@@ -70,7 +70,7 @@ export default function LoginFormProduction({
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-
+const [focusedField, setFocusedField] = useState(null);
   const validate = () => {
     const e = {};
     if (!username.trim()) e.username = t.usernameRequired;
@@ -139,7 +139,7 @@ export default function LoginFormProduction({
   return (
     <View style={[styles.container, containerStyle]}>
       <Text style={styles.title}>{t.loginTitle}</Text>
-
+<View style={styles.titleUnderline} />
       {errors.general ? (
         <Text style={[styles.error, { marginBottom: 8 }]}>{errors.general}</Text>
       ) : null}
@@ -147,22 +147,32 @@ export default function LoginFormProduction({
       {/* Username */}
       <Text style={styles.label}>{t.username}</Text>
       <TextInput
-        style={styles.input}
+        // style={styles.input}
+           style={[
+    styles.input,
+    focusedField === 'username' && { borderColor: '#FF7E00' }
+  ]}
         placeholder={t.enterUsername}
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
+        onFocus={() => setFocusedField('username')}
       />
       {errors.username && <Text style={styles.error}>{errors.username}</Text>}
 
       {/* Password */}
       <Text style={styles.label}>{t.password}</Text>
       <TextInput
-        style={styles.input}
+        // style={styles.input}
+          style={[
+    styles.input,
+    focusedField === 'password' && { borderColor: '#FF7E00' }
+  ]}
         placeholder={t.enterPassword}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+         onFocus={() => setFocusedField('password')}
       />
       {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
@@ -213,11 +223,18 @@ export default function LoginFormProduction({
             </TouchableOpacity>
           </View>
           <TextInput
-            style={[styles.input, { marginTop: 8 }]}
+            // style={[styles.input, { marginTop: 8 }]}
+                  style={[
+    styles.input,
+    { marginTop: 8 },
+    focusedField === 'captcha' && { borderColor: '#FF7E00' }
+  ]}
+      
             placeholder={t.enterCaptcha}
             keyboardType="number-pad"
             value={captchaInput}
             onChangeText={setCaptchaInput}
+             onFocus={() => setFocusedField('captcha')}
           />
           {errors.captcha && <Text style={styles.error}>{errors.captcha}</Text>}
         </View>
@@ -253,7 +270,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#EE6969',
   },
-  label: { fontSize: 14, color: '#333', marginBottom: 4 },
+  label: { fontSize: 14, color: '#FF7E00', marginBottom: 4 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -299,4 +316,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitText: { color: 'white', fontWeight: '600', fontSize: 16 },
+  titleUnderline: {
+  width: '100%',
+  height: 2,
+  backgroundColor: '#FF7E00',
+  marginTop: 8,
+  marginBottom: 16,
+},
 });

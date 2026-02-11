@@ -36,7 +36,7 @@ export default function CRPDashboardProduction({ navigation }) {
   const [crpName, setCrpName] = useState('');
   const [draftsVisible, setDraftsVisible] = useState(false);
 const [drafts, setDrafts] = useState([]);
-
+const [activeButton, setActiveButton] = useState(null);
 
   const translations = {
     en: {
@@ -332,7 +332,7 @@ const loadDrafts = async () => {
             style={{ marginLeft: 12 }}
             onPress={() => setMenuOpen(true)}
           >
-            <Text style={{ fontSize: 26 }}>☰</Text>
+            <Text style={{ fontSize: 26, color: '#FF7E00' }}>☰</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -348,7 +348,7 @@ const loadDrafts = async () => {
         <Text style={styles.cardTitle}>{t.totalLabel}</Text>
         <Text style={styles.totalNumber}>{total}/100</Text>
       </View>
-
+<View style={styles.cardOuter}>
       <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
         {/* Gram Panchayats assigned to you, */}
          {translate('panchayatsTitle')}
@@ -363,7 +363,7 @@ const loadDrafts = async () => {
           </View>
         ))
       )}
-
+</View>
       <View style={{ marginTop: 32, gap: 12 }}>
         <TouchableOpacity
           style={styles.primaryButton}
@@ -475,6 +475,7 @@ const styles = StyleSheet.create({
   userText: {
     fontSize: 16,
     fontWeight: '600',
+     color: '#FF7E00'
   },
   title: {
     fontSize: 20,
@@ -494,10 +495,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#F9ECEC',
     alignItems: 'center',
+
+        borderColor: '#FF7E00',
+  borderWidth: 1.5,
+
+  // shadow 
+ shadowColor: '#FF7E00',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.12,
+  shadowRadius: 6,
+
+  elevation: 4, 
   },
   cardTitle: {
     fontSize: 14,
-    color: '#555',
+    color: '#FF7E00',
+    // color: '#555',
   },
   totalNumber: {
     fontSize: 32,
@@ -514,7 +527,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    // borderBottomColor: '#EEE',
+    borderBottomColor: '#FF7E00',
   },
   analyticsName: { fontSize: 14, flex: 1, paddingRight: 8 },
   analyticsValue: { fontSize: 14, fontWeight: '600', color: '#333' },
@@ -539,4 +553,20 @@ const styles = StyleSheet.create({
     color: '#EE6969',
     fontWeight: '500',
   },
+   cardOuter: {
+ marginTop: 24,
+  padding: 16,
+  borderRadius: 12,
+  backgroundColor: '#FFF7F0',
+  borderWidth: 1.5,
+  borderColor: '#FF7E00',
+
+  //  Lifted / floating effect
+  shadowColor: '#FF7E00',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.12,
+  shadowRadius: 6,
+
+  elevation: 4, 
+},
 });
