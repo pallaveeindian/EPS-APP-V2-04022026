@@ -12,94 +12,239 @@ const YES_NO = ['Yes', 'No'];
  * Parent–child multi-select tree for "Source of Investment"
  * Values stored in existingForm.source_of_investment_tree
  */
-  const INVESTMENT_SOURCE_TREE = [
-    {
-      parent: 'MSME / Industry Department',
-      children: [
-        'UP MSME Promotion Policy 2022',
-        'ODOP (One District One Product)',
-        'Vishwakarma Shram Samman Yojana',
-        'CM Yuva Scheme',
-        'Micro-food Industries Promotion',
-        'Capital Subsidy Scheme',
-      ],
-    },
-    {
-      parent: 'Women Welfare / Women Empowerment Department',
-      children: ['Mahila Samarthya Yojana'],
-    },
-    {
-      parent: 'Village Industries / Khadi and Village Industries Department',
-      children: [
-        'Khadi & Village Industries (KVIC UP) Loan Assistance',
-        'Margin Money Scheme',
-      ],
-    },
-    {
-      parent: 'Agriculture / Animal Husbandry Department',
-      children: [
-        'Kamdhenu Dairy Yojana',
-        'UP Food Processing Industry Support',
-      ],
-    },
-    {
-      parent: 'Department of Social Welfare',
-      children: ['PM AJAY'],
-    },
-    {
-      parent: 'Department of Fisheries',
-      children: ['Chief Minister Matsya Sampada Yojana'],
-    },
-    {
-      parent: 'OBC Finance Development Corporation',
-      children: ['Self-employment loans'],
-    },
-    {
-      parent: 'NABARD Schemes for SHGs & Rural Enterprises',
-      children: [
-        'Micro Enterprise Development Programme (MEDP)',
-        'Livelihood Enterprise Development Programme (LEDP)',
-        'Grant for capability building',
-        'Loan refinancing',
-      ],
-    },
-    // {
-    //   parent: 'Central Government Schemes (Also including NABARD)',
-    //   children: [
-    //     'Micro Enterprise Development Programme (MEDP)',
-    //     'Livelihood Enterprise Development Programme (LEDP)',
-    //     'Grant for capability building',
-    //     'Loan refinancing',
-    //   ],
-    // },
-    {
-      parent: 'Other Schemes',
-      children: [
-        'Mudra Loan (for women entrepreneurs)',
-        'Stand-Up India (women SC/ST entrepreneurs)',
-        'ZED (Zero Defect Zero Effect) – Women MSME',
-        'Women Entrepreneurship Fund / Scheme',
-        'Coir Vikas Yojana',
-        'Prime Minister Employment Generation Programme (PMEGP)',
-        'PM SVANidhi',
-        'SHG-Bank Linkage',
-        // 'PM-FME (PM Formalization of Micro Food Processing Enterprises)',
-        'Dairy Entrepreneur Development Scheme',
-        'Prime Minister Matsya Sampada Yojana',
-        // 'PMFME (Micro Food Processing)',
-        'SFURTI (Scheme of Fund for Regeneration of Traditional Industries)',
-        'ASPIRE (A Scheme for Promotion of Innovation, Rural Industry and Entrepreneurship)',
-        'AGEY',
-        'SVEP',
-        'PMFME',
-        'PATB',
-      ],
-    },
-    {
-      parent: 'Others (Specify)',
-      children: ['Others'],
-    },
-  ];
+//  NEW: FULL bilingual tree structure
+const INVESTMENT_SOURCE_TREE = [
+  {
+    parent: { en: 'MSME / Industry Department', hi: 'एमएसएमई / उद्योग विभाग' },
+    children: [
+      { en: 'UP MSME Promotion Policy 2022', hi: 'यूपी एमएसएमई प्रमोशन पॉलिसी 2022' },
+      { en: 'ODOP (One District One Product)', hi: 'ओडीओपी (एक जिला एक उत्पाद)' },
+      { en: 'Vishwakarma Shram Samman Yojana', hi: 'विश्वरकर्मा श्रम सम्मान योजना' },
+      { en: 'CM Yuva Scheme', hi: 'मुख्यमंत्री युवा योजना' },
+      { en: 'Micro-food Industries Promotion', hi: 'सूक्ष्म खाद्य उद्योग संवर्द्धन' },
+      { en: 'Capital Subsidy Scheme', hi: 'पूंजी सहायता योजना' },
+    ],
+  },
+  {
+    parent: { en: 'Women Welfare / Women Empowerment Department', hi: 'महिला कल्याण / सशक्तिकरण विभाग' },
+    children: [
+      { en: 'Mahila Samarthya Yojana', hi: 'महिला समर्थ्य योजना' },
+    ],
+  },
+  {
+    parent: { en: 'Village Industries / Khadi and Village Industries Department', hi: 'ग्राम उद्योग / खादी और ग्राम उद्योग विभाग' },
+    children: [
+      { en: 'Khadi & Village Industries (KVIC UP) Loan Assistance', hi: 'खादी एवं ग्राम उद्योग (KVIC UP) ऋण सहायता' },
+      { en: 'Margin Money Scheme', hi: 'मार्जिन मनी योजना' },
+    ],
+  },
+  {
+    parent: { en: 'Agriculture / Animal Husbandry Department', hi: 'कृषि / पशुपालन विभाग' },
+    children: [
+      { en: 'Kamdhenu Dairy Yojana', hi: 'कमधेनु डेयरी योजना' },
+      { en: 'UP Food Processing Industry Support', hi: 'यूपी फूड प्रोसेसिंग उद्योग समर्थन' },
+    ],
+  },
+  {
+    parent: { en: 'Department of Social Welfare', hi: 'सामाजिक कल्याण विभाग' },
+    children: [
+      { en: 'PM AJAY', hi: 'पीएम अजय' },
+    ],
+  },
+  {
+    parent: { en: 'Department of Fisheries', hi: 'मत्स्य पालन विभाग' },
+    children: [
+      { en: 'Chief Minister Matsya Sampada Yojana', hi: 'मुख्यमंत्री मत्स्य संपदा योजना' },
+    ],
+  },
+  {
+    parent: { en: 'OBC Finance Development Corporation', hi: 'ओबीसी वित्त विकास निगम' },
+    children: [
+      { en: 'Self-employment loans', hi: 'स्व-रोज़गार ऋण' },
+    ],
+  },
+  {
+    parent: { en: 'NABARD Schemes for SHGs & Rural Enterprises', hi: 'एनएबीएआरडी योजनाएँ - स्वयं सहायता समूह और ग्रामीण उद्यम' },
+    children: [
+      { en: 'Micro Enterprise Development Programme (MEDP)', hi: 'सूक्ष्म उद्यम विकास कार्यक्रम (MEDP)' },
+      { en: 'Livelihood Enterprise Development Programme (LEDP)', hi: 'रोज़गार उद्यम विकास कार्यक्रम (LEDP)' },
+      { en: 'Grant for capability building', hi: 'क्षमता निर्माण हेतु अनुदान' },
+      { en: 'Loan refinancing', hi: 'ऋण पुनर्वित्त' },
+    ],
+  },
+  {
+    parent: { en: 'Other Schemes', hi: 'अन्य योजनाएँ' },
+    children: [
+      { en: 'Mudra Loan (for women entrepreneurs)', hi: 'मुद्रा ऋण (महिला उद्यमियों के लिए)' },
+      { en: 'Stand-Up India (women SC/ST entrepreneurs)', hi: 'स्टैंड-अप इंडिया (महिला SC/ST उद्यमी)' },
+      { en: 'ZED (Zero Defect Zero Effect) – Women MSME', hi: 'ZED (शून्य दोष शून्य प्रभाव) – महिला MSME' },
+      { en: 'Women Entrepreneurship Fund / Scheme', hi: 'महिला उद्यमिता निधि / योजना' },
+      { en: 'Coir Vikas Yojana', hi: 'कोयर विकास योजना' },
+      { en: 'Prime Minister Employment Generation Programme (PMEGP)', hi: 'प्रधान मंत्री रोजगार सृजन कार्यक्रम (PMEGP)' },
+      { en: 'PM SVANidhi', hi: 'पीएम स्वनिधि' },
+      { en: 'SHG-Bank Linkage', hi: 'SHG-बैंक लिंकिंग' },
+      { en: 'Dairy Entrepreneur Development Scheme', hi: 'डेयरी उद्यमी विकास योजना' },
+      { en: 'Prime Minister Matsya Sampada Yojana', hi: 'प्रधान मंत्री मत्स्य संपदा योजना' },
+      { en: 'SFURTI (Scheme of Fund for Regeneration of Traditional Industries)', hi: 'SFURTI (परंपरागत उद्योग पुनर्जनन योजना)' },
+      { en: 'ASPIRE (A Scheme for Promotion of Innovation, Rural Industry and Entrepreneurship)', hi: 'ASPIRE (नवाचार, ग्रामीण उद्योग और उद्यमिता संवर्द्धन योजना)' },
+      { en: 'AGEY', hi: 'AGEY' },
+      { en: 'SVEP', hi: 'SVEP' },
+      { en: 'PMFME', hi: 'PMFME' },
+      { en: 'PATB', hi: 'PATB' },
+    ],
+  },
+  {
+    parent: { en: 'Others (Specify)', hi: 'अन्य (स्पेसिफाई करें)' },
+    children: [
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+];
+//  const INVESTMENT_SOURCE_TREE = [
+//   {
+//     parent: { en: 'MSME / Industry Department', hi: 'एमएसएमई / उद्योग विभाग' },
+//     children: [
+//       { en: 'UP MSME Promotion Policy 2022', hi: 'यूपी एमएसएमई प्रमोशन पॉलिसी 2022' },
+//       { en: 'ODOP (One District One Product)', hi: 'ओडीओपी (एक जिला एक उत्पाद)' },
+//       { en: 'Vishwakarma Shram Samman Yojana', hi: 'विश्वकर्मा श्रम सम्मान योजना' },
+//       { en: 'CM Yuva Scheme', hi: 'मुख्यमंत्री युवा योजना' },
+//       { en: 'Micro-food Industries Promotion', hi: 'सूक्ष्म खाद्य उद्योग संवर्द्धन' },
+//       { en: 'Capital Subsidy Scheme', hi: 'पूंजी सहायता योजना' },
+//       { en: 'Prime Minister Employment Generation Programme (PMEGP)', hi: 'प्रधानमंत्री रोजगार सृजन कार्यक्रम (PMEGP)' },
+//       { en: 'Credit Linked Capital Subsidy Scheme (CLCSS)', hi: 'क्रेडिट लिंक्ड कैपिटल सब्सिडी योजना (CLCSS)' },
+//       { en: 'Technology Upgradation Scheme', hi: 'प्रौद्योगिकी उन्नयन योजना' },
+//       { en: 'Industrial Investment Promotion Scheme', hi: 'औद्योगिक निवेश प्रोत्साहन योजना' },
+//     ],
+//   },
+//   {
+//     parent: { en: 'Women Welfare / Women Empowerment Department', hi: 'महिला कल्याण / सशक्तिकरण विभाग' },
+//     children: [
+//       { en: 'Mahila Samarthya Yojana', hi: 'महिला समर्थ्य योजना' },
+//       { en: 'Mission Shakti', hi: 'मिशन शक्ति' },
+//       { en: 'Women Entrepreneurship Scheme', hi: 'महिला उद्यमिता योजना' },
+//     ],
+//   },
+//   {
+//     parent: { en: 'National Rural Livelihood Mission (NRLM)', hi: 'राष्ट्रीय ग्रामीण आजीविका मिशन (NRLM)' },
+//     children: [
+//       { en: 'SHG Bank Linkage', hi: 'एसएचजी बैंक लिंकेज' },
+//       { en: 'Revolving Fund', hi: 'रिवॉल्विंग फंड' },
+//       { en: 'Community Investment Fund', hi: 'कम्युनिटी इन्वेस्टमेंट फंड' },
+//     ],
+//   },
+//   {
+//     parent: { en: 'Bank Loan / Financial Institution', hi: 'बैंक ऋण / वित्तीय संस्था' },
+//     children: [
+//       { en: 'Term Loan', hi: 'टर्म लोन' },
+//       { en: 'Working Capital Loan', hi: 'वर्किंग कैपिटल लोन' },
+//       { en: 'Mudra Loan', hi: 'मुद्रा लोन' },
+//       { en: 'Stand Up India Scheme', hi: 'स्टैंड अप इंडिया योजना' },
+//     ],
+//   },
+//   {
+//     parent: { en: 'Self Investment', hi: 'स्वयं का निवेश' },
+//     children: [
+//       { en: 'Personal Savings', hi: 'व्यक्तिगत बचत' },
+//       { en: 'Family Support', hi: 'परिवार का सहयोग' },
+//     ],
+//   },
+//   {
+//     parent: { en: 'Others (Specify)', hi: 'अन्य (स्पेसिफाई करें)' },
+//     children: [
+//       { en: 'Others', hi: 'अन्य' },
+//     ],
+//   },
+// ];
+
+
+  // const INVESTMENT_SOURCE_TREE = [
+  //   {
+  //     parent: 'MSME / Industry Department',
+  //     children: [
+  //       'UP MSME Promotion Policy 2022',
+  //       'ODOP (One District One Product)',
+  //       'Vishwakarma Shram Samman Yojana',
+  //       'CM Yuva Scheme',
+  //       'Micro-food Industries Promotion',
+  //       'Capital Subsidy Scheme',
+  //     ],
+  //   },
+  //   {
+  //     parent: 'Women Welfare / Women Empowerment Department',
+  //     children: ['Mahila Samarthya Yojana'],
+  //   },
+  //   {
+  //     parent: 'Village Industries / Khadi and Village Industries Department',
+  //     children: [
+  //       'Khadi & Village Industries (KVIC UP) Loan Assistance',
+  //       'Margin Money Scheme',
+  //     ],
+  //   },
+  //   {
+  //     parent: 'Agriculture / Animal Husbandry Department',
+  //     children: [
+  //       'Kamdhenu Dairy Yojana',
+  //       'UP Food Processing Industry Support',
+  //     ],
+  //   },
+  //   {
+  //     parent: 'Department of Social Welfare',
+  //     children: ['PM AJAY'],
+  //   },
+  //   {
+  //     parent: 'Department of Fisheries',
+  //     children: ['Chief Minister Matsya Sampada Yojana'],
+  //   },
+  //   {
+  //     parent: 'OBC Finance Development Corporation',
+  //     children: ['Self-employment loans'],
+  //   },
+  //   {
+  //     parent: 'NABARD Schemes for SHGs & Rural Enterprises',
+  //     children: [
+  //       'Micro Enterprise Development Programme (MEDP)',
+  //       'Livelihood Enterprise Development Programme (LEDP)',
+  //       'Grant for capability building',
+  //       'Loan refinancing',
+  //     ],
+  //   },
+  //   // {
+  //   //   parent: 'Central Government Schemes (Also including NABARD)',
+  //   //   children: [
+  //   //     'Micro Enterprise Development Programme (MEDP)',
+  //   //     'Livelihood Enterprise Development Programme (LEDP)',
+  //   //     'Grant for capability building',
+  //   //     'Loan refinancing',
+  //   //   ],
+  //   // },
+  //   {
+  //     parent: 'Other Schemes',
+  //     children: [
+  //       'Mudra Loan (for women entrepreneurs)',
+  //       'Stand-Up India (women SC/ST entrepreneurs)',
+  //       'ZED (Zero Defect Zero Effect) – Women MSME',
+  //       'Women Entrepreneurship Fund / Scheme',
+  //       'Coir Vikas Yojana',
+  //       'Prime Minister Employment Generation Programme (PMEGP)',
+  //       'PM SVANidhi',
+  //       'SHG-Bank Linkage',
+  //       // 'PM-FME (PM Formalization of Micro Food Processing Enterprises)',
+  //       'Dairy Entrepreneur Development Scheme',
+  //       'Prime Minister Matsya Sampada Yojana',
+  //       // 'PMFME (Micro Food Processing)',
+  //       'SFURTI (Scheme of Fund for Regeneration of Traditional Industries)',
+  //       'ASPIRE (A Scheme for Promotion of Innovation, Rural Industry and Entrepreneurship)',
+  //       'AGEY',
+  //       'SVEP',
+  //       'PMFME',
+  //       'PATB',
+  //     ],
+  //   },
+  //   {
+  //     parent: 'Others (Specify)',
+  //     children: ['Others'],
+  //   },
+  // ];
 
 // const INVESTMENT_SOURCE_TREE = [
 //   {
@@ -191,106 +336,183 @@ const YES_NO = ['Yes', 'No'];
 
 
 const SourceOfInvestmentTree = ({ value, onChange }) => {
+   const { language } = useContext(LanguageContext); //  NEW: language usage
   const selectedTree = Array.isArray(value) ? value : [];
   const [othersText, setOthersText] = useState(''); // <-- Added state for "Others"
 
-  const isParentSelected = (parent) =>
-    !!selectedTree.find((row) => row.parent === parent);
+  const isParentSelected = (parentEn) =>
+    !!selectedTree.find((row) => row.parent === parentEn);
 
-  const isChildSelected = (parent, child) => {
-    const row = selectedTree.find((r) => r.parent === parent);
-    return !!row && row.children?.includes(child);
+  const isChildSelected = (parentEn, childEn) => {
+    const row = selectedTree.find((r) => r.parent === parentEn);
+    return !!row && row.children?.includes(childEn);
   };
 
-  const toggleParent = (parent) => {
-    const exists = selectedTree.find((row) => row.parent === parent);
+  const toggleParent = (parentEn) => {
+    const exists = selectedTree.find((row) => row.parent === parentEn);
     let updated;
     if (exists) {
-      updated = selectedTree.filter((row) => row.parent !== parent);
+      updated = selectedTree.filter((row) => row.parent !== parentEn);
     } else {
-      updated = [...selectedTree, { parent, children: [] }];
+      updated = [...selectedTree, { parent: parentEn, children: [] }];
     }
     onChange(updated);
   };
 
-  const toggleChild = (parent, child) => {
-    const existing = selectedTree.find((row) => row.parent === parent);
+  const toggleChild = (parentEn, childEn) => {
+    const existing = selectedTree.find((row) => row.parent === parentEn);
     let updated = [...selectedTree];
     if (!existing) {
-      updated.push({ parent, children: [child] });
+      updated.push({ parent: parentEn, children: [childEn]  });
     } else {
       const children = existing.children || [];
-      const has = children.includes(child);
+      const has = children.includes(childEn);
       const newChildren = has
-        ? children.filter((c) => c !== child)
-        : [...children, child];
+        ? children.filter((c) => c !== childEn)
+        : [...children, childEn];
       updated = updated.map((row) =>
-        row.parent === parent ? { ...row, children: newChildren } : row
+        row.parent === parentEn ? { ...row, children: newChildren } : row
       );
     }
     onChange(updated);
   };
 
+  // return (
+  //   <View style={{ marginTop: 8 }}>
+  //     {INVESTMENT_SOURCE_TREE.map((group) => {
+  //       const parentSelected = isParentSelected(group.parent);
+  //       const isOthersGroup = group.parent === 'Others (Specify)';
+  //       const isOthersSelected =
+  //         isOthersGroup &&
+  //         parentSelected &&
+  //         isChildSelected(group.parent, 'Others'); // <-- check if Others is selected
+
+  //       return (
+  //         <View key={group.parent} style={styles.treeGroup}>
+  //           <TouchableOpacity
+  //             onPress={() => toggleParent(group.parent)}
+  //             style={styles.treeParentRow}
+  //           >
+  //             <Text style={styles.treeParentText}>{group.parent}</Text>
+  //             <Text>{parentSelected ? '☑' : '☐'}</Text>
+  //           </TouchableOpacity>
+
+  //           {parentSelected && (
+  //             <View style={styles.treeChildrenBlock}>
+  //               {group.children.map((child) => (
+  //                 <TouchableOpacity
+  //                   key={child}
+  //                   style={styles.treeChildRow}
+  //                   onPress={() => toggleChild(group.parent, child)}
+  //                 >
+  //                   <Text style={styles.treeChildCheckbox}>
+  //                     {isChildSelected(group.parent, child) ? '☑' : '☐'}
+  //                   </Text>
+  //                   <Text style={styles.treeChildLabel}>{child}</Text>
+  //                 </TouchableOpacity>
+  //               ))}
+
+  //               {/* <-- TextInput only visible when Others is selected */}
+  //               {isOthersSelected && (
+  //                 <TextInput
+  //                   style={[styles.input, { marginTop: 6 }]}
+  //                   placeholder="Specify"
+  //                   value={othersText}
+  //                   onChangeText={(txt) => {
+  //                     setOthersText(txt);
+  //                     onChange(
+  //                       selectedTree.map((row) =>
+  //                         row.parent === group.parent
+  //                           ? { ...row, others_specify: txt }
+  //                           : row
+  //                       )
+  //                     );
+  //                   }}
+  //                 />
+  //               )}
+  //             </View>
+  //           )}
+  //         </View>
+  //       );
+  //     })}
+  //   </View>
+  // );
   return (
-    <View style={{ marginTop: 8 }}>
-      {INVESTMENT_SOURCE_TREE.map((group) => {
-        const parentSelected = isParentSelected(group.parent);
-        const isOthersGroup = group.parent === 'Others (Specify)';
-        const isOthersSelected =
-          isOthersGroup &&
-          parentSelected &&
-          isChildSelected(group.parent, 'Others'); // <-- check if Others is selected
+  <View style={{ marginTop: 8 }}>
+    {INVESTMENT_SOURCE_TREE.map((group) => {
+      const parentEn = group.parent.en;
+      const parentLabel =
+        language === 'hi' ? group.parent.hi : group.parent.en;
 
-        return (
-          <View key={group.parent} style={styles.treeGroup}>
-            <TouchableOpacity
-              onPress={() => toggleParent(group.parent)}
-              style={styles.treeParentRow}
-            >
-              <Text style={styles.treeParentText}>{group.parent}</Text>
-              <Text>{parentSelected ? '☑' : '☐'}</Text>
-            </TouchableOpacity>
+      const parentSelected = isParentSelected(parentEn);
+      const isOthersGroup = parentEn === 'Others (Specify)';
+      const isOthersSelected =
+        isOthersGroup &&
+        parentSelected &&
+        isChildSelected(parentEn, 'Others');
 
-            {parentSelected && (
-              <View style={styles.treeChildrenBlock}>
-                {group.children.map((child) => (
+      return (
+        <View key={parentEn} style={styles.treeGroup}>
+          <TouchableOpacity
+            onPress={() => toggleParent(parentEn)}
+            style={styles.treeParentRow}
+          >
+            <Text style={styles.treeParentText}>
+              {parentLabel}
+            </Text>
+            <Text>{parentSelected ? '☑' : '☐'}</Text>
+          </TouchableOpacity>
+
+          {parentSelected && (
+            <View style={styles.treeChildrenBlock}>
+              {group.children.map((child) => {
+                const childEn = child.en;
+                const childLabel =
+                  language === 'hi' ? child.hi : child.en;
+
+                return (
                   <TouchableOpacity
-                    key={child}
+                    key={childEn}
                     style={styles.treeChildRow}
-                    onPress={() => toggleChild(group.parent, child)}
+                    onPress={() => toggleChild(parentEn, childEn)}
                   >
                     <Text style={styles.treeChildCheckbox}>
-                      {isChildSelected(group.parent, child) ? '☑' : '☐'}
+                      {isChildSelected(parentEn, childEn) ? '☑' : '☐'}
                     </Text>
-                    <Text style={styles.treeChildLabel}>{child}</Text>
+                    <Text style={styles.treeChildLabel}>
+                      {childLabel}
+                    </Text>
                   </TouchableOpacity>
-                ))}
+                );
+              })}
 
-                {/* <-- TextInput only visible when Others is selected */}
-                {isOthersSelected && (
-                  <TextInput
-                    style={[styles.input, { marginTop: 6 }]}
-                    placeholder="Specify"
-                    value={othersText}
-                    onChangeText={(txt) => {
-                      setOthersText(txt);
-                      onChange(
-                        selectedTree.map((row) =>
-                          row.parent === group.parent
-                            ? { ...row, others_specify: txt }
-                            : row
-                        )
-                      );
-                    }}
-                  />
-                )}
-              </View>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
+              {isOthersSelected && (
+                <TextInput
+                  style={[styles.input, { marginTop: 6 }]}
+                  placeholder={
+                    language === 'hi' ? 'कृपया विवरण दें' : 'Specify'
+                  }
+                  value={othersText}
+                  onChangeText={(txt) => {
+                    setOthersText(txt);
+                    onChange(
+                      selectedTree.map((row) =>
+                        row.parent === parentEn
+                          ? { ...row, others_specify: txt }
+                          : row
+                      )
+                    );
+                  }}
+                />
+              )}
+            </View>
+          )}
+        </View>
+      );
+    })}
+  </View>
+);
+
 };
 
 const YesNoToggle = ({ value, onChange,language }) => (
@@ -422,10 +644,18 @@ const deleteFundCard = (index) =>
   });
   return (
     <View style={styles.sectionContainer}>
+       <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 10,
+            }}
+          >
       <Text style={styles.sectionTitle}>{language === 'hi'
     ? '4) निवेश विवरण अनुभाग'
     : '4) Investment Details Section'}</Text>
-<LanguageToggle/>
+<LanguageToggle/></View>
 {/* 17) Initial investment */}
       <View style={styles.fieldBlock}>
         <Text style={styles.label}>
@@ -930,24 +1160,30 @@ else {
 
       {/* 18) Source of investment – parent/child tree */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>
-          Select all sources of your Investment that apply
-        </Text>
-        <Text style={styles.helpText}>
-          Please select all departments and schemes from where you received support or funds
-          for your initial investment. You may choose multiple parents and multiple schemes under them.
-        </Text>
+  <Text style={styles.label}>
+    {language === 'hi'
+      ? 'अपने निवेश के सभी लागू स्रोत चुनें'
+      : 'Select all sources of your Investment that apply'}
+  </Text>
 
-        <SourceOfInvestmentTree
-          value={existingForm.source_of_investment_tree}
-          onChange={(tree) => update({ source_of_investment_tree: tree })}
-        />
+  <Text style={styles.helpText}>
+    {language === 'hi'
+      ? 'कृपया उन सभी विभागों और योजनाओं का चयन करें जिनसे आपको अपने प्रारंभिक निवेश के लिए सहायता या निधि प्राप्त हुई है। आप एक से अधिक विभाग और उनके अंतर्गत एक से अधिक योजनाएँ चुन सकते हैं।'
+      : 'Please select all departments and schemes from where you received support or funds for your initial investment. You may choose multiple parents and multiple schemes under them.'}
+  </Text>
 
-        <Text style={[styles.helpText, { marginTop: 4 }]}>
-          Note: Your selections will be saved as &quot;[Parent: Scheme1, Scheme2]&quot; format
-          for sending to the server.
-        </Text>
-      </View>
+  <SourceOfInvestmentTree
+    value={existingForm.source_of_investment_tree}
+    onChange={(tree) => update({ source_of_investment_tree: tree })}
+  />
+
+  <Text style={[styles.helpText, { marginTop: 4 }]}>
+    {language === 'hi'
+      ? 'नोट: आपके चयन को "[विभाग: योजना1, योजना2]" प्रारूप में सर्वर पर भेजा जाएगा।'
+      : 'Note: Your selections will be saved as "[Parent: Scheme1, Scheme2]" format for sending to the server.'}
+  </Text>
+</View>
+
     </View>
   );
 }

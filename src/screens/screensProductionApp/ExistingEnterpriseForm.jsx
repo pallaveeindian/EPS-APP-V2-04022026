@@ -957,6 +957,8 @@ import {
   getCrpPanchayats,
   getCrpDetail,
 } from '../../utils/tempStore';
+import { useContext } from 'react';
+import { LanguageContext } from '../../components/LanguageContext';
 
 
 // Section components
@@ -997,7 +999,7 @@ function extractLocationFromShg(shg) {
 
 export default function ExistingEnterpriseForm({ route, navigation }) {
   const recordedBenef = route?.params?.recordedBenef || null;
-  const existingEnterprise = route?.params?.existingEnterprise || null;
+  const existingEnterprise = route?.params?.existing
 
   // extra params from CRPRecordFlowProduction (same as NewEnterpriseForm)
   const beneficiary = route?.params?.beneficiary || null;
@@ -1813,6 +1815,53 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     );
   }
 
+  const PaginationButtons = ({ currentSectionIndex, TOTAL_SECTIONS, submitting, setCurrentSectionIndex, handleSubmit }) => {
+  const { language } = useContext(LanguageContext);
+
+  return (
+    <View style={styles.paginationContainer}>
+      <TouchableOpacity
+        style={[styles.navBtn, (currentSectionIndex === 0 || submitting) && styles.navBtnDisabled]}
+        disabled={currentSectionIndex === 0 || submitting}
+        onPress={() => setCurrentSectionIndex((prev) => (prev > 0 ? prev - 1 : prev))}
+      >
+        <Text style={styles.navBtnText}>
+          {language === 'hi' ? 'पिछला' : 'Previous'}
+        </Text>
+      </TouchableOpacity>
+
+      {currentSectionIndex < TOTAL_SECTIONS - 1 && (
+        <TouchableOpacity
+          style={[styles.navBtn, styles.navBtnPrimary, submitting && { opacity: 0.7 }]}
+          disabled={submitting}
+          onPress={() => setCurrentSectionIndex((prev) => (prev < TOTAL_SECTIONS - 1 ? prev + 1 : prev))}
+        >
+          <Text style={[styles.navBtnText, styles.navBtnPrimaryText]}>
+            {language === 'hi' ? 'आगे' : 'Next'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {currentSectionIndex === TOTAL_SECTIONS - 1 && (
+        <TouchableOpacity
+          style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
+          disabled={submitting}
+          onPress={handleSubmit}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitBtnText}>
+              {language === 'hi' ? 'फॉर्म जमा करें' : 'Submit Form'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
+
+  
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.sectionWrapper}>
@@ -1947,7 +1996,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         </View>
       </View>
 
-      <View style={styles.paginationContainer}>
+      {/* <View style={styles.paginationContainer}>
         <TouchableOpacity
           style={[
             styles.navBtn,
@@ -1958,7 +2007,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             setCurrentSectionIndex((prev) => (prev > 0 ? prev - 1 : prev))
           }
         >
-          <Text style={styles.navBtnText}>Previous</Text>
+          <Text style={styles.navBtnText}>{language === 'hi' ? 'पिछला' : 'Previous'}</Text>
         </TouchableOpacity>
 
         {currentSectionIndex < TOTAL_SECTIONS - 1 && (
@@ -1976,7 +2025,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             }
           >
             <Text style={[styles.navBtnText, styles.navBtnPrimaryText]}>
-              Next
+              {language === 'hi' ? 'आगे' : 'Next'}
             </Text>
           </TouchableOpacity>
         )}
@@ -1990,11 +2039,20 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             {submitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.submitBtnText}>Submit Form</Text>
+              <Text style={styles.submitBtnText}>{language === 'hi' ? 'फॉर्म जमा करें' : 'Submit Form'}</Text>
             )}
           </TouchableOpacity>
         )}
-      </View>
+      </View> */}
+
+      <PaginationButtons
+  currentSectionIndex={currentSectionIndex}
+  TOTAL_SECTIONS={TOTAL_SECTIONS}
+  submitting={submitting}
+  setCurrentSectionIndex={setCurrentSectionIndex}
+  handleSubmit={handleSubmit}
+/>
+
     </ScrollView>
   );
 }

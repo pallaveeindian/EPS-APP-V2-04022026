@@ -7,13 +7,15 @@ import {
   StyleSheet,
 } from 'react-native';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-
+import LanguageToggle from '../../../components/LanguageToggle';
+import { LanguageContext } from '../../../components/LanguageContext';
+import { useContext } from 'react';
 export default function ExistingEnterpriseMediaSection({
   existingForm,
   setExistingForm,
 }) {
   const update = (patch) => setExistingForm(patch);
-  
+  const { language } = useContext(LanguageContext);
 
   const pickFiles = async (fieldName, allowedTypes) => {
     try {
@@ -48,31 +50,35 @@ export default function ExistingEnterpriseMediaSection({
     }
   };
 
-  const renderUploadBlock = (label, fieldName, type, helpText) => (
+  const renderUploadBlock = (labelEn, labelHi, fieldName, type, helpEn, helpHi) => (
     <View style={styles.fieldBlock}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.helpText}>{helpText}</Text>
+      <Text style={styles.label}>{language === 'hi' ? labelHi : labelEn}
+</Text>
+      <Text style={styles.helpText}>{language === 'hi' ? helpHi : helpEn}</Text>
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity
           style={styles.mediaBtn}
           onPress={() => pickFiles(fieldName, type)}
         >
-          <Text style={styles.mediaBtnText}>Upload</Text>
+          <Text style={styles.mediaBtnText}> {language === 'hi' ? 'अपलोड करें' : 'Upload'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.mediaBtn}
           onPress={() => captureFromCamera(fieldName, type)}
         >
-          <Text style={styles.mediaBtnText}>Camera</Text>
+          <Text style={styles.mediaBtnText}>{language === 'hi' ? 'कैमरा' : 'Camera'}</Text>
         </TouchableOpacity>
       </View>
 
       {Array.isArray(existingForm[fieldName]) &&
         existingForm[fieldName].length > 0 && (
           <Text style={styles.mediaInfo}>
-            Selected: {existingForm[fieldName].length}
+            {/* Selected: {existingForm[fieldName].length} */}
+            {language === 'hi'
+            ? `चयनित: ${existingForm[fieldName].length}`
+            : `Selected: ${existingForm[fieldName].length}`}
           </Text>
         )}
     </View>
@@ -80,31 +86,50 @@ export default function ExistingEnterpriseMediaSection({
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>8) Enterprise Media Upload</Text>
+       <View
+                                    style={{
+                                      flexDirection: 'row',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      marginBottom: 10,
+                                    }}
+                                  >
+      <Text style={styles.sectionTitle}> {language === 'hi'
+    ? '8) उद्यम मीडिया अपलोड'
+    : '8) Enterprise Media Upload'}</Text>
+    <LanguageToggle/>
+    </View>
       <Text style={styles.helpText}>
-        Please upload photos, videos and documents related to your enterprise.
-        This helps in better verification and support.
+         {language === 'hi'
+    ? 'कृपया अपने उद्यम से संबंधित फोटो, वीडियो और दस्तावेज अपलोड करें। इससे सत्यापन और सहयोग में सुविधा होगी।'
+    : 'Please upload photos, videos and documents related to your enterprise. This helps in better verification and support.'}
       </Text>
 
       {renderUploadBlock(
         'Upload Enterprise Photos',
-        'enterprise_photos_files',
-        'photo',
-        'Please upload clear photos of your enterprise such as: workplace, machinery, products, workers, raw materials etc.'
+  'उद्यम की फोटो अपलोड करें',
+  'enterprise_photos_files',
+  'photo',
+  'Please upload clear photos of your enterprise such as: workplace, machinery, products, workers, raw materials etc.',
+  'कृपया अपने उद्यम की स्पष्ट फोटो अपलोड करें जैसे: कार्यस्थल, मशीनरी, उत्पाद, कर्मचारी, कच्चा माल आदि।'
       )}
 
       {renderUploadBlock(
-        'Upload Entreprenuer Photo',
-        'photo_entreprenuer_files',
-        'photo',
-        'Please upload clear photo of applicant/entreprenure.'
+        'Upload Entrepreneur Photo',
+  'उद्यमी की फोटो अपलोड करें',
+  'photo_entreprenuer_files',
+  'photo',
+  'Please upload clear photo of applicant/entrepreneur.',
+  'कृपया आवेदक / उद्यमी की स्पष्ट फोटो अपलोड करें।'
       )}
 
       {renderUploadBlock(
         'Upload Enterprise Documents',
-        'enterprise_documents_files',
-        'mixed',
-        'You may upload any relevant documents (registration certificate, invoices, bills, ID proofs, training certificates etc.)'
+  'उद्यम के दस्तावेज अपलोड करें',
+  'enterprise_documents_files',
+  'mixed',
+  'You may upload any relevant documents (registration certificate, invoices, bills, ID proofs, training certificates etc.)',
+  'आप संबंधित दस्तावेज अपलोड कर सकते हैं (पंजीकरण प्रमाणपत्र, बिल, चालान, पहचान पत्र, प्रशिक्षण प्रमाणपत्र आदि)।'
       )}
     </View>
   );

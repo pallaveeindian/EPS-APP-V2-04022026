@@ -677,8 +677,16 @@ export default function ExistingEnterpriseProductServicesSection({ existingForm,
   };
   return (
     <View style={styles.sectionContainer}>
+       <View
+                                                style={{
+                                                  flexDirection: 'row',
+                                                  justifyContent: 'space-between',
+                                                  alignItems: 'center',
+                                                  marginBottom: 10,
+                                                }}
+                                              >
       <Text style={styles.sectionTitle}>{language === 'hi' ? '3) उत्पाद और सेवाएँ' : '3) Product and Services'}</Text>
-      <LanguageToggle/>
+      <LanguageToggle/></View>
       <Text style={styles.helpText}> {language === 'hi'
     ? 'प्रत्येक उत्पाद को नीचे दिए गए "+" बटन का उपयोग करके अलग से जोड़ें।'
     : 'Add each product separately using the "+" button below.'}</Text>

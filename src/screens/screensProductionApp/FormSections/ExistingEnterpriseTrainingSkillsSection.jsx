@@ -11,34 +11,59 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { launchCamera } from 'react-native-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { useState } from 'react';
+import LanguageToggle from '../../../components/LanguageToggle';
+import { LanguageContext } from '../../../components/LanguageContext';
+import { useContext } from 'react';
 
 
 
-
-const YES_NO = ['Yes', 'No'];
+const YES_NO = [
+  { en: 'Yes', hi: 'हाँ' },
+  { en: 'No', hi: 'नहीं' },
+];
 
 const TRAINING_DEPT_OPTIONS = ['NRLM', 'RSETI', 'NABARD', 'UPSDM', 'Others'];
 
+// const TRAINING_TYPE_OPTIONS = [
+//   'Residential',
+//   'Non-Residential',
+// ];
+
 const TRAINING_TYPE_OPTIONS = [
-  'Residential',
-  'Non-Residential',
+  { en: 'Residential', hi: 'आवासीय' },
+  { en: 'Non-Residential', hi: 'गैर-आवासीय' },
 ];
 
+// const TRAINING_DURATION_OPTIONS = [
+//   'Under 7 days',
+//   '7 days',
+//   '15 days',
+//   '30 days',
+//   'Over 30 days',
+// ];
 
 const TRAINING_DURATION_OPTIONS = [
-  'Under 7 days',
-  '7 days',
-  '15 days',
-  '30 days',
-  'Over 30 days',
+  { value: 'Under 7 days', en: 'Under 7 days', hi: '7 दिनों से कम' },
+  { value: '7 days', en: '7 days', hi: '7 दिन' },
+  { value: '15 days', en: '15 days', hi: '15 दिन' },
+  { value: '30 days', en: '30 days', hi: '30 दिन' },
+  { value: 'Over 30 days', en: 'Over 30 days', hi: '30 दिनों से अधिक' },
 ];
 
+
+// const EXPECTED_INCOME_OPTIONS = [
+//   'Under 10,000',
+//   '10,000 - 20,000',
+//   '20,000 - 30,000',
+//   'Above 30,000',
+// ];
 const EXPECTED_INCOME_OPTIONS = [
-  'Under 10,000',
-  '10,000 - 20,000',
-  '20,000 - 30,000',
-  'Above 30,000',
+  { value: 'Under 10,000', en: 'Under 10,000', hi: '10,000 से कम' },
+  { value: '10,000 - 20,000', en: '10,000 - 20,000', hi: '10,000 - 20,000' },
+  { value: '20,000 - 30,000', en: '20,000 - 30,000', hi: '20,000 - 30,000' },
+  { value: 'Above 30,000', en: 'Above 30,000', hi: '30,000 से अधिक' },
 ];
+
 
 /**
  * Sector tree for both training received and training required
@@ -267,243 +292,538 @@ const TRAINING_SECTOR_TREE = [
   //   parent: 'Others (Specify)',
   //   children: ['Others'],
   // },
-   {
-    parent: 'Food Processing Sector',
+//    {
+//     parent: 'Food Processing Sector',
+//     children: [
+//       'Spice manufacturing',
+//       'Pickles, preserves (murabba), papad',
+//       'Savoury snacks, bhujiya, namkeen',
+//       'Instant mixes (idli mix, gram flour mix, kheer mix)',
+//       'Bakery items (cookies, cake, bread)',
+//       'Millet-based products (jowar, bajra cookies, snacks)',
+//       'Cold-pressed oils (mustard/sesame)',
+//       'Honey processing',
+//       'Jam–jelly–squash',
+//       'Ready-to-eat products',
+//       'Jaggery Production',
+//       'Whole grain/pulses/flour sorting–grading–packaging unit​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Handicraft & Artisan Sector',
+//     children: [
+//       'Zari and zardozi work',
+//       'Chikankari embroidery',
+//       'Woodwork',
+//       'Terracotta / clay products',
+//       'Bamboo / cane craft',
+//       'Handmade jewellery (terracotta jewellery, oxidised jewellery)',
+//       'Handmade candles',
+//       'Crochet / woollen products',
+//       'Paper craft, greeting cards',
+//       'Handbags, jute bags, embroidered bags',
+//       'Ration/vegetable/shopping bags (non-woven alternatives)​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Textile & Apparel Sector',
+//     children: [
+//       'Boutique unit (stitching–cutting–embellishment)',
+//       'School uniform stitching unit',
+//       'Ladies’ garments',
+//       'Bedsheet/quilt/pillow cover unit',
+//       'ODOP textile-based products (Varanasi saree, Bhadohi carpet finishing etc.)',
+//       'Home linen (curtains, table cloth, sofa covers)',
+//       'Jute/cotton carry bags',
+//       'Mask/apron/hospital gown manufacturing​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Agriculture & Allied Sector',
+//     children: [
+//       'Vegetable cultivation and group supply',
+//       'Flower cultivation (marigold, rose)',
+//       'Mushroom production',
+//       'Nursery (fruit/flower/vegetable saplings)',
+//       'Beekeeping (honey production)',
+//       'Organic manure/vermi-compost',
+//       'Animal feed unit',
+//       'Mini mill (flour/pulse grinding)',
+//       'Fruit–vegetable dehydration unit',
+//       'Fish farming',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Dairy & Animal Husbandry Sector',
+//     children: [
+//       'Dairy unit (2–10 cows/buffaloes)',
+//       'Milk collection centre',
+//       'Paneer/khoya/curd/ghee manufacturing',
+//       'Goat rearing',
+//       'Poultry unit (egg/broiler)',
+//       'Pig rearing (in specific areas)',
+//       'Fodder production',
+//       'Milk packaging and branding unit​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Beauty, Wellness & Personal Services',
+//     children: [
+//       'Beauty parlour',
+//       'Mehndi (henna) training and services',
+//       'Spa / therapy unit',
+//       'Home-care services (home nursing, baby care training)',
+//       'Mobile salon / village-based services',
+//       'Fitness group / yoga classes​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Retail & Micro Trading Sector',
+//     children: [
+//       'Grocery/provision store',
+//       'Stationery / general store',
+//       'Group sale of vegetables/fruits',
+//       'Fast food cart',
+//       'Mobile recharge shop / bill payment kiosk',
+//       'Jan Aushadhi/Medical Store',
+//       'PET shop and disposable alternatives distribution​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Cleaning & Hygiene Products Sector',
+//     children: [
+//       'Phenyl/detergent manufacturing',
+//       'Liquid handwash',
+//       'Sanitizer',
+//       'Incense sticks and dhoop sticks',
+//       'Napkin / sanitary pad unit',
+//       'Biodegradable plate and bowl manufacturing​',
+//       'Others',
+//     ],
+//   },
+
+//   {
+//     parent: 'FMCG',
+//     children: [
+//       'Handwash',
+//       'Soap',
+//       'Floor Cleaner',
+//       'Detergents',
+//       'Air fresheners',
+//       'Face wash & creams',
+//       'Shampoo & conditioner',
+//       'Sponges',
+//       'Toothpaste & toothbrushes',
+//       'Broom',
+//       'Others',
+//     ],
+//   },
+//    {
+//     parent: 'Transport',
+//     children: [
+//       'Loader',
+//       'E-Rikshaw',
+//       'Taxi',
+//       'Auto',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Packaging & Utility Products Sector',
+//     children: [
+//       'Paper bag unit',
+//       'Jute bag unit',
+//       'Box manufacturing',
+//       'Recycled paper packaging unit',
+//       'Food-grade packaging​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Prerna Canteen',
+//     children: [
+//     ],
+//   },
+//   {
+//     parent: 'Digital & Service Sector',
+//     children: [
+//       'Data entry / digital services',
+//       'CSC (Common Service Center) operations',
+//       'Online product sales (e-commerce)',
+//       'SHG product branding',
+//       'Social media management for local shops​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Solid Waste & Green Sector',
+//     children: [
+//       'Plastic waste sorting',
+//       'Fuel/briquettes from waste',
+//       'Composting unit',
+//       'Recycled paper products',
+//       'E-waste collection micro centre​',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'Construction & Fabrication Micro Enterprises',
+//     children: [
+//       'Brick and tiles cleaning/polishing unit',
+//       'Interior decoration (fabric, flowers, décor)',
+//       'Painting/plumbing/carpentry group',
+//       'POP artwork / wall decoration',
+//       'Others',
+//     ],
+//   },
+//   {
+//     parent: 'EDP|Entrepreneurship Development Programme ',
+//     children: [
+//      ]},
+//   {
+//     parent: 'Other​',
+//     children: ['Others'],
+//   },
+// ];
+
+
+{
+    parent: { en: 'Food Processing Sector', hi: 'खाद्य प्रसंस्करण क्षेत्र' },
     children: [
-      'Spice manufacturing',
-      'Pickles, preserves (murabba), papad',
-      'Savoury snacks, bhujiya, namkeen',
-      'Instant mixes (idli mix, gram flour mix, kheer mix)',
-      'Bakery items (cookies, cake, bread)',
-      'Millet-based products (jowar, bajra cookies, snacks)',
-      'Cold-pressed oils (mustard/sesame)',
-      'Honey processing',
-      'Jam–jelly–squash',
-      'Ready-to-eat products',
-      'Jaggery Production',
-      'Whole grain/pulses/flour sorting–grading–packaging unit​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Handicraft & Artisan Sector',
-    children: [
-      'Zari and zardozi work',
-      'Chikankari embroidery',
-      'Woodwork',
-      'Terracotta / clay products',
-      'Bamboo / cane craft',
-      'Handmade jewellery (terracotta jewellery, oxidised jewellery)',
-      'Handmade candles',
-      'Crochet / woollen products',
-      'Paper craft, greeting cards',
-      'Handbags, jute bags, embroidered bags',
-      'Ration/vegetable/shopping bags (non-woven alternatives)​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Textile & Apparel Sector',
-    children: [
-      'Boutique unit (stitching–cutting–embellishment)',
-      'School uniform stitching unit',
-      'Ladies’ garments',
-      'Bedsheet/quilt/pillow cover unit',
-      'ODOP textile-based products (Varanasi saree, Bhadohi carpet finishing etc.)',
-      'Home linen (curtains, table cloth, sofa covers)',
-      'Jute/cotton carry bags',
-      'Mask/apron/hospital gown manufacturing​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Agriculture & Allied Sector',
-    children: [
-      'Vegetable cultivation and group supply',
-      'Flower cultivation (marigold, rose)',
-      'Mushroom production',
-      'Nursery (fruit/flower/vegetable saplings)',
-      'Beekeeping (honey production)',
-      'Organic manure/vermi-compost',
-      'Animal feed unit',
-      'Mini mill (flour/pulse grinding)',
-      'Fruit–vegetable dehydration unit',
-      'Fish farming',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Dairy & Animal Husbandry Sector',
-    children: [
-      'Dairy unit (2–10 cows/buffaloes)',
-      'Milk collection centre',
-      'Paneer/khoya/curd/ghee manufacturing',
-      'Goat rearing',
-      'Poultry unit (egg/broiler)',
-      'Pig rearing (in specific areas)',
-      'Fodder production',
-      'Milk packaging and branding unit​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Beauty, Wellness & Personal Services',
-    children: [
-      'Beauty parlour',
-      'Mehndi (henna) training and services',
-      'Spa / therapy unit',
-      'Home-care services (home nursing, baby care training)',
-      'Mobile salon / village-based services',
-      'Fitness group / yoga classes​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Retail & Micro Trading Sector',
-    children: [
-      'Grocery/provision store',
-      'Stationery / general store',
-      'Group sale of vegetables/fruits',
-      'Fast food cart',
-      'Mobile recharge shop / bill payment kiosk',
-      'Jan Aushadhi/Medical Store',
-      'PET shop and disposable alternatives distribution​',
-      'Others',
-    ],
-  },
-  {
-    parent: 'Cleaning & Hygiene Products Sector',
-    children: [
-      'Phenyl/detergent manufacturing',
-      'Liquid handwash',
-      'Sanitizer',
-      'Incense sticks and dhoop sticks',
-      'Napkin / sanitary pad unit',
-      'Biodegradable plate and bowl manufacturing​',
-      'Others',
+      { en: 'Spice manufacturing', hi: 'मसाला निर्माण' },
+      { en: 'Pickles, preserves (murabba), papad', hi: 'अचार, मुरब्बा, पापड़' },
+      { en: 'Savoury snacks, bhujiya, namkeen', hi: 'नमकीन, भुजिया' },
+      { en: 'Instant mixes (idli mix, gram flour mix, kheer mix)', hi: 'इंस्टेंट मिश्रण (इडली, बेसन, खीर)' },
+      { en: 'Bakery items (cookies, cake, bread)', hi: 'बेकरी उत्पाद (कुकी, केक, ब्रेड)' },
+      { en: 'Millet-based products (jowar, bajra cookies, snacks)', hi: 'मिलेट आधारित उत्पाद (ज्वार, बाजरा)' },
+      { en: 'Cold-pressed oils (mustard/sesame)', hi: 'कोल्ड-प्रेस्ड तेल (सरसों/तिल)' },
+      { en: 'Honey processing', hi: 'शहद प्रसंस्करण' },
+      { en: 'Jam–jelly–squash', hi: 'जैम–जेली–स्क्वैश' },
+      { en: 'Ready-to-eat products', hi: 'तैयार खाने योग्य उत्पाद' },
+      { en: 'Jaggery Production', hi: 'गुड़ उत्पादन' },
+      {
+        en: 'Whole grain/pulses/flour sorting–grading–packaging unit',
+        hi: 'साबुत अनाज/दाल/आटा छँटाई–ग्रेडिंग–पैकेजिंग इकाई',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
 
   {
-    parent: 'FMCG',
+    parent: { en: 'Handicraft & Artisan Sector', hi: 'हस्तशिल्प एवं कारीगर क्षेत्र' },
     children: [
-      'Handwash',
-      'Soap',
-      'Floor Cleaner',
-      'Detergents',
-      'Air fresheners',
-      'Face wash & creams',
-      'Shampoo & conditioner',
-      'Sponges',
-      'Toothpaste & toothbrushes',
-      'Broom',
-      'Others',
+      { en: 'Zari and zardozi work', hi: 'जरी एवं ज़रदोज़ी कार्य' },
+      { en: 'Chikankari embroidery', hi: 'चिकनकारी कढ़ाई' },
+      { en: 'Woodwork', hi: 'लकड़ी का काम' },
+      { en: 'Terracotta / clay products', hi: 'टेरेकोटा / मिट्टी के उत्पाद' },
+      { en: 'Bamboo / cane craft', hi: 'बांस / बेंत शिल्प' },
+      {
+        en: 'Handmade jewellery (terracotta jewellery, oxidised jewellery)',
+        hi: 'हस्तनिर्मित आभूषण (टेरेकोटा, ऑक्सीडाइज़्ड)',
+      },
+      { en: 'Handmade candles', hi: 'हस्तनिर्मित मोमबत्तियाँ' },
+      { en: 'Crochet / woollen products', hi: 'क्रोशिया / ऊनी उत्पाद' },
+      { en: 'Paper craft, greeting cards', hi: 'पेपर क्राफ्ट, ग्रीटिंग कार्ड' },
+      { en: 'Handbags, jute bags, embroidered bags', hi: 'हैंडबैग, जूट बैग, कढ़ाई वाले बैग' },
+      {
+        en: 'Ration/vegetable/shopping bags (non-woven alternatives)',
+        hi: 'राशन/सब्ज़ी/शॉपिंग बैग (नॉन-वोवन विकल्प)',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
-   {
-    parent: 'Transport',
+
+  {
+    parent: { en: 'Textile & Apparel Sector', hi: 'वस्त्र एवं परिधान क्षेत्र' },
     children: [
-      'Loader',
-      'E-Rikshaw',
-      'Taxi',
-      'Auto',
-      'Others',
+      {
+        en: 'Boutique unit (stitching–cutting–embellishment)',
+        hi: 'बुटीक इकाई (सिलाई–कटिंग–सजावट)',
+      },
+      { en: 'School uniform stitching unit', hi: 'स्कूल यूनिफॉर्म सिलाई इकाई' },
+      { en: 'Ladies’ garments', hi: 'महिला परिधान' },
+      { en: 'Bedsheet/quilt/pillow cover unit', hi: 'बेडशीट/रजाई/तकिया कवर इकाई' },
+      {
+        en: 'ODOP textile-based products (Varanasi saree, Bhadohi carpet finishing etc.)',
+        hi: 'ODOP वस्त्र उत्पाद (वाराणसी साड़ी, भदोही कालीन आदि)',
+      },
+      {
+        en: 'Home linen (curtains, table cloth, sofa covers)',
+        hi: 'होम लिनन (पर्दे, मेज़पोश, सोफ़ा कवर)',
+      },
+      { en: 'Jute/cotton carry bags', hi: 'जूट/कॉटन कैरी बैग' },
+      {
+        en: 'Mask/apron/hospital gown manufacturing',
+        hi: 'मास्क/एप्रन/हॉस्पिटल गाउन निर्माण',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'Packaging & Utility Products Sector',
+    parent: { en: 'Agriculture & Allied Sector', hi: 'कृषि एवं संबद्ध क्षेत्र' },
     children: [
-      'Paper bag unit',
-      'Jute bag unit',
-      'Box manufacturing',
-      'Recycled paper packaging unit',
-      'Food-grade packaging​',
-      'Others',
+      { en: 'Vegetable cultivation and group supply', hi: 'सब्ज़ी उत्पादन एवं समूह आपूर्ति' },
+      { en: 'Flower cultivation (marigold, rose)', hi: 'फूलों की खेती (गेंदा, गुलाब)' },
+      { en: 'Mushroom production', hi: 'मशरूम उत्पादन' },
+      {
+        en: 'Nursery (fruit/flower/vegetable saplings)',
+        hi: 'नर्सरी (फल/फूल/सब्ज़ी के पौधे)',
+      },
+      { en: 'Beekeeping (honey production)', hi: 'मधुमक्खी पालन (शहद उत्पादन)' },
+      { en: 'Organic manure/vermi-compost', hi: 'जैविक खाद / वर्मी कम्पोस्ट' },
+      { en: 'Animal feed unit', hi: 'पशु आहार इकाई' },
+      { en: 'Mini mill (flour/pulse grinding)', hi: 'मिनी मिल (आटा/दाल पिसाई)' },
+      {
+        en: 'Fruit–vegetable dehydration unit',
+        hi: 'फल–सब्ज़ी निर्जलीकरण इकाई',
+      },
+      { en: 'Fish farming', hi: 'मछली पालन' },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'Prerna Canteen',
+    parent: { en: 'Dairy & Animal Husbandry Sector', hi: 'डेयरी एवं पशुपालन क्षेत्र' },
     children: [
+      { en: 'Dairy unit (2–10 cows/buffaloes)', hi: 'डेयरी इकाई (2–10 गाय/भैंस)' },
+      { en: 'Milk collection centre', hi: 'दूध संग्रह केंद्र' },
+      {
+        en: 'Paneer/khoya/curd/ghee manufacturing',
+        hi: 'पनीर/खोया/दही/घी निर्माण',
+      },
+      { en: 'Goat rearing', hi: 'बकरी पालन' },
+      { en: 'Poultry unit (egg/broiler)', hi: 'मुर्गी पालन (अंडा/ब्रॉयलर)' },
+      { en: 'Pig rearing (in specific areas)', hi: 'सूअर पालन (विशिष्ट क्षेत्रों में)' },
+      { en: 'Fodder production', hi: 'चारा उत्पादन' },
+      {
+        en: 'Milk packaging and branding unit',
+        hi: 'दूध पैकेजिंग एवं ब्रांडिंग इकाई',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'Digital & Service Sector',
+    parent: { en: 'Beauty, Wellness & Personal Services', hi: 'सौंदर्य, वेलनेस एवं व्यक्तिगत सेवाएँ' },
     children: [
-      'Data entry / digital services',
-      'CSC (Common Service Center) operations',
-      'Online product sales (e-commerce)',
-      'SHG product branding',
-      'Social media management for local shops​',
-      'Others',
+      { en: 'Beauty parlour', hi: 'ब्यूटी पार्लर' },
+      {
+        en: 'Mehndi (henna) training and services',
+        hi: 'मेहंदी प्रशिक्षण एवं सेवाएँ',
+      },
+      { en: 'Spa / therapy unit', hi: 'स्पा / थेरेपी इकाई' },
+      {
+        en: 'Home-care services (home nursing, baby care training)',
+        hi: 'होम-केयर सेवाएँ (होम नर्सिंग, बेबी केयर)',
+      },
+      {
+        en: 'Mobile salon / village-based services',
+        hi: 'मोबाइल सैलून / ग्राम स्तरीय सेवाएँ',
+      },
+      { en: 'Fitness group / yoga classes', hi: 'फिटनेस समूह / योग कक्षाएँ' },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'Solid Waste & Green Sector',
+    parent: { en: 'Retail & Micro Trading Sector', hi: 'खुदरा एवं सूक्ष्म व्यापार क्षेत्र' },
     children: [
-      'Plastic waste sorting',
-      'Fuel/briquettes from waste',
-      'Composting unit',
-      'Recycled paper products',
-      'E-waste collection micro centre​',
-      'Others',
+      { en: 'Grocery/provision store', hi: 'किराना / परचून दुकान' },
+      { en: 'Stationery / general store', hi: 'स्टेशनरी / जनरल स्टोर' },
+      { en: 'Group sale of vegetables/fruits', hi: 'फल–सब्ज़ी समूह बिक्री' },
+      { en: 'Fast food cart', hi: 'फास्ट फूड ठेला' },
+      {
+        en: 'Mobile recharge shop / bill payment kiosk',
+        hi: 'मोबाइल रिचार्ज / बिल भुगतान केंद्र',
+      },
+      { en: 'Jan Aushadhi/Medical Store', hi: 'जन औषधि / मेडिकल स्टोर' },
+      {
+        en: 'PET shop and disposable alternatives distribution',
+        hi: 'PET एवं डिस्पोज़ेबल विकल्पों का वितरण',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'Construction & Fabrication Micro Enterprises',
+    parent: { en: 'Cleaning & Hygiene Products Sector', hi: 'सफाई एवं स्वच्छता उत्पाद क्षेत्र' },
     children: [
-      'Brick and tiles cleaning/polishing unit',
-      'Interior decoration (fabric, flowers, décor)',
-      'Painting/plumbing/carpentry group',
-      'POP artwork / wall decoration',
-      'Others',
+      { en: 'Phenyl/detergent manufacturing', hi: 'फिनाइल / डिटर्जेंट निर्माण' },
+      { en: 'Liquid handwash', hi: 'लिक्विड हैंडवॉश' },
+      { en: 'Sanitizer', hi: 'सैनिटाइज़र' },
+      { en: 'Incense sticks and dhoop sticks', hi: 'अगरबत्ती एवं धूपबत्ती' },
+      { en: 'Napkin / sanitary pad unit', hi: 'नैपकिन / सेनेटरी पैड इकाई' },
+      {
+        en: 'Biodegradable plate and bowl manufacturing',
+        hi: 'बायोडिग्रेडेबल प्लेट एवं कटोरा निर्माण',
+      },
+      { en: 'Others', hi: 'अन्य' },
     ],
   },
+
   {
-    parent: 'EDP|Entrepreneurship Development Programme ',
+    parent: { en: 'FMCG', hi: 'तेज़ी से बिकने वाले उपभोक्ता उत्पाद (FMCG)' },
     children: [
-     ]},
+      { en: 'Handwash', hi: 'हैंडवॉश' },
+      { en: 'Soap', hi: 'साबुन' },
+      { en: 'Floor Cleaner', hi: 'फ़्लोर क्लीनर' },
+      { en: 'Detergents', hi: 'डिटर्जेंट' },
+      { en: 'Air fresheners', hi: 'एयर फ्रेशनर' },
+      { en: 'Face wash & creams', hi: 'फेस वॉश एवं क्रीम' },
+      { en: 'Shampoo & conditioner', hi: 'शैम्पू एवं कंडीशनर' },
+      { en: 'Sponges', hi: 'स्पंज' },
+      { en: 'Toothpaste & toothbrushes', hi: 'टूथपेस्ट एवं टूथब्रश' },
+      { en: 'Broom', hi: 'झाड़ू' },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
   {
-    parent: 'Other​',
-    children: ['Others'],
+    parent: { en: 'Transport', hi: 'परिवहन' },
+    children: [
+      { en: 'Loader', hi: 'लोडर' },
+      { en: 'E-Rikshaw', hi: 'ई-रिक्शा' },
+      { en: 'Taxi', hi: 'टैक्सी' },
+      { en: 'Auto', hi: 'ऑटो' },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
+  {
+    parent: { en: 'Packaging & Utility Products Sector', hi: 'पैकेजिंग एवं उपयोगिता उत्पाद क्षेत्र' },
+    children: [
+      { en: 'Paper bag unit', hi: 'पेपर बैग इकाई' },
+      { en: 'Jute bag unit', hi: 'जूट बैग इकाई' },
+      { en: 'Box manufacturing', hi: 'डिब्बा निर्माण' },
+      { en: 'Recycled paper packaging unit', hi: 'रीसायकल पेपर पैकेजिंग इकाई' },
+      { en: 'Food-grade packaging', hi: 'फूड-ग्रेड पैकेजिंग' },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
+  {
+    parent: { en: 'Prerna Canteen', hi: 'प्रेरणा कैंटीन' },
+    children: [],
+  },
+
+  {
+    parent: { en: 'Digital & Service Sector', hi: 'डिजिटल एवं सेवा क्षेत्र' },
+    children: [
+      { en: 'Data entry / digital services', hi: 'डेटा एंट्री / डिजिटल सेवाएँ' },
+      { en: 'CSC (Common Service Center) operations', hi: 'CSC (कॉमन सर्विस सेंटर) संचालन' },
+      { en: 'Online product sales (e-commerce)', hi: 'ऑनलाइन उत्पाद बिक्री (ई-कॉमर्स)' },
+      { en: 'SHG product branding', hi: 'SHG उत्पाद ब्रांडिंग' },
+      {
+        en: 'Social media management for local shops',
+        hi: 'स्थानीय दुकानों हेतु सोशल मीडिया प्रबंधन',
+      },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
+  {
+    parent: { en: 'Solid Waste & Green Sector', hi: 'ठोस अपशिष्ट एवं हरित क्षेत्र' },
+    children: [
+      { en: 'Plastic waste sorting', hi: 'प्लास्टिक कचरा छँटाई' },
+      { en: 'Fuel/briquettes from waste', hi: 'कचरे से ईंधन / ब्रिकेट' },
+      { en: 'Composting unit', hi: 'कम्पोस्टिंग इकाई' },
+      { en: 'Recycled paper products', hi: 'रीसायकल पेपर उत्पाद' },
+      { en: 'E-waste collection micro centre', hi: 'ई-कचरा संग्रह माइक्रो केंद्र' },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
+  {
+    parent: {
+      en: 'Construction & Fabrication Micro Enterprises',
+      hi: 'निर्माण एवं फैब्रिकेशन सूक्ष्म उद्यम',
+    },
+    children: [
+      {
+        en: 'Brick and tiles cleaning/polishing unit',
+        hi: 'ईंट एवं टाइल सफाई / पॉलिशिंग इकाई',
+      },
+      {
+        en: 'Interior decoration (fabric, flowers, décor)',
+        hi: 'इंटीरियर सजावट (कपड़ा, फूल, डेकोर)',
+      },
+      {
+        en: 'Painting/plumbing/carpentry group',
+        hi: 'पेंटिंग / प्लंबिंग / बढ़ईगीरी समूह',
+      },
+      { en: 'POP artwork / wall decoration', hi: 'POP आर्टवर्क / दीवार सजावट' },
+      { en: 'Others', hi: 'अन्य' },
+    ],
+  },
+
+  {
+    parent: {
+      en: 'EDP | Entrepreneurship Development Programme',
+      hi: 'EDP | उद्यमिता विकास कार्यक्रम',
+    },
+    children: [],
+  },
+
+  {
+    parent: { en: 'Other', hi: 'अन्य' },
+    children: [{ en: 'Others', hi: 'अन्य' }],
   },
 ];
 
-const YesNoToggle = ({ value, onChange }) => (
-  <View style={styles.yesNoRow}>
-    {YES_NO.map((opt) => (
-      <TouchableOpacity
-        key={opt}
-        style={[
-          styles.yesNoBtn,
-          value === opt && styles.yesNoBtnActive,
-        ]}
-        onPress={() => onChange(opt)}
-      >
-        <Text
-          style={[
-            styles.yesNoText,
-            value === opt && styles.yesNoTextActive,
-          ]}
-        >
-          {opt}
-        </Text>
-      </TouchableOpacity>
-    ))}
-  </View>
-);
+// const YesNoToggle = ({ value, onChange }) => (
+//   <View style={styles.yesNoRow}>
+//     {YES_NO.map((opt) => (
+//       <TouchableOpacity
+//         key={opt}
+//         style={[
+//           styles.yesNoBtn,
+//           value === opt && styles.yesNoBtnActive,
+//         ]}
+//         onPress={() => onChange(opt)}
+//       >
+//         <Text
+//           style={[
+//             styles.yesNoText,
+//             value === opt && styles.yesNoTextActive,
+//           ]}
+//         >
+//           {opt}
+//         </Text>
+//       </TouchableOpacity>
+//     ))}
+//   </View>
+// );
 
-const ChipRow = ({ value, options, onChange }) => (
-  <View style={styles.chipRow}>
-    {options.map((opt) => {
-      const active = value === opt;
+const YesNoToggle = ({ value, onChange, language = 'en' }) => (
+  <View style={styles.yesNoRow}>
+    {YES_NO.map((opt) => {
+      const displayText = language === 'hi' ? opt.hi : opt.en;
+
       return (
         <TouchableOpacity
-          key={opt}
-          style={[styles.chip, active && styles.chipActive]}
-          onPress={() => onChange(opt)}
+          key={opt.en}
+          style={[
+            styles.yesNoBtn,
+            value === opt.en && styles.yesNoBtnActive,
+          ]}
+          onPress={() => onChange(opt.en)}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.chipText, active && styles.chipTextActive]}>
-            {opt}
+          <Text
+            style={[
+              styles.yesNoText,
+              value === opt.en && styles.yesNoTextActive,
+            ]}
+          >
+            {displayText}
           </Text>
         </TouchableOpacity>
       );
@@ -511,85 +831,275 @@ const ChipRow = ({ value, options, onChange }) => (
   </View>
 );
 
+// const ChipRow = ({ value, options, onChange }) => (
+//   <View style={styles.chipRow}>
+//     {options.map((opt) => {
+//       const active = value === opt;
+//       return (
+//         <TouchableOpacity
+//           key={opt}
+//           style={[styles.chip, active && styles.chipActive]}
+//           onPress={() => onChange(opt)}
+//         >
+//           <Text style={[styles.chipText, active && styles.chipTextActive]}>
+//             {opt}
+//           </Text>
+//         </TouchableOpacity>
+//       );
+//     })}
+//   </View>
+// );
+const ChipRow = ({ value, options, onChange }) => (
+  <View style={styles.chipRow}>
+    {options.map((opt) => {
+      const optionValue =
+        typeof opt === 'string' ? opt : opt.value;
+
+      const optionLabel =
+        typeof opt === 'string' ? opt : opt.label || opt.en;
+
+      const active = value === optionValue;
+
+      return (
+        <TouchableOpacity
+          key={optionValue}
+          style={[styles.chip, active && styles.chipActive]}
+          onPress={() => onChange(optionValue)}
+        >
+          <Text
+            style={[
+              styles.chipText,
+              active && styles.chipTextActive,
+            ]}
+          >
+            {optionLabel}
+          </Text>
+        </TouchableOpacity>
+      );
+    })}
+  </View>
+);
+
+// const ChipRow = ({ value, options, onChange }) => (
+//   <View style={styles.chipRow}>
+//     {options.map((opt) => {
+//       // Support both string and object
+//       const optionValue =
+//         typeof opt === 'string' ? opt : opt.value;
+
+//       const optionLabel =
+//         typeof opt === 'string' ? opt : opt.label;
+
+//       const active = value === optionValue;
+
+//       return (
+//         <TouchableOpacity
+//           key={optionValue}
+//           style={[styles.chip, active && styles.chipActive]}
+//           onPress={() => onChange(optionValue)}
+//         >
+//           <Text
+//             style={[
+//               styles.chipText,
+//               active && styles.chipTextActive,
+//             ]}
+//           >
+//             {optionLabel}
+//           </Text>
+//         </TouchableOpacity>
+//       );
+//     })}
+//   </View>
+// );
+
+
 /**
  * Parent–child sector tree used for both training received and required.
  * value: [{ parent, children: [] }]
  */
-const TrainingSectorTree = ({ value, onChange }) => {
+// const TrainingSectorTree = ({ value, onChange }) => {
+//   const selectedTree = Array.isArray(value) ? value : [];
+
+//   const isParentSelected = (parent) =>
+//     !!selectedTree.find((row) => row.parent === parent);
+
+//   const isChildSelected = (parent, child) => {
+//     const row = selectedTree.find((r) => r.parent === parent);
+//     return !!row && row.children?.includes(child);
+//   };
+
+//   const toggleParent = (parent) => {
+//     const exists = selectedTree.find((row) => row.parent === parent);
+//     let updated;
+//     if (exists) {
+//       updated = selectedTree.filter((row) => row.parent !== parent);
+//     } else {
+//       updated = [...selectedTree, { parent, children: [] }];
+//     }
+//     onChange(updated);
+//   };
+
+//   const toggleChild = (parent, child) => {
+//     const existing = selectedTree.find((row) => row.parent === parent);
+//     let updated = [...selectedTree];
+//     if (!existing) {
+//       updated.push({ parent, children: [child] });
+//     } else {
+//       const children = existing.children || [];
+//       const has = children.includes(child);
+//       const newChildren = has
+//         ? children.filter((c) => c !== child)
+//         : [...children, child];
+//       updated = updated.map((row) =>
+//         row.parent === parent ? { ...row, children: newChildren } : row
+//       );
+//     }
+//     onChange(updated);
+//   };
+// const toggleTrainingType = (val) => {
+//   setTrainingType((prev) =>
+//     prev.includes(val)
+//       ? prev.filter((v) => v !== val)
+//       : [...prev, val]
+//   );
+// };
+
+//   return (
+//     <View style={{ marginTop: 8 }}>
+//       {TRAINING_SECTOR_TREE.map((group) => {
+//         const parentSelected = isParentSelected(group.parent);
+//         return (
+//           <View key={group.parent} style={styles.treeGroup}>
+//             <TouchableOpacity
+//               onPress={() => toggleParent(group.parent)}
+//               style={styles.treeParentRow}
+//             >
+//               <Text style={styles.treeParentText}>{group.parent}</Text>
+//               <Text>{parentSelected ? '☑' : '☐'}</Text>
+//             </TouchableOpacity>
+
+//             {parentSelected && (
+//               <View style={styles.treeChildrenBlock}>
+//                 {group.children.map((child) => (
+//                   <TouchableOpacity
+//                     key={child}
+//                     style={styles.treeChildRow}
+//                     onPress={() => toggleChild(group.parent, child)}
+//                   >
+//                     <Text style={styles.treeChildCheckbox}>
+//                       {isChildSelected(group.parent, child) ? '☑' : '☐'}
+//                     </Text>
+//                     <Text style={styles.treeChildLabel}>{child}</Text>
+//                   </TouchableOpacity>
+//                 ))}
+//               </View>
+//             )}
+//           </View>
+//         );
+//       })}
+//     </View>
+//   );
+// };
+
+// const computeTitleFromTree = (tree, fallback) => {
+//   if (!Array.isArray(tree) || tree.length === 0) return fallback;
+//   const parent = tree[0]?.parent;
+//   return parent || fallback;
+// };
+
+const TrainingSectorTree = ({ value, onChange, language }) => {
   const selectedTree = Array.isArray(value) ? value : [];
 
-  const isParentSelected = (parent) =>
-    !!selectedTree.find((row) => row.parent === parent);
+  const isParentSelected = (parentEn) =>
+    !!selectedTree.find((row) => row.parent === parentEn);
 
-  const isChildSelected = (parent, child) => {
-    const row = selectedTree.find((r) => r.parent === parent);
-    return !!row && row.children?.includes(child);
+  const isChildSelected = (parentEn, childEn) => {
+    const row = selectedTree.find((r) => r.parent === parentEn);
+    return !!row && row.children?.includes(childEn);
   };
 
-  const toggleParent = (parent) => {
-    const exists = selectedTree.find((row) => row.parent === parent);
+  const toggleParent = (parentEn) => {
+    const exists = selectedTree.find((row) => row.parent === parentEn);
     let updated;
+
     if (exists) {
-      updated = selectedTree.filter((row) => row.parent !== parent);
+      updated = selectedTree.filter((row) => row.parent !== parentEn);
     } else {
-      updated = [...selectedTree, { parent, children: [] }];
+      updated = [...selectedTree, { parent: parentEn, children: [] }];
     }
+
     onChange(updated);
   };
 
-  const toggleChild = (parent, child) => {
-    const existing = selectedTree.find((row) => row.parent === parent);
+  const toggleChild = (parentEn, childEn) => {
+    const existing = selectedTree.find((row) => row.parent === parentEn);
     let updated = [...selectedTree];
+
     if (!existing) {
-      updated.push({ parent, children: [child] });
+      updated.push({ parent: parentEn, children: [childEn] });
     } else {
       const children = existing.children || [];
-      const has = children.includes(child);
+      const has = children.includes(childEn);
+
       const newChildren = has
-        ? children.filter((c) => c !== child)
-        : [...children, child];
+        ? children.filter((c) => c !== childEn)
+        : [...children, childEn];
+
       updated = updated.map((row) =>
-        row.parent === parent ? { ...row, children: newChildren } : row
+        row.parent === parentEn
+          ? { ...row, children: newChildren }
+          : row
       );
     }
+
     onChange(updated);
   };
-const toggleTrainingType = (val) => {
-  setTrainingType((prev) =>
-    prev.includes(val)
-      ? prev.filter((v) => v !== val)
-      : [...prev, val]
-  );
-};
 
   return (
     <View style={{ marginTop: 8 }}>
       {TRAINING_SECTOR_TREE.map((group) => {
-        const parentSelected = isParentSelected(group.parent);
+        const parentEn = group.parent.en;
+        const parentLabel =
+          language === 'hi' ? group.parent.hi : group.parent.en;
+
+        const parentSelected = isParentSelected(parentEn);
+
         return (
-          <View key={group.parent} style={styles.treeGroup}>
+          <View key={parentEn} style={styles.treeGroup}>
             <TouchableOpacity
-              onPress={() => toggleParent(group.parent)}
+              onPress={() => toggleParent(parentEn)}
               style={styles.treeParentRow}
             >
-              <Text style={styles.treeParentText}>{group.parent}</Text>
+              <Text style={styles.treeParentText}>{parentLabel}</Text>
               <Text>{parentSelected ? '☑' : '☐'}</Text>
             </TouchableOpacity>
 
             {parentSelected && (
               <View style={styles.treeChildrenBlock}>
-                {group.children.map((child) => (
-                  <TouchableOpacity
-                    key={child}
-                    style={styles.treeChildRow}
-                    onPress={() => toggleChild(group.parent, child)}
-                  >
-                    <Text style={styles.treeChildCheckbox}>
-                      {isChildSelected(group.parent, child) ? '☑' : '☐'}
-                    </Text>
-                    <Text style={styles.treeChildLabel}>{child}</Text>
-                  </TouchableOpacity>
-                ))}
+                {group.children.map((child) => {
+                  const childEn = child.en;
+                  const childLabel =
+                    language === 'hi' ? child.hi : child.en;
+
+                  return (
+                    <TouchableOpacity
+                      key={childEn}
+                      style={styles.treeChildRow}
+                      onPress={() =>
+                        toggleChild(parentEn, childEn)
+                      }
+                    >
+                      <Text style={styles.treeChildCheckbox}>
+                        {isChildSelected(parentEn, childEn)
+                          ? '☑'
+                          : '☐'}
+                      </Text>
+                      <Text style={styles.treeChildLabel}>
+                        {childLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -598,18 +1108,29 @@ const toggleTrainingType = (val) => {
     </View>
   );
 };
-
-const computeTitleFromTree = (tree, fallback) => {
+const computeTitleFromTree = (tree, fallback, language) => {
   if (!Array.isArray(tree) || tree.length === 0) return fallback;
-  const parent = tree[0]?.parent;
-  return parent || fallback;
+
+  const parentEn = tree[0]?.parent;
+
+  const matched = TRAINING_SECTOR_TREE.find(
+    (g) => g.parent.en === parentEn
+  );
+
+  if (!matched) return fallback;
+
+  return language === 'hi'
+    ? matched.parent.hi
+    : matched.parent.en;
 };
+
 
 export default function ExistingEnterpriseTrainingSkillsSection({
   existingForm,
   setExistingForm,
 }) {
   const update = (patch) => setExistingForm(patch);
+  const { language } = useContext(LanguageContext);
 // const [trainingLocationType, setTrainingLocationType] = useState("");
   const trainingReceived = Array.isArray(existingForm.training_received_rows)
     ? existingForm.training_received_rows
@@ -740,21 +1261,35 @@ const [trainingType, setTrainingType] = useState([]);
 
   return (
     <View style={styles.sectionContainer}>
+      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: 10,
+                        }}
+                      >
       <Text style={styles.sectionTitle}>
-        6) Training / Skills Related Section
+        {language === 'hi'
+    ? '6) प्रशिक्षण / कौशल संबंधी अनुभाग'
+    : '6) Training / Skills Related Section'}
       </Text>
-
+<LanguageToggle/>
+</View>
       {/* TRAINING RECEIVED */}
       <View style={styles.fieldBlock}>
         <Text style={styles.label}>
-          Have you received any skill training?
+           {language === 'hi'
+    ? 'क्या आपने किसी प्रकार का कौशल प्रशिक्षण प्राप्त किया है?'
+    : 'Have you received any skill training?'}
         </Text>
         <Text style={styles.helpText}>
-          Please select Yes if you have already attended any training related to
-          business, skills or livelihood. You can add details of each training
-          in the section below.
+          {language === 'hi'
+    ? 'यदि आपने व्यवसाय, कौशल या आजीविका से संबंधित कोई प्रशिक्षण प्राप्त किया है तो "हाँ" चुनें। आप नीचे दिए गए अनुभाग में प्रत्येक प्रशिक्षण का विवरण जोड़ सकते हैं।'
+    : 'Please select Yes if you have already attended any training related to business, skills or livelihood. You can add details of each training in the section below.'}
         </Text>
         <YesNoToggle
+        language={language}
           value={existingForm.is_training_received || ''}
           onChange={(val) => update({ is_training_received: val })}
         />
@@ -763,8 +1298,9 @@ const [trainingType, setTrainingType] = useState([]);
       {isTrainingReceivedYes && (
         <View style={{ marginTop: 8 }}>
           <Text style={[styles.helpText, { marginBottom: 8 }]}>
-            Please record each training separately. Click &quot;+ Add Training
-            Detail&quot; to add another training.
+            {language === 'hi'
+    ? 'कृपया प्रत्येक प्रशिक्षण को अलग-अलग दर्ज करें। नया प्रशिक्षण जोड़ने के लिए "+ प्रशिक्षण विवरण जोड़ें" पर क्लिक करें।'
+    : 'Please record each training separately. Click "+ Add Training Detail" to add another training.'}
           </Text>
 
           {trainingReceived.map((row, index) => (
@@ -774,7 +1310,12 @@ const [trainingType, setTrainingType] = useState([]);
                 onPress={() => toggleTrainingReceivedExpand(index)}
               >
                 <Text style={styles.cardTitle}>
-                  {row.title || 'New Training Detail'}
+                  {/* {row.title || 'New Training Detail'} */}
+                   {row.title
+    ? row.title
+    : language === 'hi'
+      ? `नया प्रशिक्षण विवरण ${index + 1}`
+      : `New Training Detail ${index + 1}`}
                 </Text>
                 <Text style={styles.cardToggle}>
                   {row.expanded ? '▲' : '▼'}
@@ -786,7 +1327,7 @@ const [trainingType, setTrainingType] = useState([]);
                   style={styles.removeBtn}
                   onPress={() => removeTrainingReceivedRow(index)}
                 >
-                  <Text style={styles.removeBtnText}>Delete</Text>
+                  <Text style={styles.removeBtnText}>{language === 'hi' ? 'हटाएँ' : 'Delete'}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -795,11 +1336,14 @@ const [trainingType, setTrainingType] = useState([]);
                   {/* 1) Department */}
                   <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                      Which department did you receive the training from?
+                      {language === 'hi'
+    ? 'आपने प्रशिक्षण किस विभाग/संस्था से प्राप्त किया?'
+    : 'Which department did you receive the training from?'}
                     </Text>
                     <Text style={styles.helpText}>
-                      Please select the department or organisation that
-                      conducted the training.
+                       {language === 'hi'
+    ? 'आपने प्रशिक्षण किस विभाग/संस्था से प्राप्त किया?'
+    : 'Which department did you receive the training from?'}
                     </Text>
                     <ChipRow
                       value={row.department || ''}
@@ -825,15 +1369,32 @@ const [trainingType, setTrainingType] = useState([]);
                   {/* 2) Sectors and modules (tree) */}
                   <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                      Please select all sectors in which you have received trainings
+                      {language === 'hi'
+    ? 'कृपया उन सभी क्षेत्रों का चयन करें जिनमें आपने प्रशिक्षण प्राप्त किया है'
+    : 'Please select all sectors in which you have received trainings'}
                     </Text>
                     <Text style={styles.helpText}>
-                      First tick the main business sector, then choose all
-                      specific trainings you have attended under that sector.
-                      You can select more than one sector.
+                     {language === 'hi'
+    ? 'पहले मुख्य व्यवसाय क्षेत्र चुनें, फिर उस क्षेत्र के अंतर्गत आपने जिन- जिन प्रशिक्षणों में भाग लिया है उन्हें चुनें। आप एक से अधिक क्षेत्र चुन सकते हैं।'
+    : 'First tick the main business sector, then choose all specific trainings you have attended under that sector. You can select more than one sector.'}
                     </Text>
-
-                    <TrainingSectorTree
+<TrainingSectorTree
+  value={row.sector_tree}
+  language={language}   // ✅ pass language
+  onChange={(tree) =>
+    updateTrainingReceivedRow(index, {
+      sector_tree: tree,
+      title: computeTitleFromTree(
+        tree,
+        language === 'hi'
+          ? 'नया प्रशिक्षण विवरण'
+          : 'New Training Detail',
+        language   // ✅ pass language here also
+      ),
+    })
+  }
+/>
+                    {/* <TrainingSectorTree
                       value={row.sector_tree}
                       onChange={(tree) =>
                         updateTrainingReceivedRow(index, {
@@ -844,11 +1405,16 @@ const [trainingType, setTrainingType] = useState([]);
                           ),
                         })
                       }
-                    />
+                    /> */}
 
                     <TextInput
                       style={[styles.input, { marginTop: 6 }]}
-                      placeholder="If Others, please specify sector / sub-sector details here"
+                      placeholder={
+    language === 'hi'
+      ? 'यदि अन्य, तो कृपया यहाँ क्षेत्र / उप-क्षेत्र का विवरण लिखें'
+      : 'If Others, please specify sector / sub-sector details here'
+  }
+
                       value={row.other_sector_detail || ''}
                       onChangeText={(v) =>
                         updateTrainingReceivedRow(index, {
@@ -858,8 +1424,9 @@ const [trainingType, setTrainingType] = useState([]);
                     />
 
                     <Text style={[styles.helpText, { marginTop: 4 }]}>
-                      Your selections will be saved as
-                      &nbsp;&quot;[Sector: Module1, Module2]&quot; format for sending to the server.
+                        {language === 'hi'
+    ? 'आपके चयन को सर्वर पर भेजने के लिए "[क्षेत्र: मॉड्यूल1, मॉड्यूल2]" प्रारूप में सहेजा जाएगा।'
+    : 'Your selections will be saved as "[Sector: Module1, Module2]" format for sending to the server.'}
                     </Text>
                   </View>
 
@@ -889,10 +1456,14 @@ const [trainingType, setTrainingType] = useState([]);
                   {/* 3) Certificates upload */}
 <View style={styles.fieldBlock}>
   <Text style={styles.label}>
-    Please upload if you have any certificates for your trainings  (If Have)
+      {language === 'hi'
+    ? 'यदि आपके पास प्रशिक्षण के प्रमाणपत्र हैं तो कृपया अपलोड करें'
+    : 'Please upload if you have any certificates for your trainings (If Have)'}
   </Text>
   <Text style={styles.helpText}>
-    You can upload photos or PDF copies of your training certificates. Each file will be stored separately.
+     {language === 'hi'
+    ? 'आप अपने प्रशिक्षण प्रमाणपत्रों की फोटो या पीडीएफ कॉपी अपलोड कर सकते हैं। प्रत्येक फ़ाइल अलग-अलग सहेजी जाएगी।'
+    : 'You can upload photos or PDF copies of your training certificates. Each file will be stored separately.'}
   </Text>
   <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
     {/* Upload button */}
@@ -900,7 +1471,7 @@ const [trainingType, setTrainingType] = useState([]);
       style={styles.mediaBtn}
       onPress={() => pickCertificates(index)}
     >
-      <Text style={styles.mediaBtnText}>Upload Certificates</Text>
+      <Text style={styles.mediaBtnText}>{language === 'hi' ? 'प्रमाणपत्र अपलोड करें' : 'Upload Certificates'}</Text>
     </TouchableOpacity>
 
     {/* Camera button */}
@@ -922,13 +1493,16 @@ const [trainingType, setTrainingType] = useState([]);
         }
       }}
     >
-      <Text style={styles.mediaBtnText}>Camera</Text>
+      <Text style={styles.mediaBtnText}>{language === 'hi' ? 'कैमरा' : 'Camera'}</Text>
     </TouchableOpacity>
   </View>
 
   {Array.isArray(row.certificates_files) && row.certificates_files.length > 0 && (
     <Text style={styles.mediaInfo}>
-      Selected: {row.certificates_files.length} file(s)
+      {/* Selected: {row.certificates_files.length} file(s) */}
+      {language === 'hi'
+    ? `चयनित: ${row.certificates_files.length} फ़ाइल`
+    : `Selected: ${row.certificates_files.length} file(s)`}
     </Text>
   )}
 </View>
@@ -942,7 +1516,7 @@ const [trainingType, setTrainingType] = useState([]);
             style={styles.addBtn}
             onPress={addTrainingReceivedRow}
           >
-            <Text style={styles.addBtnText}>+ Add Training Detail</Text>
+            <Text style={styles.addBtnText}> {language === 'hi' ? '+ प्रशिक्षण विवरण जोड़ें' : '+ Add Training Detail'}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -950,13 +1524,17 @@ const [trainingType, setTrainingType] = useState([]);
       {/* TRAINING REQUIRED */}
       <View style={[styles.fieldBlock, { marginTop: 18 }]}>
         <Text style={styles.label}>
-          Do you require skill training in future?
+          {language === 'hi'
+      ? 'क्या आपको भविष्य में कौशल प्रशिक्षण की आवश्यकता है?'
+      : 'Do you require skill training in future?'}
         </Text>
         <Text style={styles.helpText}>
-          Please select Yes if you are interested in taking new training to
-          grow or improve your enterprise.
+           {language === 'hi'
+      ? 'यदि आप अपने उद्यम को बढ़ाने या सुधारने के लिए नया प्रशिक्षण लेना चाहते हैं, तो कृपया "हाँ" चुनें।'
+      : 'Please select Yes if you are interested in taking new training to grow or improve your enterprise.'}
         </Text>
         <YesNoToggle
+        language={language}
           value={existingForm.is_training_required || ''}
           onChange={(val) => update({ is_training_required: val })}
         />
@@ -966,8 +1544,9 @@ const [trainingType, setTrainingType] = useState([]);
       {isTrainingRequiredYes && (
         <View style={{ marginTop: 8 }}>
           <Text style={[styles.helpText, { marginBottom: 8 }]}>
-            Please add each training requirement separately. This will help us
-            plan suitable training for you.
+            {language === 'hi'
+    ? 'कृपया प्रत्येक प्रशिक्षण आवश्यकता को अलग-अलग जोड़ें। इससे आपके लिए उपयुक्त प्रशिक्षण की योजना बनाने में सहायता मिलेगी।'
+    : 'Please add each training requirement separately. This will help us plan suitable training for you.'}
           </Text>
 
           {trainingRequired.map((row, index) => (
@@ -977,7 +1556,11 @@ const [trainingType, setTrainingType] = useState([]);
                 onPress={() => toggleTrainingRequiredExpand(index)}
               >
                 <Text style={styles.cardTitle}>
-                  {row.title || 'New Training Requirement'}
+                  {/* {row.title || 'New Training Requirement'} */}
+                   {row.title ||
+          (language === 'hi'
+            ? 'नया प्रशिक्षण आवश्यकता विवरण'
+            : 'New Training Requirement')}
                 </Text>
                 <Text style={styles.cardToggle}>
                   {row.expanded ? '▲' : '▼'}
@@ -989,7 +1572,7 @@ const [trainingType, setTrainingType] = useState([]);
                   style={styles.removeBtn}
                   onPress={() => removeTrainingRequiredRow(index)}
                 >
-                  <Text style={styles.removeBtnText}>Delete</Text>
+                  <Text style={styles.removeBtnText}>{language === 'hi' ? 'हटाएँ' : 'Delete'}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -997,21 +1580,28 @@ const [trainingType, setTrainingType] = useState([]);
                 <View style={styles.cardBody}>
                    <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                    Which is your preferred sector for training?
+                     {language === 'hi'
+    ? 'प्रशिक्षण के लिए आपका पसंदीदा क्षेत्र कौन सा है?'
+    : 'Which is your preferred sector for training?'}
                     </Text>
                     <Text style={styles.helpText}>
-                      Please select all business sectors and skill areas where
-                      you want training in future.
+                        {language === 'hi'
+    ? 'कृपया उन सभी व्यवसाय क्षेत्रों और कौशल क्षेत्रों का चयन करें जिनमें आप भविष्य में प्रशिक्षण लेना चाहते हैं।'
+    : 'Please select all business sectors and skill areas where you want training in future.'}
                     </Text>
 
                     <TrainingSectorTree
+                      language={language}  
                       value={row.sector_tree}
                       onChange={(tree) =>
                         updateTrainingRequiredRow(index, {
                           sector_tree: tree,
                           title: computeTitleFromTree(
                             tree,
-                            'New Training Requirement'
+                             language === 'hi'
+          ? 'नया प्रशिक्षण आवश्यकता विवरण'
+          : 'New Training Requirement',
+        language
                           ),
                         })
                       }
@@ -1019,7 +1609,11 @@ const [trainingType, setTrainingType] = useState([]);
 
                     <TextInput
                       style={[styles.input, { marginTop: 6 }]}
-                      placeholder="If Others, please specify sector / sub-sector details here"
+                       placeholder={
+    language === 'hi'
+      ? 'यदि अन्य, तो कृपया यहाँ क्षेत्र / उप-क्षेत्र का विवरण लिखें'
+      : 'If Others, please specify sector / sub-sector details here'
+  }
                       value={row.other_sector_detail || ''}
                       onChangeText={(v) =>
                         updateTrainingRequiredRow(index, {
@@ -1030,14 +1624,18 @@ const [trainingType, setTrainingType] = useState([]);
                   </View>
       <View style={styles.fieldBlock}>
   <Text style={styles.label}>
-    What is your preferred training type?
+    {language === 'hi'
+    ? 'आप किस प्रकार का प्रशिक्षण पसंद करते हैं?'
+    : 'What is your preferred training type?'}
   </Text>
 
   <Text style={styles.helpText}>
-    You may select one or both options.
+     {language === 'hi'
+    ? 'आप एक या दोनों विकल्प चुन सकते हैं।'
+    : 'You may select one or both options.'}
   </Text>
 
-  {TRAINING_TYPE_OPTIONS.map((opt) => (
+  {/* {TRAINING_TYPE_OPTIONS.map((opt) => (
     <TouchableOpacity
       key={opt}
       style={styles.checkboxRow}
@@ -1051,35 +1649,74 @@ const [trainingType, setTrainingType] = useState([]);
       />
       <Text style={styles.checkboxLabel}>{opt}</Text>
     </TouchableOpacity>
-  ))}
+  ))} */}
+  {TRAINING_TYPE_OPTIONS.map((opt) => {
+  const value = opt.en; // ✅ store English in state
+  const label = language === 'hi' ? opt.hi : opt.en;
+
+  return (
+    <TouchableOpacity
+      key={value}
+      style={styles.checkboxRow}
+      onPress={() => toggleTrainingType(value)}
+    >
+      <View
+        style={[
+          styles.checkbox,
+          trainingType.includes(value) && styles.checkboxChecked,
+        ]}
+      />
+      <Text style={styles.checkboxLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+})}
 </View>
 
 
                   <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                      How many days of training are you comfortable in one slot?
+                      {language === 'hi'
+      ? 'आप एक सत्र में कितने दिनों के प्रशिक्षण के लिए सहज हैं?'
+      : 'How many days of training are you comfortable in one slot?'}
                     </Text>
                     <Text style={styles.helpText}>
-                      Please select the training duration that suits you best.
+                         {language === 'hi'
+      ? 'कृपया वह प्रशिक्षण अवधि चुनें जो आपको सबसे उपयुक्त लगे।'
+      : 'Please select the training duration that suits you best.'}
                     </Text>
-                    <ChipRow
+                    {/* <ChipRow
                       value={row.duration || ''}
                       options={TRAINING_DURATION_OPTIONS}
                       onChange={(val) =>
                         updateTrainingRequiredRow(index, { duration: val })
                       }
-                    />
+                    /> */}
+                    <ChipRow
+  value={row.duration || ''}
+  options={TRAINING_DURATION_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: language === 'hi' ? opt.hi : opt.en,
+  }))}
+  onChange={(val) =>
+    updateTrainingRequiredRow(index, { duration: val })
+  }
+/>
+
                   </View>
 
                   {/* 1) Preferred department */}
                   <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                    Which is your preferred department for training?
+                    {language === 'hi'
+    ? 'प्रशिक्षण के लिए आपका पसंदीदा विभाग/संस्था कौन सा है?'
+    : 'Which is your preferred department for training?'}
                     </Text>
                     <Text style={styles.helpText}>
-                      Please select the department or organisation from which
-                      you would like to receive training.
+                       {language === 'hi'
+    ? 'कृपया उस विभाग या संस्था का चयन करें जिससे आप प्रशिक्षण प्राप्त करना चाहते हैं।'
+    : 'Please select the department or organisation from which you would like to receive training.'}
                     </Text>
+                    
                     <ChipRow
                       value={row.department || ''}
                       options={TRAINING_DEPT_OPTIONS}
@@ -1090,7 +1727,11 @@ const [trainingType, setTrainingType] = useState([]);
                     {row.department === 'Others' && (
                       <TextInput
                         style={[styles.input, { marginTop: 6 }]}
-                        placeholder="Please specify the department"
+                        placeholder={
+    language === 'hi'
+      ? 'कृपया विभाग/संस्था का नाम लिखें'
+      : 'Please specify the department'
+  }
                         value={row.department_other || ''}
                         onChangeText={(v) =>
                           updateTrainingRequiredRow(index, {
@@ -1202,16 +1843,18 @@ const [trainingType, setTrainingType] = useState([]);
 
                     <View style={styles.fieldBlock}>
   <Text style={styles.label}>
-    What is your preferred training location?
+     {language === 'hi'
+    ? 'प्रशिक्षण के लिए आपका पसंदीदा स्थान क्या है?'
+    : 'What is your preferred training location?'}
   </Text>
 
   <Text style={styles.helpText}>
-    Please fill the State, District and Block where you would
-    like to attend the training. These will be saved together
-    as your preferred location.
+    {language === 'hi'
+    ? 'कृपया वह राज्य, जिला और ब्लॉक भरें जहाँ आप प्रशिक्षण लेना चाहते हैं। इन्हें आपके पसंदीदा स्थान के रूप में एक साथ सहेजा जाएगा।'
+    : 'Please fill the State, District and Block where you would like to attend the training. These will be saved together as your preferred location.'}
   </Text>
 
-  <Text style={styles.smallLabel}>Select Location Type</Text>
+  <Text style={styles.smallLabel}> {language === 'hi' ? 'स्थान प्रकार चुनें' : 'Select Location Type'}</Text>
 
   <View style={styles.input}>
     <Picker
@@ -1222,11 +1865,13 @@ const [trainingType, setTrainingType] = useState([]);
         })
       }
     >
-      <Picker.Item label="Select Location" value="" />
-      <Picker.Item label="State" value="state" />
-      <Picker.Item label="District" value="district" />
-      <Picker.Item label="Block" value="block" />
-      <Picker.Item label="Village" value="village" />
+      <Picker.Item  label={language === 'hi' ? 'स्थान चुनें' : 'Select Location'} value="" />
+      <Picker.Item       label={language === 'hi' ? 'राज्य' : 'State'}
+ value="state" />
+      <Picker.Item       label={language === 'hi' ? 'जिला' : 'District'}
+ value="district" />
+      <Picker.Item  label={language === 'hi' ? 'ब्लॉक' : 'Block'} value="block" />
+      <Picker.Item  label={language === 'hi' ? 'ब्लॉक' : 'Block'} value="village" />
     </Picker>
   </View>
 </View>
@@ -1236,13 +1881,27 @@ const [trainingType, setTrainingType] = useState([]);
                   {/* 5) Expected income */}
                   <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
-                      What is your expected income after training?
+                      {language === 'hi'
+    ? 'प्रशिक्षण के बाद आपकी अपेक्षित आय क्या है?'
+    : 'What is your expected income after training?'}
                     </Text>
                     <Text style={styles.helpText}>
-                      Please select the monthly income range you are expecting
-                      after successfully completing the training.
+                      {language === 'hi'
+    ? 'कृपया प्रशिक्षण सफलतापूर्वक पूरा करने के बाद आप जिस मासिक आय की अपेक्षा करते हैं, उसका चयन करें।'
+    : 'Please select the monthly income range you are expecting after successfully completing the training.'}
                     </Text>
                     <ChipRow
+  value={row.expected_income || ''}
+  options={EXPECTED_INCOME_OPTIONS.map((opt) => ({
+    value: opt.value, // stored in backend
+    label: language === 'hi' ? opt.hi : opt.en, // shown in UI
+  }))}
+  onChange={(val) =>
+    updateTrainingRequiredRow(index, { expected_income: val })
+  }
+/>
+
+                    {/* <ChipRow
                       value={row.expected_income || ''}
                       options={EXPECTED_INCOME_OPTIONS}
                       onChange={(val) =>
@@ -1250,7 +1909,7 @@ const [trainingType, setTrainingType] = useState([]);
                           expected_income: val,
                         })
                       }
-                    />
+                    /> */}
                   </View>
                 </View>
               )}
@@ -1261,7 +1920,9 @@ const [trainingType, setTrainingType] = useState([]);
             style={styles.addBtn}
             onPress={addTrainingRequiredRow}
           >
-            <Text style={styles.addBtnText}>+ Add Training Requirement</Text>
+            <Text style={styles.addBtnText}>  {language === 'hi'
+    ? '+ प्रशिक्षण आवश्यकता जोड़ें'
+    : '+ Add Training Requirement'}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -1272,23 +1933,34 @@ const [trainingType, setTrainingType] = useState([]);
           {/* 1) Nearest skill centre */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>
-              Do you know of any Skill Centres related to your enterprise?
+              {language === 'hi'
+          ? 'क्या आप अपने उद्यम से संबंधित किसी कौशल केंद्र के बारे में जानते हैं?'
+          : 'Do you know of any Skill Centres related to your enterprise?'}
             </Text>
             <Text style={styles.helpText}>
-              Please select Yes if you are aware of any nearby skill or
-              training centre.
+             {language === 'hi'
+          ? 'यदि आप किसी नजदीकी कौशल या प्रशिक्षण केंद्र के बारे में जानते हैं तो कृपया "हाँ" चुनें।'
+          : 'Please select Yes if you are aware of any nearby skill or training centre.'}
             </Text>
             <YesNoToggle
+             language={language}
               value={existingForm.nearest_skill_centre || ''}
               onChange={(val) => update({ nearest_skill_centre: val })}
             />
             {existingForm.nearest_skill_centre === 'Yes' && (
               <View style={{ marginTop: 6 }}>
                 <Text style={styles.helpText}>
-                  Please mention its location (village/town, block, district).
+                   {language === 'hi'
+              ? 'कृपया उसका स्थान (ग्राम/नगर, ब्लॉक, जिला) लिखें।'
+              : 'Please mention its location (village/town, block, district).'}
                 </Text>
                 <TextInput
                   style={styles.input}
+                   placeholder={
+              language === 'hi'
+                ? 'स्थान दर्ज करें'
+                : 'Enter location'
+            }
                   value={existingForm.skill_centre_loc || ''}
                   onChangeText={(v) => update({ skill_centre_loc: v })}
                 />
@@ -1299,24 +1971,34 @@ const [trainingType, setTrainingType] = useState([]);
           {/* 2) Nearest industry */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>
-              Do you know of any Industries / Industrial Sectors related to your enterprise?
+               {language === 'hi'
+      ? 'क्या आप अपने उद्यम से संबंधित किसी उद्योग / औद्योगिक क्षेत्र के बारे में जानते हैं?'
+      : 'Do you know of any Industries / Industrial Sectors related to your enterprise?'}
             </Text>
             <Text style={styles.helpText}>
-              Please select Yes if you know any nearby industrial areas,
-              factories or clusters.
+               {language === 'hi'
+      ? 'यदि आप किसी नजदीकी औद्योगिक क्षेत्र, फैक्ट्री या क्लस्टर के बारे में जानते हैं तो कृपया "हाँ" चुनें।'
+      : 'Please select Yes if you know any nearby industrial areas, factories or clusters.'}
             </Text>
             <YesNoToggle
+             language={language}
               value={existingForm.nearest_industry || ''}
               onChange={(val) => update({ nearest_industry: val })}
             />
             {existingForm.nearest_industry === 'Yes' && (
               <View style={{ marginTop: 6 }}>
                 <Text style={styles.helpText}>
-                  Please mention its location (name of industrial area, town,
-                  etc.).
+                  {language === 'hi'
+          ? 'कृपया उसका स्थान (औद्योगिक क्षेत्र का नाम, नगर आदि) लिखें।'
+          : 'Please mention its location (name of industrial area, town, etc.).'}
                 </Text>
                 <TextInput
                   style={styles.input}
+                   placeholder={
+          language === 'hi'
+            ? 'स्थान दर्ज करें'
+            : 'Enter location'
+        }
                   value={existingForm.industry_loc || ''}
                   onChangeText={(v) => update({ industry_loc: v })}
                 />
@@ -1329,15 +2011,23 @@ const [trainingType, setTrainingType] = useState([]);
       {/* 22) Future expansion plan */}
       <View style={[styles.fieldBlock, { marginTop: 18 }]}>
         <Text style={styles.label}>
-          What is your Future Expansion Plan (If any)?
+           {language === 'hi'
+      ? 'आपकी भविष्य की विस्तार योजना क्या है? (यदि कोई हो)'
+      : 'What is your Future Expansion Plan (If any)?'}
         </Text>
         <Text style={styles.helpText}>
-          Please briefly describe how you would like to grow your enterprise in
-          the future (for example, new products, more workers, new markets, etc.).
+          {language === 'hi'
+      ? 'कृपया संक्षेप में बताएं कि आप भविष्य में अपने उद्यम को कैसे बढ़ाना चाहते हैं (जैसे नए उत्पाद, अधिक कर्मचारी, नए बाजार आदि)।'
+      : 'Please briefly describe how you would like to grow your enterprise in the future (for example, new products, more workers, new markets, etc.).'}
         </Text>
         <TextInput
           style={[styles.input, { height: 90, textAlignVertical: 'top' }]}
           multiline
+          placeholder={
+      language === 'hi'
+        ? 'अपनी योजना यहाँ लिखें'
+        : 'Write your plan here'
+    }
           value={existingForm.expansion_plan || ''}
           onChangeText={(v) => update({ expansion_plan: v })}
         />
@@ -1346,13 +2036,17 @@ const [trainingType, setTrainingType] = useState([]);
       {/* 23) Information about government schemes */}
       <View style={styles.fieldBlock}>
         <Text style={styles.label}>
-          Do you know about Govt Schemes relevant to your business?
+           {language === 'hi'
+      ? 'क्या आप अपने व्यवसाय से संबंधित सरकारी योजनाओं के बारे में जानते हैं?'
+      : 'Do you know about Govt Schemes relevant to your business?'}
         </Text>
         <Text style={styles.helpText}>
-          Please select Yes if you are interested in learning about different
-          government schemes related to your business or livelihood.
+           {language === 'hi'
+      ? 'यदि आप अपने व्यवसाय या आजीविका से संबंधित विभिन्न सरकारी योजनाओं के बारे में जानकारी प्राप्त करने में रुचि रखते हैं, तो कृपया "हाँ" चुनें।'
+      : 'Please select Yes if you are interested in learning about different government schemes related to your business or livelihood.'}
         </Text>
         <YesNoToggle
+         language={language}
           value={existingForm.info_abt_gov_scheme || ''}
           onChange={(val) => update({ info_abt_gov_scheme: val })}
         />

@@ -30,7 +30,9 @@ const BASE_HEADERS = {
   'X-API-ID': clientId,
   'X-API-KEY': clientKey,
 };
-
+import LanguageToggle from '../../components/LanguageToggle';
+import { LanguageContext } from '../../components/LanguageContext';
+import { useContext } from 'react';
 function buildAuthHeaders() {
   const headers = { ...BASE_HEADERS };
   try {
@@ -102,6 +104,7 @@ function labelFromDetailEnterpriseType(detailType) {
 
 
 export default function CRPViewRecordedProduction({ route,navigation }) {
+  const { language } = useContext(LanguageContext);
   const [loading, setLoading] = useState(false);
 
   const [panchayats, setPanchayats] = useState([]);
@@ -474,8 +477,10 @@ useEffect(() => {
         const text = await res.text();
         console.error('epsakhi-detail error', res.status, text);
         Alert.alert(
-          'Error',
-          'Unable to load beneficiary detail from server.'
+           language === 'hi' ? 'त्रुटि' : 'Error',
+    language === 'hi'
+      ? 'सर्वर से लाभार्थी का विवरण लोड करने में असमर्थ।'
+      : 'Unable to load beneficiary detail from server.'
         );
         setDetailMode(false);
         return;
@@ -485,7 +490,10 @@ useEffect(() => {
       setEpsakhiDetail(data);
     } catch (err) {
       console.error('Failed to fetch epsakhi-detail', err);
-      Alert.alert('Error', 'Unable to load beneficiary detail.');
+      Alert.alert( language === 'hi' ? 'त्रुटि' : 'Error',
+    language === 'hi'
+      ? 'लाभार्थी विवरण लोड करने में असमर्थ।'
+      : 'Unable to load beneficiary detail.');
       setDetailMode(false);
     } finally {
       setLoading(false);
@@ -610,22 +618,22 @@ useEffect(() => {
       
       {isPLD && (
         <View style={styles.pldBadge}>
-          <Text style={styles.pldBadgeText}>PLD</Text>
+          <Text style={styles.pldBadgeText}>   {language === 'hi' ? 'पीएलडी' : 'PLD'}</Text>
         </View>
       )}
 
       <View style={{ flex: 1 }}>
         <Text style={styles.listText}>{name}</Text>
-        <Text style={styles.metaText}>Member code: {memberCode}</Text>
-        <Text style={styles.metaText}>Mobile: {mobile}</Text>
-        <Text style={styles.typeText}>Enterprise: {typeLabel}</Text>
+        <Text style={styles.metaText}>{language === 'hi' ? 'सदस्य कोड' : 'Member code'}: {memberCode}</Text>
+        <Text style={styles.metaText}>{language === 'hi' ? 'मोबाइल' : 'Mobile'}: {mobile}</Text>
+        <Text style={styles.typeText}>{language === 'hi' ? 'उद्यम' : 'Enterprise'}: {typeLabel}</Text>
       </View>
 
       <TouchableOpacity
         style={styles.viewBtn}
         onPress={() => openDetailPage(item)}
       >
-        <Text style={styles.viewBtnText}>View</Text>
+        <Text style={styles.viewBtnText}> {language === 'hi' ? 'देखें' : 'View'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -674,48 +682,48 @@ useEffect(() => {
 
     return (
       <View style={styles.container}>
-        <LoaderModal visible={loading} message="Loading..." />
+        <LoaderModal visible={loading} message={language === 'hi' ? 'लोड हो रहा है...' : 'Loading...'} />
 
         {/* Header for detail page */}
         <View style={styles.headerRow}>
           <BackButton onPress={goBackFromDetail} />
-          <Text style={styles.headerTitle}>Beneficiary Detail</Text>
+          <Text style={styles.headerTitle}>{language === 'hi' ? 'लाभार्थी विवरण' : 'Beneficiary Detail'}</Text>
         </View>
 
         <ScrollView style={{ flex: 1 }}>
           {/* Summary */}
           <View style={styles.summaryCard}>
             <Text style={styles.summaryTitle}>
-              Member Code:{' '}
+               {language === 'hi' ? 'सदस्य कोड:' : 'Member Code:'}{' '}
               {beneficiary?.lokos_member_code || detailMemberCode || 'NA'}
             </Text>
             <Text style={styles.summaryText}>
-              Name: {beneficiary?.applicant_name || 'NA'}
+               {language === 'hi' ? 'नाम:' : 'Name:'}  {beneficiary?.applicant_name || 'NA'}
             </Text>
             <Text style={styles.summaryText}>
-              Enterprise Type: {enterpriseTypeLabel}
+              {language === 'hi' ? 'उद्यम प्रकार:' : 'Enterprise Type:'} {enterpriseTypeLabel}
             </Text>
           </View>
 
           {/* Beneficiary section */}
           {renderKeyValueSection('Beneficiary (Recorded Beneficiary)', beneficiary)}
-
           {/* Enterprise section */}
           {enterprise ? (
             renderKeyValueSection('Enterprise Details', enterprise)
           ) : (
             <View style={styles.detailSection}>
-              <Text style={styles.detailSectionTitle}>Enterprise Details</Text>
+              <Text style={styles.detailSectionTitle}>  {language === 'hi' ? 'उद्यम विवरण' : 'Enterprise Details'}</Text>
               <Text style={{ fontSize: 12, color: '#666' }}>
-                No enterprise form data found for this beneficiary, or it has not been
-                submitted yet.
+                {language === 'hi'
+    ? 'इस लाभार्थी के लिए कोई उद्यम फॉर्म डेटा नहीं पाया गया है, या यह अभी तक जमा नहीं किया गया है।'
+    : 'No enterprise form data found for this beneficiary, or it has not been submitted yet.'}
               </Text>
             </View>
           )}
 {applicantSignature && (
   <View style={{ padding: 10, alignItems: 'center' }}>
     <Text style={{ fontWeight: '700', fontSize: 14, marginBottom: 6 }}>
-      Applicant Signature
+      {language === 'hi' ? 'आवेदक के हस्ताक्षर' : 'Applicant Signature'}
     </Text>
     <Image
       source={{ uri: applicantSignature }}
@@ -782,7 +790,9 @@ useEffect(() => {
 
           {!epsakhiDetail && !loading && (
             <Text style={styles.emptyText}>
-              No detail data available for this beneficiary.
+              {language === 'hi'
+    ? 'इस लाभार्थी के लिए कोई विवरण उपलब्ध नहीं है।'
+    : 'No detail data available for this beneficiary.'}
             </Text>
           )}
 
@@ -801,13 +811,17 @@ useEffect(() => {
       {/* Header */}
       <View style={styles.headerRow}>
         <BackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>Recorded Beneficiaries</Text>
+        <Text style={styles.headerTitle}>{language === 'hi' ? 'रिकॉर्ड किए गए लाभार्थी' : 'Recorded Beneficiaries'}</Text>
       </View>
-
+<LanguageToggle/>
       {/* Filters */}
       <View style={{ marginBottom: 10 }}>
         <SearchBar
-          placeholder="Search by name / phone / member code"
+          placeholder={
+      language === 'hi'
+        ? 'नाम / फ़ोन / सदस्य कोड से खोजें'
+        : 'Search by name / phone / member code'
+    }
           value={searchText}
           onChangeText={setSearchText}
           style={{ marginBottom: 8 }}
@@ -815,14 +829,14 @@ useEffect(() => {
 
         <View style={styles.filterRow}>
           <View style={styles.filterCol}>
-            <Text style={styles.filterLabel}>Panchayat</Text>
+            <Text style={styles.filterLabel}>{language === 'hi' ? 'पंचायत' : 'Panchayat'}</Text>
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedPanchayatId}
                 onValueChange={handlePanchayatChange}
                 style={styles.picker}
               >
-                <Picker.Item label="All Panchayats" value="" />
+                <Picker.Item label={language === 'hi' ? 'सभी पंचायतें' : 'All Panchayats'}value="" />
                 {panchayats.map((p) => (
                   <Picker.Item
                     key={p.panchayat_id}
@@ -839,7 +853,7 @@ useEffect(() => {
           </View>
 
           <View style={styles.filterCol}>
-            <Text style={styles.filterLabel}>Village</Text>
+            <Text style={styles.filterLabel}> {language === 'hi' ? 'गाँव' : 'Village'}</Text>
             <View style={styles.pickerWrapper}>
               <Picker
                 selectedValue={selectedVillageId}
@@ -850,8 +864,12 @@ useEffect(() => {
                 <Picker.Item
                   label={
                     selectedPanchayatId
-                      ? 'All Villages'
-                      : 'Select Panchayat first'
+                       ? language === 'hi'
+        ? 'सभी गाँव'
+        : 'All Villages'
+      : language === 'hi'
+        ? 'पहले पंचायत चुनें'
+        : 'Select Panchayat first'
                   }
                   value=""
                 />
@@ -890,7 +908,9 @@ useEffect(() => {
         }
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            No recorded beneficiaries found for the selected filters.
+             {language === 'hi'
+    ? 'चयनित फ़िल्टर के लिए कोई रिकॉर्डेड लाभार्थी नहीं मिला।'
+    : 'No recorded beneficiaries found for the selected filters.'}
           </Text>
         }
       />

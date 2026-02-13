@@ -11,9 +11,11 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { launchImageLibrary } from 'react-native-image-picker';
-
+import LanguageToggle from '../../../components/LanguageToggle';
+import { LanguageContext } from '../../../components/LanguageContext';
+import { useContext } from 'react';
 // Yes/No toggle that works with STRING values: "Yes" / "No"
-const YesNoToggle = ({ value, onChange }) => {
+const YesNoToggle = ({ value, onChange, language }) => {
   const current = value === 'Yes' ? 'Yes' : value === 'No' ? 'No' : '';
 
   const handlePress = (opt) => {
@@ -38,7 +40,12 @@ const YesNoToggle = ({ value, onChange }) => {
               current === opt && styles.yesNoTextActive,
             ]}
           >
-            {opt}
+            {/* {opt} */}
+             {language === 'hi'
+              ? opt === 'Yes'
+                ? 'हाँ'
+                : 'नहीं'
+              : opt}
           </Text>
         </TouchableOpacity>
       ))}
@@ -54,7 +61,7 @@ export default function ExistingEnterpriseDeclarationSection({
 }) {
   // parent passes a "patch" function; just forward patches to it
   const update = (patch) => setExistingForm(patch);
-
+const { language } = useContext(LanguageContext);
   // Local state for date picker (DD / MM / YYYY)
   const [declDay, setDeclDay] = useState('');
   const [declMonth, setDeclMonth] = useState('');
@@ -142,14 +149,25 @@ export default function ExistingEnterpriseDeclarationSection({
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>9) Declaration & Submit</Text>
-
+      <View
+                                          style={{
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            marginBottom: 10,
+                                          }}
+                                        >
+      <Text style={styles.sectionTitle}> {language === 'hi'
+    ? '9) घोषणा एवं जमा करें'
+    : '9) Declaration & Submit'}</Text>
+<LanguageToggle/></View>
       {/* 1) Declaration confirmed */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>Declaration</Text>
+        <Text style={styles.label}>{language === 'hi' ? 'घोषणा' : 'Declaration'}</Text>
         <Text style={styles.helpText}>
-          I hereby declare that all information provided above is correct
-          and checked by me.
+          {language === 'hi'
+    ? 'मैं यह घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी मेरे द्वारा जाँची गई है और सही है।'
+    : 'I hereby declare that all information provided above is correct and checked by me.'}
         </Text>
 
         <YesNoToggle
@@ -160,10 +178,11 @@ export default function ExistingEnterpriseDeclarationSection({
 
       {/* 2) Declaration Date */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>Declaration Date</Text>
+        <Text style={styles.label}> {language === 'hi' ? 'घोषणा तिथि' : 'Declaration Date'}</Text>
         <Text style={styles.helpText}>
-          Please select the date on which this form is being completed.
-          The selected date will be clearly stored as YYYY-MM-DD.
+         {language === 'hi'
+    ? 'कृपया वह तिथि चुनें जिस दिन यह फॉर्म भरा जा रहा है। चयनित तिथि YYYY-MM-DD प्रारूप में सुरक्षित की जाएगी।'
+    : 'Please select the date on which this form is being completed. The selected date will be clearly stored as YYYY-MM-DD.'}
         </Text>
 
         <TouchableOpacity
@@ -171,7 +190,9 @@ export default function ExistingEnterpriseDeclarationSection({
           onPress={() => setDateModalVisible(true)}
         >
           <Text style={styles.dateDisplayText}>
-            {existingForm.declaration_date || 'Select Declaration Date'}
+            {existingForm.declaration_date || (language === 'hi'
+    ? 'घोषणा तिथि चुनें'
+    : 'Select Declaration Date')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -185,17 +206,19 @@ export default function ExistingEnterpriseDeclarationSection({
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Select Declaration Date</Text>
+            <Text style={styles.modalTitle}>  {language === 'hi'
+    ? 'घोषणा तिथि चुनें'
+    : 'Select Declaration Date'}</Text>
             <View style={styles.modalPickerRow}>
               {/* Day */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>Day</Text>
+                <Text style={styles.modalLabel}>{language === 'hi' ? 'दिन' : 'Day'}</Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declDay || ''}
                     onValueChange={(v) => setDeclDay(v)}
                   >
-                    <Picker.Item label="DD" value="" />
+                    <Picker.Item label={language === 'hi' ? 'दिन' : 'Day'} value="" />
                     {dayOptions.map((d) => (
                       <Picker.Item key={d} label={d} value={d} />
                     ))}
@@ -205,13 +228,13 @@ export default function ExistingEnterpriseDeclarationSection({
 
               {/* Month */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>Month</Text>
+                <Text style={styles.modalLabel}>{language === 'hi' ? 'माह' : 'Month'}</Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declMonth || ''}
                     onValueChange={(v) => setDeclMonth(v)}
                   >
-                    <Picker.Item label="MM" value="" />
+                    <Picker.Item label={language === 'hi' ? 'माह' : 'MM'} value="" />
                     {monthOptions.map((m) => (
                       <Picker.Item
                         key={m.value}
@@ -225,13 +248,13 @@ export default function ExistingEnterpriseDeclarationSection({
 
               {/* Year */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>Year</Text>
+                <Text style={styles.modalLabel}>{language === 'hi' ? 'वर्ष' : 'Year'}</Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declYear || ''}
                     onValueChange={(v) => setDeclYear(v)}
                   >
-                    <Picker.Item label="YYYY" value="" />
+                    <Picker.Item label={language === 'hi' ? 'वर्ष' : 'YYYY'} value="" />
                     {yearOptions.map((y) => (
                       <Picker.Item key={y} label={y} value={y} />
                     ))}
@@ -245,13 +268,13 @@ export default function ExistingEnterpriseDeclarationSection({
                 style={[styles.modalBtn, styles.modalBtnSecondary]}
                 onPress={() => setDateModalVisible(false)}
               >
-                <Text style={styles.modalBtnSecondaryText}>Cancel</Text>
+                <Text style={styles.modalBtnSecondaryText}>{language === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnPrimary]}
                 onPress={applyDate}
               >
-                <Text style={styles.modalBtnPrimaryText}>Confirm</Text>
+                <Text style={styles.modalBtnPrimaryText}> {language === 'hi' ? 'पुष्टि करें' : 'Confirm'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -260,35 +283,50 @@ export default function ExistingEnterpriseDeclarationSection({
 
       {/* 3) Applicant Signature upload */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>Applicant Signature</Text>
+        <Text style={styles.label}>  {language === 'hi'
+    ? 'आवेदक के हस्ताक्षर'
+    : 'Applicant Signature'}</Text>
         <Text style={styles.helpText}>
-          Please upload a clear photo or scanned copy of your signature.
-          This will be stored securely with your application.
+          {language === 'hi'
+    ? 'कृपया अपने हस्ताक्षर की स्पष्ट फोटो या स्कैन कॉपी अपलोड करें। यह आपकी आवेदन के साथ सुरक्षित रखा जाएगा।'
+    : 'Please upload a clear photo or scanned copy of your signature. This will be stored securely with your application.'}
         </Text>
 
         <TouchableOpacity style={styles.mediaBtn} onPress={pickSignature}>
-          <Text style={styles.mediaBtnText}>Upload Signature</Text>
+          <Text style={styles.mediaBtnText}>{language === 'hi'
+    ? 'हस्ताक्षर अपलोड करें'
+    : 'Upload Signature'}</Text>
         </TouchableOpacity>
 
         {signatureCount > 0 && (
           <Text style={styles.mediaInfo}>
-            Selected Signature File(s): {signatureCount}
+            {/* Selected Signature File(s): {signatureCount} */}
+            {language === 'hi'
+  ? `चयनित हस्ताक्षर फ़ाइल: ${signatureCount}`
+  : `Selected Signature File(s): ${signatureCount}`}
           </Text>
         )}
       </View>
 
       {/* Optional verifier name */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>Verifier Name (optional)</Text>
+        <Text style={styles.label}> {language === 'hi'
+    ? 'सत्यापनकर्ता का नाम (वैकल्पिक)'
+    : 'Verifier Name (optional)'}</Text>
         <Text style={styles.helpText}>
-          If a CRP or official is helping you fill this form, please
-          mention their name here (optional).
+          {language === 'hi'
+    ? 'यदि कोई CRP या अधिकारी यह फॉर्म भरने में आपकी सहायता कर रहा है, तो कृपया उनका नाम यहाँ लिखें (वैकल्पिक)।'
+    : 'If a CRP or official is helping you fill this form, please mention their name here (optional).'}
         </Text>
         <TextInput
           style={styles.input}
           value={existingForm.verifier_name || ''}
           onChangeText={(v) => update({ verifier_name: v })}
-          placeholder="Enter verifier name (if any)"
+          placeholder={
+  language === 'hi'
+    ? 'सत्यापनकर्ता का नाम दर्ज करें (यदि कोई हो)'
+    : 'Enter verifier name (if any)'
+}
         />
       </View>
 
@@ -305,7 +343,13 @@ export default function ExistingEnterpriseDeclarationSection({
             onPress={onSubmit}
           >
             <Text style={styles.submitBtnText}>
-              {submitting ? 'Submitting...' : 'Submit Existing Enterprise Form'}
+              {submitting
+    ? language === 'hi'
+      ? 'जमा किया जा रहा है...'
+      : 'Submitting...'
+    : language === 'hi'
+    ? 'मौजूदा उद्यम फॉर्म जमा करें'
+    : 'Submit Existing Enterprise Form'}
             </Text>
           </TouchableOpacity>
         </View>
