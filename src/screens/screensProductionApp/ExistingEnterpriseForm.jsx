@@ -964,6 +964,7 @@ import { LanguageContext } from '../../components/LanguageContext';
 // Section components
 import ExistingEnterpriseBasicInfoSection from './FormSections/ExistingEnterpriseBasicInfoSection';
 import ExistingEnterpriseProductServicesSection from './FormSections/ExistingEnterpriseProductServicesSection';
+import ShopBasedProductSection from './FormSections/ExistingEnterpriseShop';
 import ExistingEnterpriseEnterpriseDetailsSection from './FormSections/ExistingEnterpriseEnterpriseDetailsSection';
 import ExistingEnterpriseInvestmentSection from './FormSections/ExistingEnterpriseInvestmentSection';
 import ExistingEnterpriseLoanSubsidySection from './FormSections/ExistingEnterpriseLoanSubsidySection';
@@ -1074,16 +1075,30 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     industry_loc: '',
 
     // SUPPORT REQUIRED
-    other_support: '',
-    other_support_specify: '',
-    other_support_loan_amount: '',
-    mentorship_support: '',
-    is_promo_ad_req: '',
-    promo_ad_specify: '',
-    infrastructure_support: '',
-    infrastructure_support_specify: '',
-    digital_emarket_support: '',
-    machinery_equipment_support: '',
+    // SHOP BASED PRODUCTS
+has_shop_product: '',
+shop_type: '',
+shop_type_other: '',
+inventory_source: '',
+target_customers: '',
+target_customers_other: '',
+sales_area: '',
+marketing_strategy: '',
+marketing_strategy_other: '',
+accept_digital_payment: '',
+avg_monthly_sales: '',
+annual_sale: '',
+
+    // other_support: '',
+    // other_support_specify: '',
+    // other_support_loan_amount: '',
+    // mentorship_support: '',
+    // is_promo_ad_req: '',
+    // promo_ad_specify: '',
+    // infrastructure_support: '',
+    // infrastructure_support_specify: '',
+    // digital_emarket_support: '',
+    // machinery_equipment_support: '',
 
     // MEDIA (child table)
     media: {
@@ -1890,33 +1905,22 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             setExistingForm={updateForm}
           />
         </View>
-
         <View
-          style={
-            currentSectionIndex === 2
-              ? styles.sectionVisible
-              : styles.sectionHidden
-          }
-        >
-          <ExistingEnterpriseProductServicesSection
-            existingForm={existingForm}
-            setExistingForm={updateForm}
-          />
-        </View>
-
-        {/* <View
-          style={
-            currentSectionIndex === 2
-              ? styles.sectionVisible
-              : styles.sectionHidden
-          }
-        >
-          <ExistingEnterpriseEnterpriseDetailsSection
-            existingForm={existingForm}
-            setExistingForm={updateForm}
-          />
-        </View> */}
-
+  style={
+    currentSectionIndex === 2
+      ? styles.sectionVisible
+      : styles.sectionHidden
+  }
+>
+  <ShopBasedProductSection
+    row={existingForm}
+    index={0}
+    updateRow={(i, patch) => updateForm(patch)}
+    language={useContext(LanguageContext).language}
+    addProductRow={() => {}}
+    ProductAndServicesComponent={ExistingEnterpriseProductServicesSection}
+  />
+</View>
         <View
           style={
             currentSectionIndex === 3
@@ -1995,56 +1999,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           />
         </View>
       </View>
-
-      {/* <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          style={[
-            styles.navBtn,
-            (currentSectionIndex === 0 || submitting) && styles.navBtnDisabled,
-          ]}
-          disabled={currentSectionIndex === 0 || submitting}
-          onPress={() =>
-            setCurrentSectionIndex((prev) => (prev > 0 ? prev - 1 : prev))
-          }
-        >
-          <Text style={styles.navBtnText}>{language === 'hi' ? 'पिछला' : 'Previous'}</Text>
-        </TouchableOpacity>
-
-        {currentSectionIndex < TOTAL_SECTIONS - 1 && (
-          <TouchableOpacity
-            style={[
-              styles.navBtn,
-              styles.navBtnPrimary,
-              submitting && { opacity: 0.7 },
-            ]}
-            disabled={submitting}
-            onPress={() =>
-              setCurrentSectionIndex((prev) =>
-                prev < TOTAL_SECTIONS - 1 ? prev + 1 : prev
-              )
-            }
-          >
-            <Text style={[styles.navBtnText, styles.navBtnPrimaryText]}>
-              {language === 'hi' ? 'आगे' : 'Next'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {currentSectionIndex === TOTAL_SECTIONS - 1 && (
-          <TouchableOpacity
-            style={[styles.submitBtn, submitting && { opacity: 0.7 }]}
-            disabled={submitting}
-            onPress={handleSubmit}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.submitBtnText}>{language === 'hi' ? 'फॉर्म जमा करें' : 'Submit Form'}</Text>
-            )}
-          </TouchableOpacity>
-        )}
-      </View> */}
-
       <PaginationButtons
   currentSectionIndex={currentSectionIndex}
   TOTAL_SECTIONS={TOTAL_SECTIONS}
@@ -2056,7 +2010,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 14, backgroundColor: '#fff' },
 

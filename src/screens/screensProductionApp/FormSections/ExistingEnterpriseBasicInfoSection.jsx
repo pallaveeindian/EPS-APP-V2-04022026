@@ -8,208 +8,6 @@ import LanguageToggle from '../../../components/LanguageToggle';
 import { LanguageContext } from '../../../components/LanguageContext';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 import LicenseSelector from './BasicInformationSectionLicenseSelector'
-// const ENTERPRISE_TYPE_TREE = [
-//   {
-//     parent: 'Food Processing Sector',
-//     children: [
-//       'Spice manufacturing',
-//       'Pickles, preserves (murabba), papad',
-//       'Savoury snacks, bhujiya, namkeen',
-//       'Instant mixes (idli mix, gram flour mix, kheer mix)',
-//       'Bakery items (cookies, cake, bread)',
-//       'Millet-based products (jowar, bajra cookies, snacks)',
-//       'Cold-pressed oils (mustard/sesame)',
-//       'Honey processing',
-//       'Jam–jelly–squash',
-//       'Ready-to-eat products',
-//       'Jaggery Production',
-//       'Whole grain/pulses/flour sorting–grading–packaging unit​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Handicraft & Artisan Sector',
-//     children: [
-//       'Zari and zardozi work',
-//       'Chikankari embroidery',
-//       'Woodwork',
-//       'Terracotta / clay products',
-//       'Bamboo / cane craft',
-//       'Handmade jewellery (terracotta jewellery, oxidised jewellery)',
-//       'Handmade candles',
-//       'Crochet / woollen products',
-//       'Paper craft, greeting cards',
-//       'Handbags, jute bags, embroidered bags',
-//       'Ration/vegetable/shopping bags (non-woven alternatives)​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Textile & Apparel Sector',
-//     children: [
-//       'Boutique unit (stitching–cutting–embellishment)',
-//       'School uniform stitching unit',
-//       'Ladies’ garments',
-//       'Bedsheet/quilt/pillow cover unit',
-//       'ODOP textile-based products (Varanasi saree, Bhadohi carpet finishing etc.)',
-//       'Home linen (curtains, table cloth, sofa covers)',
-//       'Jute/cotton carry bags',
-//       'Mask/apron/hospital gown manufacturing​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Agriculture & Allied Sector',
-//     children: [
-//       'Vegetable cultivation and group supply',
-//       'Flower cultivation (marigold, rose)',
-//       'Mushroom production',
-//       'Nursery (fruit/flower/vegetable saplings)',
-//       'Beekeeping (honey production)',
-//       'Organic manure/vermi-compost',
-//       'Animal feed unit',
-//       'Mini mill (flour/pulse grinding)',
-//       'Fruit–vegetable dehydration unit',
-//       'Fish farming',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Dairy & Animal Husbandry Sector',
-//     children: [
-//       'Dairy unit (2–10 cows/buffaloes)',
-//       'Milk collection centre',
-//       'Paneer/khoya/curd/ghee manufacturing',
-//       'Goat rearing',
-//       'Poultry unit (egg/broiler)',
-//       'Pig rearing (in specific areas)',
-//       'Fodder production',
-//       'Milk packaging and branding unit​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Beauty, Wellness & Personal Services',
-//     children: [
-//       'Beauty parlour',
-//       'Mehndi (henna) training and services',
-//       'Spa / therapy unit',
-//       'Home-care services (home nursing, baby care training)',
-//       'Mobile salon / village-based services',
-//       'Fitness group / yoga classes​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Retail & Micro Trading Sector',
-//     children: [
-//       'Grocery/provision store',
-//       'Stationery / general store',
-//       'Group sale of vegetables/fruits',
-//       'Fast food cart',
-//       'Mobile recharge shop / bill payment kiosk',
-//       'Jan Aushadhi/Medical Store',
-//       'PET shop and disposable alternatives distribution​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Cleaning & Hygiene Products Sector',
-//     children: [
-//       'Phenyl/detergent manufacturing',
-//       'Liquid handwash',
-//       'Sanitizer',
-//       'Incense sticks and dhoop sticks',
-//       'Napkin / sanitary pad unit',
-//       'Biodegradable plate and bowl manufacturing​',
-//       'Others',
-//     ],
-//   },
-
-//   {
-//     parent: 'FMCG',
-//     children: [
-//       'Handwash',
-//       'Soap',
-//       'Floor Cleaner',
-//       'Detergents',
-//       'Air fresheners',
-//       'Face wash & creams',
-//       'Shampoo & conditioner',
-//       'Sponges',
-//       'Toothpaste & toothbrushes',
-//       'Broom',
-//       'Others',
-//     ],
-//   },
-//    {
-//     parent: 'Transport',
-//     children: [
-//       'Loader',
-//       'E-Rikshaw',
-//       'Taxi',
-//       'Auto',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Packaging & Utility Products Sector',
-//     children: [
-//       'Paper bag unit',
-//       'Jute bag unit',
-//       'Box manufacturing',
-//       'Recycled paper packaging unit',
-//       'Food-grade packaging​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Prerna Canteen',
-//     children: [
-//     ],
-//   },
-//   {
-//     parent: 'Digital & Service Sector',
-//     children: [
-//       'Data entry / digital services',
-//       'CSC (Common Service Center) operations',
-//       'Online product sales (e-commerce)',
-//       'SHG product branding',
-//       'Social media management for local shops​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Solid Waste & Green Sector',
-//     children: [
-//       'Plastic waste sorting',
-//       'Fuel/briquettes from waste',
-//       'Composting unit',
-//       'Recycled paper products',
-//       'E-waste collection micro centre​',
-//       'Others',
-//     ],
-//   },
-//   {
-//     parent: 'Construction & Fabrication Micro Enterprises',
-//     children: [
-//       'Brick and tiles cleaning/polishing unit',
-//       'Interior decoration (fabric, flowers, décor)',
-//       'Painting/plumbing/carpentry group',
-//       'POP artwork / wall decoration',
-//       'Others',
-//     ],
-//   },
-//   {
-//   parent: 'EDP|Entrepreneurship Development Programme',
-//    children: [
-//    ],
-//   },
-//   {
-//     parent: 'Other​',
-//     children: ['Others'],
-//   },
-// ];
 
 const ENTERPRISE_TYPE_TREE = [
   {
@@ -496,14 +294,6 @@ const ENTERPRISE_TYPE_TREE = [
   },
 ];
 
-// const OWNERSHIP_OPTIONS = [
-//   { label: 'Individual', value: 'Individual' },
-//   { label: 'Partnership', value: 'Partnership' },
-//   { label: 'SHG-based enterprise', value: 'SHG-based enterprise' },
-//   { label: 'Family-run enterprise', value: 'Family-run enterprise' },
-//   { label: 'Others', value: 'Others' },
-// ];
-
 const OWNERSHIP_OPTIONS = [
   {
     label: { en: 'Individual', hi: 'व्यक्तिगत' },
@@ -689,51 +479,6 @@ const { language } = useContext(LanguageContext);
   const yearOptions = [];
   for (let y = currentYear; y >= startYear; y--) yearOptions.push(y.toString());
 
- 
-  //    useEffect(() => {
-  //   const loadDraft = async () => {
-  //     try {
-  //       const saved = await AsyncStorage.getItem(BASIC_INFO_DRAFT_KEY);
-  //       if (saved) {
-  //         setExistingForm(JSON.parse(saved)); //  FIXED
-  //       }
-  //     } catch (e) {
-  //       console.log('Draft load failed', e);
-  //     } finally {
-  //       setDraftLoaded(true); // ADDED
-  //     }
-  //   };
-
-  //   loadDraft();
-  // }, []); // CHANGED (removed dependency on setExistingForm)
-
-  /* =====================================================
-     FIX 2: Auto-save ONLY AFTER draft is loaded
-  ===================================================== */
-  // useEffect(() => {
-  //   if (!draftLoaded) return; // CRITICAL FIX
-
-  //   AsyncStorage.setItem(
-  //     BASIC_INFO_DRAFT_KEY,
-  //     JSON.stringify(existingForm)
-  //   );
-  // }, [existingForm, draftLoaded]); // CHANGED
-
-  /* =====================================================
-     FIX 3: Save draft when app goes background
-  ===================================================== */
-  // useEffect(() => {
-  //   const sub = AppState.addEventListener('change', state => {
-  //     if (state !== 'active' && draftLoaded) {
-  //       AsyncStorage.setItem(
-  //         BASIC_INFO_DRAFT_KEY,
-  //         JSON.stringify(existingForm)
-  //       );
-  //     }
-  //   });
-
-  //   return () => sub.remove();
-  // }, [existingForm, draftLoaded]); //  CHANGED
 
   /* =====================================================
       FIX 4: PATCH update (NO functional updater)
@@ -827,22 +572,6 @@ const { language } = useContext(LanguageContext);
           />
         )}
       </View>
-
-      {/* Special category */}
-      {/* <View style={styles.fieldBlock}>
-        <Text style={styles.label}>
-          Please specify your special category (If applicable)
-        </Text>
-        <Text style={styles.helpText}>
-          Please mention if you belong to any special category (e.g., widow, PwD, etc.).
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={existingForm.owner_special_category || ''}
-          onChangeText={(v) => update({ owner_special_category: v })}
-        />
-      </View> */}
-
       {/* Year of establishment */}
       <View style={styles.fieldBlock}>
         <Text style={styles.label}>{language === 'hi'
@@ -893,19 +622,6 @@ const { language } = useContext(LanguageContext);
         </Modal>
       </View>
       <View><LicenseSelector language={language}/></View>
-        
-      {/* UDDYAM AADHAR */}
-      {/* <View style={styles.fieldBlock}>
-        <Text style={styles.label}>Please Specify the correct UDDYAM AADHAR NUMBER (If any)</Text>
-        <Text style={styles.helpText}>
-          Please enter the Udyam Aadhar Number carefully. This will be used for verification.
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={existingForm.uddyam_aadhar || ''}
-          onChangeText={(v) => update({ uddyam_aadhar: v })}
-        />
-      </View> */}
 
       {/* Total employees */}
       <View style={styles.fieldBlock}>
@@ -942,22 +658,6 @@ const { language } = useContext(LanguageContext);
           onChangeText={(v) => update({ number_of_shg_emp: v })}
         />
       </View>
-      {/* Special category */}
-      {/* <View style={styles.fieldBlock}>
-        <Text style={styles.label}>
-          Please specify your special category (If applicable)
-        </Text>
-        <Text style={styles.helpText}>
-          Please mention if you belong to any special category (e.g., widow, PwD, etc.).
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={existingForm.owner_special_category || ''}
-          onChangeText={(v) => update({ owner_special_category: v })}
-        />
-      </View> */}
-
-
       {/* cadre selection */}
 <View style={styles.fieldBlock}>
   <Text style={styles.label}>{language === "hi"

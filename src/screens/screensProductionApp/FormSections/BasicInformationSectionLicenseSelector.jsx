@@ -11,100 +11,6 @@ import {
 
 import { pick } from "@react-native-documents/picker";
 
-/* ---------------- LICENSE DATA ---------------- */
-// const licenseOptions = [
-//   {
-//     category: "Food, Health & Product Safety",
-//     options: [
-//       { label: "FSSAI License / Registration", value: "fssai" },
-//       { label: "FSSAI Basic Registration", value: "fssai_basic" },
-//       { label: "FSSAI State License", value: "fssai_state" },
-//       { label: "FSSAI Central License", value: "fssai_central" },
-//       { label: "AYUSH Manufacturing License", value: "ayush_manufacturing" },
-//       { label: "AYUSH License", value: "ayush_license" },
-//       { label: "AYUSH Certificate", value: "ayush_certificate" },
-//       // { label: "BIS Certification", value: "bis" },
-//       // { label: "BIS Certification (Toys)", value: "bis_toys" },
-//       // { label: "Organic Certification", value: "organic_certification" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Business, Trade & Tax Registrations",
-//     options: [
-//       { label: "GST Registration", value: "gst" },
-//       { label: "MSME (Udyam) Registration", value: "msme" },
-//       { label: "Shop & Establishment Registration", value: "shop_establishment" },
-//       { label: "KVIC / Khadi & Village Industries Registration", value: "kvic" },
-//       { label: "Handloom Registration", value: "handloom" },
-//       { label: "Cooperative Society Registration", value: "cooperative_registration" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Environment, Pollution & Waste Management",
-//     options: [
-//       { label: "Pollution Control Board Consent / Clearance", value: "pcb_clearance" },
-//       { label: "Plastic Recycling Authorization", value: "plastic_recycling" },
-//       { label: "E-Waste Recycling Authorization", value: "ewaste_recycling" },
-//       { label: "Biogas Plant Approval", value: "biogas_approval" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Agriculture, Animal Husbandry & Fisheries",
-//     options: [
-//       { label: "Fisheries Department Registration", value: "fisheries_registration" },
-//       { label: "Local Animal Husbandry License", value: "animal_husbandry_license" },
-//       { label: "Dairy License (Local Authority)", value: "dairy_license" },
-//       { label: "Agriculture Produce Packaging Approval", value: "agri_packaging" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Tourism, Hospitality & Local Bodies",
-//     options: [
-//       { label: "Tourism Department Registration", value: "tourism_registration" },
-//       { label: "Homestay Registration", value: "homestay_registration" },
-//       { label: "Local Municipal / Nagar Palika License", value: "municipal_license" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Transport & Mobility",
-//     options: [
-//       { label: "RTO Registration", value: "rto_registration" },
-//       { label: "RTO Permit / Approval", value: "rto_permit" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Energy, Power & Utilities",
-//     options: [
-//       { label: "Electricity Board Approval", value: "electricity_board_approval" },
-//       { label: "Solar Installation Authorization", value: "solar_authorization" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "IT, Media & Communication",
-//     options: [{ label: "Cyber Café License", value: "cyber_cafe_license" }, { label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Storage & Infrastructure",
-//     options: [{ label: "Cold Storage License", value: "cold_storage_license" },{ label: "Other (Please specify)", value: "other" }
-//     ]
-//   },
-//   {
-//     category: "Local / Miscellaneous Permissions",
-//     options: [
-//       { label: "Local Authority Permission", value: "local_authority_permission" },
-//       { label: "Other (Please specify)", value: "other" }
-//     ]
-//   }
-// ];
-
 const licenseOptions = [
   {
     category: { en: "Food, Health & Product Safety", hi: "खाद्य, स्वास्थ्य और उत्पाद सुरक्षा" },
@@ -229,13 +135,6 @@ const LicenseSelector = ({ language = "en" }) => {
     openSections: {},
     otherText: {}
   }
-    // {
-    //   id: Date.now(),
-    //   selected: {},
-    //   files: {},
-    //   openSections: {},
-    //   otherText: {} // { category: "text" }
-    // }
   ]);
 
   const toggleSection = (cardId, category) => {

@@ -113,7 +113,6 @@ const { language } = useContext(LanguageContext);
       if (!assets.length) return;
 
       update({
-        // wrapper will later upload to /enterprise-media/ with field "others"
         declaration_signature_files: assets,
       });
     } catch (e) {

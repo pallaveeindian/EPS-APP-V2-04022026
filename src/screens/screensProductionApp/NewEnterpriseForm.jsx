@@ -1870,33 +1870,6 @@ const toggleTrainingReqType = (val) => {
 <LanguageToggle />
 </View>
       {/* 1) Special category */}
-      {/* <Text style={styles.label}>Please specify your special category (If applicable)</Text> */}
-      {/* <TextInput
-        style={styles.input}
-        value={form.applicant_special_category}
-        onChangeText={(v) => setField('applicant_special_category', v)}
-        placeholder="e.g. Divyang, Widow, Single Woman, etc."
-      /> */}
-         {/* {[
-        'Divyang',
-        'Widow',
-        'Single Woman',
-      ].map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={styles.checkboxRow}
-          onPress={() => setField('prefered_location_choice', opt)}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              form.prefered_location_choice === opt && styles.checkboxChecked,
-            ]}
-          />
-          <Text style={styles.checkboxLabel}>{opt}</Text>
-        </TouchableOpacity>
-      ))} */}
-
       {/* 2) Enterprise Type (subform /enterprise-types/) */}
       <ParentChildMultiSelect
   title={
@@ -1970,27 +1943,6 @@ const toggleTrainingReqType = (val) => {
 
       {/* 4) CIF Funds */}
       <Text style={[styles.sectionHeading, { marginTop: 20 }]}>{language === 'hi' ? 'अनिवार्य SHG फंड अनुभाग' : 'Mandatory SHG Fund Section'}</Text>
-      {/* <Text style={styles.label}>Have you received any portion of CIF Fund? If Yes, specify amount</Text> */}
-      {/* <Text style={styles.label}>Have your SHG Recieved CIF Fund</Text>
-      <YesNoToggle
-        value={form.has_shg_cif}
-        onChange={(v) => setField('has_shg_cif', v)}
-      />
-      {form.has_shg_cif === 'Yes' && (
-        <>
-          <Text style={styles.label}>
-            Please specify the amount of financial assistance your SHG received
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={form.cif_fund_amt}
-            onChangeText={(v) => setField('cif_fund_amt', v)}
-            keyboardType="numeric"
-            placeholder="Enter amount"
-          />
-        </>
-      )} */}
-      
       <Text style={styles.label}> {language === 'hi'
     ? 'क्या आपकी स्वयं सहायता समूह को अनिवार्य फंड प्राप्त हुआ है?'
     : 'Have your SHG received mandatory Fund?'}</Text>
@@ -2221,15 +2173,6 @@ const toggleTrainingReqType = (val) => {
               </TouchableOpacity>
 
               {row.open && (
-                // <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
-                //    <ParentChildMultiSelect
-                //     title="Please select all sectors in which you have received trainings"
-                //     items={TRAINING_SECTORS}
-                //     value={row.sectors}
-                //     onChange={(sel) => updateTrainingRow(row.id, { sectors: sel })}
-                //     otherParentKey={TRAINING_OTHER_PARENT_KEY}
-                //   />
-
  <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
     <ParentChildMultiSelect
       title={
@@ -2293,14 +2236,6 @@ const toggleTrainingReqType = (val) => {
                       }
                     />
                   )}
-
-                  {/* <ParentChildMultiSelect
-                    title="Please select all sectors in which you have received trainings"
-                    items={TRAINING_SECTORS}
-                    value={row.sectors}
-                    onChange={(sel) => updateTrainingRow(row.id, { sectors: sel })}
-                    otherParentKey={TRAINING_OTHER_PARENT_KEY}
-                  /> */}
                 </View>
               )}
             </View>
@@ -2339,15 +2274,6 @@ const toggleTrainingReqType = (val) => {
 
       {form.is_training_required === 'Yes' && (
         <>
-        {/* <ParentChildMultiSelect
-            title="Which is your preferred sector for training?"
-            description="Select sector(s) and sub sectors for which you want training."
-            items={TRAINING_SECTORS}
-            value={trainingReqSectors}
-            onChange={setTrainingReqSectors}
-            otherParentKey={TRAINING_OTHER_PARENT_KEY}
-          /> */}
-
           <ParentChildMultiSelect
     title={
       language === 'hi'
@@ -2373,31 +2299,6 @@ const toggleTrainingReqType = (val) => {
         : TRAINING_OTHER_PARENT_KEY.en
     }
   />
-          {/* <Text style={styles.label}>Which is your preferred department for training?</Text>
-          {['NRLM', 'RCT', 'NABARD', 'UPSDM', 'Others'].map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={styles.checkboxRow}
-              onPress={() => setTrainingReqDept(opt)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  trainingReqDept === opt && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>{opt}</Text>
-            </TouchableOpacity>
-          ))}
-          {trainingReqDept === 'Others' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Please specify department"
-              value={trainingReqDept === 'Others' ? '' : trainingReqDept}
-              onChangeText={(t) => setTrainingReqDept(t)}
-            />
-          )} */}
-
 <Text style={styles.label}> {language === 'hi' ? 'आपका पसंदीदा प्रशिक्षण प्रकार क्या है?' : 'What is your preferred training type?'}</Text>
 
 {['Residential', 'Non-Residential'].map((opt) => (
@@ -2492,57 +2393,6 @@ const toggleTrainingReqType = (val) => {
               onChangeText={(t) => setTrainingReqDept(t)}
             />
           )}
-
-          {/* <ParentChildMultiSelect
-            title="Which is your preferred sector for training?"
-            description="Select sector(s) and sub sectors for which you want training."
-            items={TRAINING_SECTORS}
-            value={trainingReqSectors}
-            onChange={setTrainingReqSectors}
-            otherParentKey={TRAINING_OTHER_PARENT_KEY}
-          /> */}
-{/* 
-          <Text style={styles.label}>How many days of training are you comfortable with?</Text>
-          {['Under 7 days', '7 days', '15 days', '30 days', 'Over 30 days'].map(
-            (opt) => (
-              <TouchableOpacity
-                key={opt}
-                style={styles.checkboxRow}
-                onPress={() => setTrainingReqDuration(opt)}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    trainingReqDuration === opt && styles.checkboxChecked,
-                  ]}
-                />
-                <Text style={styles.checkboxLabel}>{opt}</Text>
-              </TouchableOpacity>
-            )
-          )} */}
-
-          {/* <Text style={styles.label}>What is your preferred training location?</Text>          
-          <Text style={styles.label}>Desired District</Text>          
-          <TextInput
-            style={[styles.input, { marginTop: 6 }]}
-            placeholder="District"
-            value={trainingReqLocationDistrict}
-            onChangeText={setTrainingReqLocationDistrict}
-          />
-          <Text style={styles.label}>Desired Block</Text>          
-          <TextInput
-            style={[styles.input, { marginTop: 6 }]}
-            placeholder="Block"
-            value={trainingReqLocationBlock}
-            onChangeText={setTrainingReqLocationBlock}
-          />
-             <Text style={styles.label}>Desired Village</Text>   
-          <TextInput
-            style={styles.input}
-            placeholder="Village"
-            value={trainingReqLocationVillage}
-            onChangeText={setTrainingReqLocationVillage}
-          /> */}
           <Text style={styles.label}>{language === 'hi'
     ? 'आपका पसंदीदा प्रशिक्षण स्थान क्या है?'
     : 'What is your preferred training location?'}</Text>          
@@ -2561,29 +2411,6 @@ const toggleTrainingReqType = (val) => {
     <Picker.Item label={language === 'hi' ? 'गाँव' : 'Village'} value="village" />
   </Picker>
 </View>
-
-
-          {/* <Text style={styles.label}>What is your expected Salary after training?</Text>
-          {[
-            'Under 10,000',
-            '10,000 - 20,000',
-            '20,000 - 30,000',
-            'Above 30,000',
-          ].map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={styles.checkboxRow}
-              onPress={() => setTrainingReqExpectedIncome(opt)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  trainingReqExpectedIncome === opt && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>{opt}</Text>
-            </TouchableOpacity>
-          ))} */}
         </>
       )}
 
@@ -2657,246 +2484,6 @@ const toggleTrainingReqType = (val) => {
       )}
 
       {/* ========= SECTION: Support Required ========= */}
-      {/* <Text style={styles.sectionHeading}>Support Required</Text> */}
-
-      {/* <Text style={styles.label}>Do you require Mentorship support?</Text>
-      <YesNoToggle
-        value={form.mentorship_support}
-        onChange={(v) => setField('mentorship_support', v)}
-      /> */}
-
-      {/* <Text style={styles.label}>Do you require Financial Assistance?</Text>
-      {['Grant and Subsidy', 'Loan', 'Interest Subvention','Others'].map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={styles.checkboxRow}
-          onPress={() => setField('financial_support_type', opt)}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              form.financial_support_type === opt && styles.checkboxChecked,
-            ]}
-          />
-          <Text style={styles.checkboxLabel}>{opt}</Text>
-        </TouchableOpacity>
-      ))} */}
-
-      {/* {(form.financial_support_type === 'Grant and Subsidy' ||
-        form.financial_support_type === 'Others') && (
-        <TextInput
-          style={styles.input}
-          placeholder="Please specify details"
-          value={form.financial_support_other_text}
-          onChangeText={(v) => setField('financial_support_other_text', v)}
-        />
-      )} */}
-      {/* {['Grant and Subsidy', 'Interest Subvention', 'Others'].includes(form.financial_support_type) && (
-  <TextInput
-    style={styles.input}
-    placeholder="Please specify"
-    value={form.financial_support_other_text}
-    onChangeText={(v) => setField('financial_support_other_text', v)}
-  />
-)}
-
-
-      {form.financial_support_type === 'Loan' && (
-        <>
-          <Text style={styles.label}>What loan amount range do you require?</Text>
-          {[
-            'Below to 50,000',
-            '50,000 - 1,00,000',
-            '1,00,000 - 2,00,000',
-            '2,00,000 - 5,00,000',
-            'Above to 5,00,000',
-          ].map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={styles.checkboxRow}
-              onPress={() => setField('loan_amount_range', opt)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  form.loan_amount_range === opt && styles.checkboxChecked,
-                ]}
-              />
-              <Text style={styles.checkboxLabel}>{opt}</Text>
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
-
-      <Text style={styles.label}>
-        What type of Market Linkage Assistance you require?
-      </Text>
-      {['Retail', 'Business', 'Government', 'Others'].map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={styles.checkboxRow}
-          onPress={() => setField('market_linkage_type', opt)}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              form.market_linkage_type === opt && styles.checkboxChecked,
-            ]}
-          />
-          <Text style={styles.checkboxLabel}>{opt}</Text>
-        </TouchableOpacity>
-      ))}
-      {form.market_linkage_type && (
-        <TextInput
-          style={styles.input}
-          placeholder="Please specify details"
-          value={form.market_linkage_detail}
-          onChangeText={(v) => setField('market_linkage_detail', v)}
-        />
-      )} */}
-
-      {/* <Text style={styles.label}>
-        What type of Branding Promotion Assistance you require?
-      </Text>
-      {['Physical', 'Online', 'Others'].map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={styles.checkboxRow}
-          onPress={() => setField('is_promo_ad_req_type', opt)}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              form.is_promo_ad_req_type === opt && styles.checkboxChecked,
-            ]}
-          />
-          <Text style={styles.checkboxLabel}>{opt}</Text>
-        </TouchableOpacity>
-      ))}
-      {form.is_promo_ad_req_type && (
-        <TextInput
-          style={styles.input}
-          placeholder="Please specify details"
-          value={form.is_promo_ad_req_detail}
-          onChangeText={(v) => setField('is_promo_ad_req_detail', v)}
-        />
-      )} */}
-{/* 
-      <Text style={styles.label}>
-  What type of Branding Promotion Assistance you require?
-</Text>
-
-{['Physical', 'Online', 'Others'].map((opt) => (
-  <TouchableOpacity
-    key={opt}
-    style={styles.checkboxRow}
-    onPress={() => {
-      setField('is_promo_ad_req_type', opt);
-      setField('is_promo_ad_req_subtype', '');
-      setField('is_promo_ad_req_detail', '');
-    }}
-  >
-    <View
-      style={[
-        styles.checkbox,
-        form.is_promo_ad_req_type === opt && styles.checkboxChecked,
-      ]}
-    />
-    <Text style={styles.checkboxLabel}>{opt}</Text>
-  </TouchableOpacity>
-))} */}
-
-{/* When ONLINE is selected → SUB OPTIONS */}
-{/* {form.is_promo_ad_req_type === 'Online' && (
-  <>
-    <Text style={[styles.label, { marginTop: 8 }]}>
-      Select preferred online platform
-    </Text>
-
-    {['Flipkart', 'Amazon', 'Meesho', 'ONDC', 'Others'].map((sub) => (
-      <TouchableOpacity
-        key={sub}
-        style={styles.checkboxRow}
-        onPress={() => setField('is_promo_ad_req_subtype', sub)}
-      >
-        <View
-          style={[
-            styles.checkbox,
-            form.is_promo_ad_req_subtype === sub && styles.checkboxChecked,
-          ]}
-        />
-        <Text style={styles.checkboxLabel}>{sub}</Text>
-      </TouchableOpacity>
-    ))} */}
-
-    {/* If ONLINE → OTHERS selected → specify input */}
-    {/* {form.is_promo_ad_req_subtype === 'Others' && (
-      <TextInput
-        style={styles.input}
-        placeholder="Please specify platform"
-        value={form.is_promo_ad_req_detail}
-        onChangeText={(v) => setField('is_promo_ad_req_detail', v)}
-      />
-    )}
-  </>
-)} */}
-
-{/* When PHYSICAL or main OTHERS selected → direct specify field */}
-{/* {form.is_promo_ad_req_type !== '' &&
-  form.is_promo_ad_req_type !== 'Online' && (
-    <TextInput
-      style={styles.input}
-      placeholder="Please specify details"
-      value={form.is_promo_ad_req_detail}
-      onChangeText={(v) => setField('is_promo_ad_req_detail', v)}
-    />
-  )}
-
-
-
-      <Text style={styles.label}>
-        What type of Infrastructure support you require?
-      </Text>
-      {['Equipments', 'Machinery', 'Place of Business', 'Others'].map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={styles.checkboxRow}
-          onPress={() => setField('infrastructure_support_type', opt)}
-        >
-          <View
-            style={[
-              styles.checkbox,
-              form.infrastructure_support_type === opt && styles.checkboxChecked,
-            ]}
-          />
-          <Text style={styles.checkboxLabel}>{opt}</Text>
-        </TouchableOpacity>
-      ))}
-      {form.infrastructure_support_type && (
-        <TextInput
-          style={styles.input}
-          placeholder="Please specify details"
-          value={form.infrastructure_support_detail}
-          onChangeText={(v) => setField('infrastructure_support_detail', v)}
-        />
-      )} */}
-
-      {/* <Text style={styles.label}>Do you require Digital E-Market support?</Text>
-      <YesNoToggle
-        value={form.digital_emarket_support}
-        onChange={(v) => setField('digital_emarket_support', v)}
-      /> */}
-
-      {/* <Text style={styles.label}>Do you require any other support?</Text>
-      <TextInput
-        style={[styles.input, { minHeight: 60 }]}
-        multiline
-        value={form.other_support}
-        onChangeText={(v) => setField('other_support', v)}
-        placeholder="Please describe any other support required"
-      /> */}
-
-
 <Text style={styles.sectionHeading}> {language === 'hi' ? 'आवश्यक सहायता' : 'Support Required'}</Text>
 
 {/* ===== YES / NO ===== */}
@@ -3473,18 +3060,6 @@ const toggleTrainingReqType = (val) => {
             : opt}
           </Text>
       </TouchableOpacity>
-
-      {/* Show input ONLY if "Other" is selected */}
-      {/* {opt === 'Other' && selected && (
-        <TextInput
-          style={styles.input}
-          placeholder="Please specify"
-          value={form.applicant_cadre_activity_other || ''}
-          onChangeText={(t) =>
-            setField('applicant_cadre_activity_other', t)
-          }
-        />
-      )} */}
     </View>
   );
 })}
