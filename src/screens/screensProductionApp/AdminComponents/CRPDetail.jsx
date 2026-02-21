@@ -1,4 +1,5 @@
-// src/screens/admin/AdminDashboardProduction.jsx
+// src/screens/admin/AdminComponents/CRPDetail.jsx
+
 import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
@@ -13,42 +14,47 @@ import {
   RefreshControl,
 } from 'react-native';
 
-import { getUser, clearUser } from '../../utils/auth';
-import gsApi from '../../api/gsApi';
-import LoaderModal from '../LoaderModal';
-import BurgerMenu from '../BurgerMenu';
-import LanguageToggle from '../../components/LanguageToggle';
-import { LanguageContext } from '../../components/LanguageContext';
-import { clearAllTemp } from '../../utils/tempStore';
+import { useNavigation } from '@react-navigation/native';
+import { getUser, clearUser } from '../../../utils/auth';
+import gsApi from '../../../api/gsApi';
+import LoaderModal from '../../LoaderModal';
+import BurgerMenu from '../../BurgerMenu';
+import LanguageToggle from '../../../components/LanguageToggle';
+import { LanguageContext } from '../../../components/LanguageContext';
+import { clearAllTemp } from '../../../utils/tempStore';
 
-// Admin Components
-import OverallAnalyticsSection from './AdminComponents/OverallAnalyticsSection';
-import CRPList from './AdminComponents/CRPList';
+import CRPInfo from './CRPDetailComponents/CRPInfo';
+import CRPPanchayats from './CRPDetailComponents/CRPPanchayats';
 
-export default function AdminDashboardProduction({ navigation }) {
+export default function CRPDetail({ route }) {
+  const navigation = useNavigation();
   const { language } = useContext(LanguageContext);
+
+  const { crpId } = route.params;
+  const memberCode = crpId;
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   /* ------------------ Translations ------------------ */
 
   const translations = {
     en: {
-      headerTitle: 'Admin Dashboard',
-      welcome: 'Welcome {name}',
+      headerTitle: 'CRP Details',
       logout: 'Logout',
-      loading: 'Loading dashboard...',
+      dashboard: 'Dashboard',
+      loading: 'Loading CRP details...',
       sessionExpiredTitle: 'Session expired',
       sessionExpiredMsg: 'Your session has expired. Please log in again.',
     },
     hi: {
-      headerTitle: 'एडमिन डैशबोर्ड',
-      welcome: 'स्वागत है {name}',
+      headerTitle: 'सीआरपी विवरण',
       logout: 'लॉग आउट',
-      loading: 'डैशबोर्ड लोड हो रहा है...',
+      dashboard: 'डैशबोर्ड',
+      loading: 'सीआरपी विवरण लोड हो रहा है...',
       sessionExpiredTitle: 'सत्र समाप्त',
       sessionExpiredMsg: 'आपका सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।',
     },
@@ -58,25 +64,11 @@ export default function AdminDashboardProduction({ navigation }) {
 
   const translate = key => t[key] || translations.en[key] || key;
 
-  /* ------------------ Auth Helpers ------------------ */
+  /* ------------------ Auth Handling ------------------ */
 
   const isAuthExpiredError = err => {
     const status = err?.status || err?.response?.status;
-    const detail =
-      err?.data?.detail || err?.response?.data?.detail || err?.message || '';
-
-    if (status === 401) return true;
-
-    if (
-      typeof detail === 'string' &&
-      (detail.toLowerCase().includes('token') ||
-        detail.toLowerCase().includes('credentials') ||
-        detail.toLowerCase().includes('auth'))
-    ) {
-      return true;
-    }
-
-    return false;
+    return status === 401;
   };
 
   const handleLogout = async () => {
@@ -90,37 +82,26 @@ export default function AdminDashboardProduction({ navigation }) {
     Alert.alert(
       translate('sessionExpiredTitle'),
       translate('sessionExpiredMsg'),
-      [
-        {
-          text: 'OK',
-          onPress: handleLogout,
-        },
-      ],
+      [{ text: 'OK', onPress: handleLogout }],
     );
   };
 
   /* ------------------ Bootstrap ------------------ */
 
-  const bootstrapAdminData = async u => {
+  const bootstrap = async u => {
     try {
       setLoading(true);
 
-      // Example: inject token
       if (u?.access) {
         gsApi.setAuthToken?.(u.access, u.refresh);
       }
-
-      // TODO: Add admin analytics API here
-      // await gsApi.getAdminSummary()
     } catch (err) {
-      console.error('Admin dashboard error', err);
-
       if (isAuthExpiredError(err)) {
         handleSessionExpired();
         return;
       }
 
-      Alert.alert('Error', 'Failed to load admin dashboard.');
+      Alert.alert('Error', 'Failed to load CRP details.');
     } finally {
       setLoading(false);
     }
@@ -136,20 +117,32 @@ export default function AdminDashboardProduction({ navigation }) {
       }
 
       setUser(u);
-      await bootstrapAdminData(u);
+      await bootstrap(u);
     })();
   }, []);
 
   const onRefresh = async () => {
     if (!user) return;
+
     setRefreshing(true);
-    await bootstrapAdminData(user);
+
+    await bootstrap(user);
+
+    setRefreshKey(prev => prev + 1);
+
     setRefreshing(false);
   };
 
   /* ------------------ Menu ------------------ */
 
   const menuItems = [
+    {
+      label: t.dashboard,
+      color: '#EE6969',
+      onPress: () => {
+        navigation.navigate('AdminDashboard');
+      },
+    },
     {
       label: t.logout,
       color: '#EE6969',
@@ -165,7 +158,7 @@ export default function AdminDashboardProduction({ navigation }) {
     <SafeAreaView style={styles.container}>
       <LoaderModal visible={loading} message={t.loading} />
 
-      {/* ---------------- FIXED HEADER ---------------- */}
+      {/* -------- FIXED HEADER -------- */}
       <View style={styles.fixedHeader}>
         <View style={styles.header}>
           <LanguageToggle />
@@ -182,16 +175,26 @@ export default function AdminDashboardProduction({ navigation }) {
         </View>
       </View>
 
-      {/* ---------------- SCROLLABLE CONTENT ---------------- */}
+      {/* -------- SCROLLABLE CONTENT -------- */}
       <ScrollView
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 50 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <Text style={styles.title}>{t.headerTitle}</Text>
-        <CRPList />
-        <OverallAnalyticsSection />
+        <Text style={styles.title}>
+          {t.headerTitle} - {memberCode}
+        </Text>
+
+        {/* SECTION 1 */}
+        <View style={styles.section}>
+          <CRPInfo memberCode={memberCode} refreshKey={refreshKey} />
+        </View>
+
+        {/* SECTION 2 */}
+        <View style={styles.section}>
+          <CRPPanchayats memberCode={memberCode} refreshKey={refreshKey} />
+        </View>
       </ScrollView>
 
       <BurgerMenu
@@ -235,14 +238,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     marginTop: 8,
-    marginBottom: 8,
+    marginBottom: 12,
     color: '#EE6969',
-    textAlign: 'center',
-  },
-  greetingText: {
-    fontSize: 16,
-    marginBottom: 16,
-    color: '#444',
     textAlign: 'center',
   },
   section: {
@@ -250,15 +247,13 @@ const styles = StyleSheet.create({
     borderColor: '#FF7E00',
     borderRadius: 10,
     padding: 16,
-    marginBottom: 12,
-    marginTop: 12,
-    minHeight: 90,
-    justifyContent: 'center',
+    marginBottom: 16,
     backgroundColor: '#FFF7F0',
   },
   sectionHeading: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });

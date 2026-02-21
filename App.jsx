@@ -14,6 +14,7 @@ import ExistingEnterpriseForm from './src/screens/screensProductionApp/ExistingE
 import NewEnterpriseForm from './src/screens/screensProductionApp/NewEnterpriseForm';
 import NoEnterpriseForm from './src/screens/screensProductionApp/NoEnterpriseForm';
 import { LanguageProvider } from './src/components/LanguageContext';
+import CRPDetail from './src/screens/screensProductionApp/AdminComponents/CRPDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,12 +33,18 @@ export default function App() {
           <Stack.Screen name="CRPDashboard" component={CRPDashboard} />
           <Stack.Screen name="CRPRecordFlow" component={CRPRecordFlow} />
           <Stack.Screen name="CRPViewRecorded" component={CRPViewRecorded} />
-          <Stack.Screen name="ExistingEnterpriseForm" component={ExistingEnterpriseForm} />
-          <Stack.Screen name="NewEnterpriseForm" component={NewEnterpriseForm} />
+          <Stack.Screen
+            name="ExistingEnterpriseForm"
+            component={ExistingEnterpriseForm}
+          />
+          <Stack.Screen
+            name="NewEnterpriseForm"
+            component={NewEnterpriseForm}
+          />
           <Stack.Screen name="NoEnterpriseForm" component={NoEnterpriseForm} />
           {/* Admin flow (existing hierarchy reused) */}
           <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-
+          <Stack.Screen name="CRPDetail" component={CRPDetail} />
         </Stack.Navigator>
       </NavigationContainer>
     </LanguageProvider>

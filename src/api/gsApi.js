@@ -1,16 +1,15 @@
 // src/api/gsApi.js
 //  import Config from "react-native-config";
-import { X_API_ID, X_API_KEY } from '@env';  
+import { X_API_ID, X_API_KEY } from '@env';
 const BASE_URL = 'http://66.116.207.88:8088';
-const clientId = X_API_ID ;
-const clientKey = X_API_KEY ;
+const clientId = X_API_ID;
+const clientKey = X_API_KEY;
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
+  Accept: 'application/json',
   'X-API-ID': clientId,
   'X-API-KEY': clientKey,
 };
-
-
 
 let AUTH_TOKEN = null;
 let REFRESH_TOKEN = null;
@@ -111,9 +110,7 @@ function isAccessTokenExpired(err) {
   if (err.status !== 401) return false;
 
   const detail =
-    typeof err?.data?.detail === 'string'
-      ? err.data.detail.toLowerCase()
-      : '';
+    typeof err?.data?.detail === 'string' ? err.data.detail.toLowerCase() : '';
 
   return (
     detail.includes('token_not_valid') ||
@@ -135,7 +132,7 @@ async function request(
     headers = {},
     useAuth = true,
     retryOnAuthFail = true,
-  } = {}
+  } = {},
 ) {
   const url = buildUrl(path);
 
@@ -154,7 +151,12 @@ async function request(
   try {
     return await doFetch();
   } catch (err) {
-    if (useAuth && retryOnAuthFail && isAccessTokenExpired(err) && REFRESH_TOKEN) {
+    if (
+      useAuth &&
+      retryOnAuthFail &&
+      isAccessTokenExpired(err) &&
+      REFRESH_TOKEN
+    ) {
       // refresh once
       await refreshAccessTokenOnce();
       return doFetch();
@@ -173,7 +175,7 @@ async function requestMultipart(
     headers = {},
     useAuth = true,
     retryOnAuthFail = true,
-  } = {}
+  } = {},
 ) {
   const url = buildUrl(path);
 
@@ -195,7 +197,12 @@ async function requestMultipart(
   try {
     return await doFetch();
   } catch (err) {
-    if (useAuth && retryOnAuthFail && isAccessTokenExpired(err) && REFRESH_TOKEN) {
+    if (
+      useAuth &&
+      retryOnAuthFail &&
+      isAccessTokenExpired(err) &&
+      REFRESH_TOKEN
+    ) {
       await refreshAccessTokenOnce();
       return doFetch();
     }
@@ -229,30 +236,51 @@ export async function login(username, password) {
 
 // ======================= LOOKUPS =======================
 
-export async function getDistricts(page = 1, search = '') {
+/* ================= Districts ================= */
+
+export async function getDistricts(page = 1, search = '', pageSize = null) {
   const qs = new URLSearchParams();
   qs.append('page', String(page));
+
   if (search) qs.append('search', search);
+  if (pageSize) qs.append('page_size', String(pageSize));
 
   return request(`/api/v1/lookups/districts/?${qs.toString()}`);
 }
 
-export async function getBlocksByDistrict(districtId, page = 1, search = '') {
+/* ================= Blocks ================= */
+
+export async function getBlocksByDistrict(
+  districtId,
+  page = 1,
+  search = '',
+  pageSize = null,
+) {
   const qs = new URLSearchParams();
   qs.append('page', String(page));
+
   if (search) qs.append('search', search);
+  if (pageSize) qs.append('page_size', String(pageSize));
 
   return request(`/api/v1/lookups/blocks/${districtId}/?${qs.toString()}`);
 }
 
-export async function getPanchayatsByBlock(blockId, page = 1, search = '') {
+/* ================= Panchayats ================= */
+
+export async function getPanchayatsByBlock(
+  blockId,
+  page = 1,
+  search = '',
+  pageSize = null,
+) {
   const qs = new URLSearchParams();
   qs.append('page', String(page));
+
   if (search) qs.append('search', search);
+  if (pageSize) qs.append('page_size', String(pageSize));
 
   return request(`/api/v1/lookups/panchayats/${blockId}/?${qs.toString()}`);
 }
-
 /**
  * Backward compatible:
  *   - old: getVillagesByPanchayat(panchayatId, page = 1, search = '')
@@ -261,7 +289,7 @@ export async function getPanchayatsByBlock(blockId, page = 1, search = '') {
 export async function getVillagesByPanchayat(
   panchayatId,
   pageOrOptions = 1,
-  search = ''
+  search = '',
 ) {
   const qs = new URLSearchParams();
 
@@ -290,7 +318,7 @@ export async function getVillagesByPanchayat(
 
   const query = qs.toString();
   return request(
-    `/api/v1/lookups/villages/${panchayatId}/${query ? `?${query}` : ''}`
+    `/api/v1/lookups/villages/${panchayatId}/${query ? `?${query}` : ''}`,
   );
 }
 
@@ -300,6 +328,20 @@ export async function getVillagesByPanchayat(
  */
 export async function getVillageDetail(villageId) {
   return request(`/api/v1/lookups/villages/detail/${villageId}/`);
+}
+
+// ======================= EP SAKHI ANALYTICS =======================
+export async function getEPSakhiAnalytics() {
+  return request('/api/v1/eps-admin-dash/');
+}
+
+export async function getAdminCrpList(params = {}) {
+  const query = buildQuery({
+    // page_size: 50000,
+    ...params,
+  });
+
+  return request(`/api/v1/eps-admin-crp/${query}`);
 }
 
 // ======================= EP SAKHI HELPERS =======================
@@ -331,6 +373,28 @@ export async function getPanchayatsUnderCrpByMember(memberCode, params = {}) {
   return request(`/api/v1/panchayats-under-crp/${memberCode}/${query}`);
 }
 
+/* ================= CRP-PANCHAYAT CRUD ================= */
+
+export async function createCrpPanchayat(payload) {
+  return request('/api/v1/crud-panchayats-under-crp/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function updateCrpPanchayat(id, payload) {
+  return request(`/api/v1/crud-panchayats-under-crp/${id}/`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export async function deleteCrpPanchayat(id) {
+  return request(`/api/v1/crud-panchayats-under-crp/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
 // Recorded beneficiaries (main)
 
 export async function getRecordedBeneficiaries(params = {}) {
@@ -338,9 +402,9 @@ export async function getRecordedBeneficiaries(params = {}) {
   return request(`/api/v1/recorded-beneficiaries/${query}`);
 }
 
-export async function getpld(parmas={}){
-  const query= buildQuery(params);
-  return request (`/api/v1/upsrlm-shg-members/${query}`);
+export async function getpld(parmas = {}) {
+  const query = buildQuery(params);
+  return request(`/api/v1/upsrlm-shg-members/${query}`);
 }
 export async function getRecordedBeneficiaryDetail(id) {
   return request(`/api/v1/recorded-beneficiaries/${id}/`);
@@ -415,6 +479,26 @@ export async function getExistingEnterprises(params = {}) {
   return request(`/api/v1/existing-enterprise/${query}`);
 }
 
+export async function deleteExistingEnterprise(id) {
+  return request(`/api/v1/existing-enterprise/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createEnterpriseLicense(payload) {
+  return requestMultipart('/api/v1/enterprise-licenses/', {
+    // Use requestMultipart here
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function deleteEnterpriseLicense(id) {
+  return request(`/api/v1/enterprise-licenses/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
 function isFormData(obj) {
   return obj && typeof obj.append === 'function';
 }
@@ -452,6 +536,38 @@ export async function getNewEnterprise(id) {
 export async function getNewEnterprises(params = {}) {
   const query = buildQuery(params);
   return request(`/api/v1/new-enterprise/${query}`);
+}
+
+export async function deleteNewEnterprise(id) {
+  return request(`/api/v1/new-enterprise/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createEnterpriseMandatoryFund(payload) {
+  return request('/api/v1/mandatory-fund/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function deleteEnterpriseMandatoryFund(id) {
+  return request(`/api/v1/mandatory-fund/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createEnterpriseSupport(payload) {
+  return request('/api/v1/enterprise-support/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function deleteEnterpriseSupport(id) {
+  return request(`/api/v1/enterprise-support/${id}/`, {
+    method: 'DELETE',
+  });
 }
 
 // ======================= ENTERPRISE CHILD MODELS =======================
@@ -510,7 +626,7 @@ export async function getEnterpriseSupportDetails(params = {}) {
   return request(`/api/v1/enterprise-support-details/${query}`);
 }
 
-// Training requirements (existing/new/no-enterprise, form_type = rec/req)
+// Training requirements (existing/new, form_type = rec/req)
 
 export async function createEnterpriseTrainingReq(payload) {
   return request('/api/v1/enterprise-training-reqs/', {
@@ -535,6 +651,60 @@ export async function deleteEnterpriseTrainingReq(id) {
 export async function getEnterpriseTrainingReqs(params = {}) {
   const query = buildQuery(params);
   return request(`/api/v1/enterprise-training-reqs/${query}`);
+}
+
+// Training Media
+
+export async function createTrainingMedia(payload) {
+  return request('/api/v1/training-certificates/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function updateTrainingMedia(id, payload) {
+  return request(`/api/v1/training-certificates/${id}/`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export async function uploadTrainingCertificate(formData) {
+  return requestMultipart('/api/v1/training-certificates/', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export async function deleteTrainingMedia(id) {
+  return request(`/api/v1/training-certificates/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createEnterpriseSubsidyDetail(payload) {
+  return request('/api/v1/enterprise-subsidy-details/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function updateEnterpriseSubsidyDetail(id, payload) {
+  return request(`/api/v1/enterprise-subsidy-details/${id}/`, {
+    method: 'PATCH', // Using PATCH as per your Loan pattern
+    body: payload,
+  });
+}
+
+export async function deleteEnterpriseSubsidyDetail(id) {
+  return request(`/api/v1/enterprise-subsidy-details/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function getEnterpriseSubsidyDetails(params = {}) {
+  const query = buildQuery(params);
+  return request(`/api/v1/enterprise-subsidy-details/${query}`);
 }
 
 // Media (existing/new enterprise)
@@ -566,6 +736,33 @@ export async function getEnterpriseMediaList(params = {}) {
 
 // Products
 
+// SHOP BASED ENTERPRISE
+export async function createEnterpriseShop(payload) {
+  return request('/api/v1/enterprise-shop/', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export async function deleteEnterpriseShop(id) {
+  return request(`/api/v1/enterprise-shop/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
+export async function uploadShopMedia(formData) {
+  return requestMultipart('/api/v1/shop-media/', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export async function deleteShopMedia(id) {
+  return request(`/api/v1/shop-media/${id}/`, {
+    method: 'DELETE',
+  });
+}
+
 export async function createEnterpriseProduct(payload) {
   return request('/api/v1/enterprise-products/', {
     method: 'POST',
@@ -589,6 +786,13 @@ export async function deleteEnterpriseProduct(id) {
 export async function getEnterpriseProducts(params = {}) {
   const query = buildQuery(params);
   return request(`/api/v1/enterprise-products/${query}`);
+}
+
+export async function uploadProductMedia(payload) {
+  return request('/api/v1/product-media/', {
+    method: 'POST',
+    body: payload,
+  });
 }
 
 // Enterprise type/category (existing/new/no)
@@ -674,6 +878,23 @@ export async function getNoEnterpriseWages(params = {}) {
   return request(`/api/v1/no-enterprise-wages/${query}`);
 }
 
+// NEW! Admin side APIs
+export async function updateUser(userId, payload) {
+  return request(`/api/v1/lookups/users/${userId}/`, {
+    method: 'PATCH',
+    body: payload,
+    useAuth: false,
+    headers: DEFAULT_HEADERS,
+  });
+}
+
+export async function updateCrp(id, payload) {
+  return request(`/api/v1/crp/${id}/`, {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
 // ======================= EXPORT AGGREGATED API =======================
 
 const api = {
@@ -690,6 +911,11 @@ const api = {
   getPanchayatsByBlock,
   getVillagesByPanchayat,
   getVillageDetail,
+  updateUser,
+
+  // Analytics
+  getEPSakhiAnalytics,
+  getAdminCrpList,
 
   // CRP helpers
   getCrpDetailByUserId,
@@ -697,6 +923,10 @@ const api = {
   getCrpListByClf,
   getPanchayatsUnderCrpByUserId,
   getPanchayatsUnderCrpByMember,
+  updateCrp,
+  createCrpPanchayat,
+  updateCrpPanchayat,
+  deleteCrpPanchayat,
 
   // UPSRLM + epSakhi helper
   getUpsrlmShgList,
@@ -711,15 +941,18 @@ const api = {
   updateRecordedBeneficiary,
   deleteRecordedBeneficiary,
 
-  // enterprise main (existing / new)
+  // existing enterprise
   createExistingEnterprise,
   updateExistingEnterprise,
   getExistingEnterprise,
   getExistingEnterprises,
-  createNewEnterprise,
-  updateNewEnterprise,
-  getNewEnterprise,
-  getNewEnterprises,
+
+  // child models - licenses
+  createEnterpriseLicense,
+
+  // child models - shops
+  createEnterpriseShop,
+  uploadShopMedia,
 
   // child models - loan
   createEnterpriseLoanDetail,
@@ -733,12 +966,6 @@ const api = {
   deleteEnterpriseSupportDetail,
   getEnterpriseSupportDetails,
 
-  // child models - training
-  createEnterpriseTrainingReq,
-  updateEnterpriseTrainingReq,
-  deleteEnterpriseTrainingReq,
-  getEnterpriseTrainingReqs,
-
   // child models - media
   uploadEnterpriseMedia,
   updateEnterpriseMedia,
@@ -751,12 +978,57 @@ const api = {
   deleteEnterpriseProduct,
   getEnterpriseProducts,
 
+  uploadProductMedia,
+
+  // new enterprise
+  createNewEnterprise,
+  updateNewEnterprise,
+  getNewEnterprise,
+  getNewEnterprises,
+
+  // Shared
+  // child models - mandatory fund
+  createEnterpriseMandatoryFund,
+
+  // child models - support
+  createEnterpriseSupport,
+
+  // child models - training
+  createEnterpriseTrainingReq,
+  updateEnterpriseTrainingReq,
+  deleteEnterpriseTrainingReq,
+  getEnterpriseTrainingReqs,
+
+  createTrainingMedia,
+  updateTrainingMedia,
+  deleteTrainingMedia,
+
+  uploadTrainingCertificate,
+
+  // child models - subsidy
+  createEnterpriseSubsidyDetail,
+  updateEnterpriseSubsidyDetail,
+  deleteEnterpriseSubsidyDetail,
+  getEnterpriseSubsidyDetails,
+
   // child models - type/category
   createEnterpriseType,
   updateEnterpriseType,
   deleteEnterpriseType,
   getEnterpriseTypes,
 
+  // Deletion Rows
+  deleteExistingEnterprise,
+  deleteEnterpriseLicense,
+  deleteNewEnterprise,
+  deleteEnterpriseMandatoryFund,
+  deleteEnterpriseSupport,
+  deleteEnterpriseTrainingReq,
+  deleteTrainingMedia,
+  deleteEnterpriseShop,
+  deleteShopMedia,
+
+  // CANCELLED
   // no-enterprise flows
   createNoEnterpriseForm,
   updateNoEnterpriseForm,

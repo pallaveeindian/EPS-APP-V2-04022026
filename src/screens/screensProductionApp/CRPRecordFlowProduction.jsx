@@ -25,13 +25,12 @@ import SearchBar from '../SearchBar';
 import { LanguageContext } from '../../components/LanguageContext';
 import LanguageToggle from '../../components/LanguageToggle';
 
-
 const UI_PAGE_SIZE = 10;
 
 export default function CRPRecordFlowProduction({ navigation }) {
   //  LanguageContext hook at TOP level (following CRPDashboard pattern)
   const { language } = useContext(LanguageContext);
-  
+
   const translations = {
     en: {
       selectGramPanchayat: 'Select Gram Panchayat',
@@ -48,11 +47,13 @@ export default function CRPRecordFlowProduction({ navigation }) {
       failedShgs: 'Failed to fetch SHGs for this village.',
       failedMembers: 'Failed to fetch SHG members.',
       alreadyRecorded: 'Already Recorded',
-      alreadyRecordedMessage: 'This beneficiary enterprise has already been recorded.',
+      alreadyRecordedMessage:
+        'This beneficiary enterprise has already been recorded.',
       hasExistingEnterprise: 'Does ',
       haveExistingEnterprise: ' have an existing Enterprise?',
       interestedNewEnterprise: 'Is ',
-      interestedOpeningNewEnterprise: ' interested in opening a new Enterprise?',
+      interestedOpeningNewEnterprise:
+        ' interested in opening a new Enterprise?',
       yes: 'Yes',
       no: 'No',
       cancel: 'Cancel',
@@ -123,7 +124,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
 
   // RECORDED BENEFICIARIES STATE (kept in sync with server)
   const [recorded, setRecorded] = useState(getCrpRecordedBeneficiaries() || []);
-// const [PLDrecList, setPLDrecList] = useState([]);
+  // const [PLDrecList, setPLDrecList] = useState([]);
   // ---------- Helpers ----------
 
   const paginate = (items, page) => {
@@ -135,15 +136,21 @@ export default function CRPRecordFlowProduction({ navigation }) {
     filteredPanchayats,
     filteredVillages,
     filteredShgs,
-    filteredBeneficiaries
+    filteredBeneficiaries,
   ) => {
     if (step === 'gp') {
-      const total = Math.max(1, Math.ceil(filteredPanchayats.length / UI_PAGE_SIZE));
+      const total = Math.max(
+        1,
+        Math.ceil(filteredPanchayats.length / UI_PAGE_SIZE),
+      );
       const current = Math.min(pageGp, total);
       return { currentPage: current, totalPages: total };
     }
     if (step === 'village') {
-      const total = Math.max(1, Math.ceil(filteredVillages.length / UI_PAGE_SIZE));
+      const total = Math.max(
+        1,
+        Math.ceil(filteredVillages.length / UI_PAGE_SIZE),
+      );
       const current = Math.min(pageVillage, total);
       return { currentPage: current, totalPages: total };
     }
@@ -152,7 +159,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
       const current = Math.min(pageShg, total);
       return { currentPage: current, totalPages: total };
     }
-    const total = Math.max(1, Math.ceil(filteredBeneficiaries.length / UI_PAGE_SIZE));
+    const total = Math.max(
+      1,
+      Math.ceil(filteredBeneficiaries.length / UI_PAGE_SIZE),
+    );
     const current = Math.min(pageBenef, total);
     return { currentPage: current, totalPages: total };
   };
@@ -161,7 +171,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
     `${String(panchayatId || '')}::${String(villageId || '')}`;
 
   // Calculate age helper
-  const calculateAge = (dobStr) => {
+  const calculateAge = dobStr => {
     if (!dobStr) return null;
     try {
       const dob = new Date(dobStr);
@@ -178,17 +188,19 @@ export default function CRPRecordFlowProduction({ navigation }) {
     }
   };
 
-  const filterRecordedCountForVillage = (villageId) =>
-    recorded.filter((r) => String(r.village_id) === String(villageId)).length;
+  const filterRecordedCountForVillage = villageId =>
+    recorded.filter(r => String(r.village_id) === String(villageId)).length;
 
-  const filterRecordedCountForShg = (shgCode) =>
-    recorded.filter((r) => String(r.lokos_shg_code) === String(shgCode)).length;
+  const filterRecordedCountForShg = shgCode =>
+    recorded.filter(r => String(r.lokos_shg_code) === String(shgCode)).length;
 
   const buildRecordedPayloadFromMember = (member, shg) => {
     const addresses = Array.isArray(member?.member_addresses)
       ? member.member_addresses
       : [];
-    const phones = Array.isArray(member?.member_phones) ? member.member_phones : [];
+    const phones = Array.isArray(member?.member_phones)
+      ? member.member_phones
+      : [];
 
     const primaryAddress = addresses[0] || {};
     const primaryPhone = phones[0] || {};
@@ -199,7 +211,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
     if (candidate !== null && candidate !== undefined) {
       if (typeof candidate === 'number') {
         created_by_to_send = candidate;
-      } else if (typeof candidate === 'string' && /^\d+$/.test(candidate.trim())) {
+      } else if (
+        typeof candidate === 'string' &&
+        /^\d+$/.test(candidate.trim())
+      ) {
         created_by_to_send = parseInt(candidate.trim(), 10);
       }
     }
@@ -221,11 +236,13 @@ export default function CRPRecordFlowProduction({ navigation }) {
       block_id: primaryAddress?.block_id ?? blockId ?? null,
       panchayat_id:
         primaryAddress?.panchayat_id ?? selectedPanchayat?.panchayat_id ?? null,
-      village_id: primaryAddress?.village_id ?? selectedVillage?.village_id ?? null,
+      village_id:
+        primaryAddress?.village_id ?? selectedVillage?.village_id ?? null,
 
       mobile: primaryPhone?.phone_no ?? null,
 
-      lokos_shg_code: (shg?.code ?? member?.shg_code ?? selectedShg?.code) ?? null,
+      lokos_shg_code:
+        shg?.code ?? member?.shg_code ?? selectedShg?.code ?? null,
     };
 
     if (created_by_to_send !== null) {
@@ -279,7 +296,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       }
     })();
 
-    const panchayatIds = gps.map((p) => p.panchayat_id).filter(Boolean);
+    const panchayatIds = gps.map(p => p.panchayat_id).filter(Boolean);
     if (panchayatIds.length) {
       (async () => {
         try {
@@ -308,7 +325,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
   // ---------- Fetch helpers (API) ----------
 
   // Fetch all villages for a panchayat – SINGLE backend call, large page_size
-  const fetchVillagesForPanchayat = async (panchayatId) => {
+  const fetchVillagesForPanchayat = async panchayatId => {
     try {
       const res = await gsApi.getVillagesByPanchayat(panchayatId, {
         page: 1,
@@ -390,7 +407,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
   };
 
   // Fetch SHG members for a SHG (keep paging loop; members count is manageable)
-  const fetchMembersForShg = async (shgCode) => {
+  const fetchMembersForShg = async shgCode => {
     const all = [];
     let page = 1;
     const MAX_PAGES = 50; // hard safety cap
@@ -419,56 +436,9 @@ export default function CRPRecordFlowProduction({ navigation }) {
     return all;
   };
 
-// const fetchMembersForShg = async (shgCode) => {
-//   const all = [];
-//   const PLDall = []; // ✅ PLD-only accumulator
-//   let page = 1;
-//   const MAX_PAGES = 50; // hard safety cap
-
-//   while (page <= MAX_PAGES) {
-//     try {
-//       const res = await gsApi.getUpsrlmShgMembers(shgCode, {
-//         page,
-//         page_size: 10,
-//       });
-
-//       const rows = Array.isArray(res?.data)
-//         ? res.data
-//         : Array.isArray(res?.results)
-//         ? res.results
-//         : Array.isArray(res)
-//         ? res
-//         : [];
-
-//       if (!rows.length) break;
-
-//       // ✅ keep ALL rows
-//       all.push(...rows);
-
-//       // ✅ filter PLD rows
-//       const PLDrows = rows.filter(
-//         (row) => row?.pld_status === true
-//       );
-//       PLDall.push(...PLDrows);
-
-//       page += 1;
-//     } catch (err) {
-//       if (err?.status === 404) break;
-//       throw err;
-//     }
-//   }
-
-//   return {
-//     allRows: all,
-//     PLDrows: PLDall,
-//   };
-// };
-
-
-
   // ---------- Handlers for steps ----------
 
-  const handleSelectPanchayat = async (p) => {
+  const handleSelectPanchayat = async p => {
     if (!blockId) {
       Alert.alert(t.error, t.crpNotMapped);
       return;
@@ -495,7 +465,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
     }
   };
 
-  const handleSelectVillage = async (v) => {
+  const handleSelectVillage = async v => {
     setSelectedVillage(v);
     setSelectedShg(null);
     setBeneficiaries([]);
@@ -506,7 +476,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       setLoading(true);
       const cacheKey = makeVillageCacheKey(
         selectedPanchayat?.panchayat_id,
-        v.village_id
+        v.village_id,
       );
       let shgRows = getShgListForPanchayat(cacheKey) || [];
 
@@ -515,7 +485,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       }
 
       // safety: keep only SHGs belonging to this village
-      const shgsInVillage = shgRows.filter((s) => {
+      const shgsInVillage = shgRows.filter(s => {
         const shgVillage =
           s.villageId !== undefined && s.villageId !== null
             ? s.villageId
@@ -532,7 +502,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
     }
   };
 
-  const handleSelectShg = async (s) => {
+  const handleSelectShg = async s => {
     setSelectedShg(s);
     setStep('beneficiaries');
     setPageBenef(1);
@@ -541,18 +511,23 @@ export default function CRPRecordFlowProduction({ navigation }) {
       setLoading(true);
       const rows = await fetchMembersForShg(s.code);
 
-      const enriched = rows.map((m) => {
+      const enriched = rows.map(m => {
         const rec = recorded.find(
-          (r) =>
+          r =>
             String(r.lokos_member_code) === String(m.member_code) &&
-            String(r.lokos_shg_code) === String(s.code)
+            String(r.lokos_shg_code) === String(s.code),
         );
 
         // Recorded only if enterprise_id is present
         const isRecorded = !!(rec && rec.enterprise_id);
-         const isPLD = m?.pld_status === true; // ✅ SAFE ADDITION
+        const isPLD = m?.pld_status === true; // ✅ SAFE ADDITION
 
-        return { ...m, _isRecorded: isRecorded, _recordRow: rec || null, _isPLD: isPLD };
+        return {
+          ...m,
+          _isRecorded: isRecorded,
+          _recordRow: rec || null,
+          _isPLD: isPLD,
+        };
       });
       setBeneficiaries(enriched);
     } catch (err) {
@@ -563,37 +538,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
     }
   };
 
-
-// const handleSelectShg = async (shg) => {
-//   try {
-//     setLoading(true);
-
-//     const { allRows, PLDrows } = await fetchMembersForShg(shg.code);
-
-//     console.log('ALL SHG members:', allRows);
-//     console.log('PLD SHG members:', PLDrows);
-
-//     const enriched = allRows.map((r) => ({
-//       ...r,
-//       _isRecorded: recorded.some(
-//         (rec) =>
-//           String(rec.member_code) === String(r.member_code)
-//       ),
-//     }));
-
-//     setBeneficiaries(enriched);
-//     setStep('beneficiaries');
-//     setPaging((p) => ({ ...p, currentPage: 1 }));
-
-//   } catch (e) {
-//     console.log('Error in handleSelectShg', e);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
-  const handleBeneficiaryPress = async (row) => {
+  const handleBeneficiaryPress = async row => {
     const hasExisting = row._isRecorded;
 
     if (hasExisting) {
@@ -636,25 +581,18 @@ export default function CRPRecordFlowProduction({ navigation }) {
                 },
                 {
                   text: t.no,
-                  // onPress: () =>
-                  //   navigation.navigate('NoEnterpriseForm', {
-                  //     beneficiary: row,
-                  //     recordedBenef: row._recordRow,
-                  //     tempShg: selectedShg,
-                  //     crpUserId,
-                  //   }),
-                   onPress: () => {
-    Alert.alert(
-      "Success",
-      "Your data has been recorded successfully",
-      [{ text: "OK", style: "default" }],
-      { cancelable: true }
-    );
-  },
+                  onPress: () => {
+                    Alert.alert(
+                      'Success',
+                      'Your data has been recorded successfully',
+                      [{ text: 'OK', style: 'default' }],
+                      { cancelable: true },
+                    );
+                  },
                   style: 'default',
                 },
               ],
-              { cancelable: true }
+              { cancelable: true },
             );
           },
           style: 'default',
@@ -665,7 +603,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
           style: 'cancel',
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
 
@@ -673,34 +611,64 @@ export default function CRPRecordFlowProduction({ navigation }) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+
     try {
       if (step === 'gp') {
         const gps = getCrpPanchayats() || [];
         setPanchayats(gps);
-        const panchayatIds = gps.map((p) => p.panchayat_id).filter(Boolean);
+
+        const panchayatIds = gps.map(p => p.panchayat_id).filter(Boolean);
+
         if (panchayatIds.length) {
           try {
             const res = await gsApi.getRecordedBeneficiaries({
               panchayat_multi: panchayatIds.join(','),
               page_size: 5000,
             });
+
             const recList = Array.isArray(res?.results)
               ? res.results
               : Array.isArray(res)
               ? res
               : [];
+
             setRecorded(recList);
             setCrpRecordedBeneficiaries?.(recList);
           } catch (e) {
-            console.log('Error refreshing recorded beneficiaries on refresh', e);
+            console.log('Error refreshing recorded beneficiaries', e);
           }
         }
+
         setPageGp(1);
       } else if (step === 'village' && selectedPanchayat) {
         await handleSelectPanchayat(selectedPanchayat);
       } else if (step === 'shg' && selectedVillage) {
         await handleSelectVillage(selectedVillage);
       } else if (step === 'beneficiaries' && selectedShg) {
+        // 🔥 1️⃣ Refresh recorded list for current panchayat
+        const panchayatId = selectedPanchayat?.panchayat_id;
+
+        if (panchayatId) {
+          try {
+            const res = await gsApi.getRecordedBeneficiaries({
+              panchayat_multi: String(panchayatId),
+              page_size: 5000,
+            });
+
+            const recList = Array.isArray(res?.results)
+              ? res.results
+              : Array.isArray(res)
+              ? res
+              : [];
+
+            setRecorded(recList);
+            setCrpRecordedBeneficiaries?.(recList);
+          } catch (e) {
+            console.log('Error refreshing recorded list for beneficiaries', e);
+          }
+        }
+
+        // 🔥 2️⃣ Re-fetch members and re-evaluate _isRecorded
         await handleSelectShg(selectedShg);
       }
     } catch (e) {
@@ -710,106 +678,49 @@ export default function CRPRecordFlowProduction({ navigation }) {
     }
   };
 
-//   const handleRefresh = async () => {
-//   setRefreshing(true);
-//   try {
-//     if (step === 'gp') {
-//       const gps = getCrpPanchayats() || [];
-//       setPanchayats(gps);
-
-//       const panchayatIds = gps.map(p => p.panchayat_id).filter(Boolean);
-
-//       if (panchayatIds.length) {
-//         try {
-//           const res = await gsApi.getRecordedBeneficiaries({
-//             panchayat_multi: panchayatIds.join(','),
-//             page_size: 5000,
-//           });
-
-//           const recList = Array.isArray(res?.results)
-//             ? res.results
-//             : Array.isArray(res)
-//             ? res
-//             : [];
-
-//           // ✅ Existing list (all rows)
-//           setRecorded(recList);
-//           setCrpRecordedBeneficiaries?.(recList);
-
-//           // ✅ NEW: PLD-only list
-//           const PLDrecList = recList.filter(
-//             item => item?.pld_status === true
-//           );
-//           setPLDrecList(PLDrecList);
-
-//         } catch (e) {
-//           console.log(
-//             'Error refreshing recorded beneficiaries on refresh',
-//             e
-//           );
-//         }
-//       }
-//       setPageGp(1);
-//     } 
-//     else if (step === 'village' && selectedPanchayat) {
-//       await handleSelectPanchayat(selectedPanchayat);
-//     } 
-//     else if (step === 'shg' && selectedVillage) {
-//       await handleSelectVillage(selectedVillage);
-//     } 
-//     else if (step === 'beneficiaries' && selectedShg) {
-//       await handleSelectShg(selectedShg);
-//     }
-//   } catch (e) {
-//     console.log('Error in handleRefresh', e);
-//   } finally {
-//     setRefreshing(false);
-//   }
-// };
-
-
   // ---------- Filters + paging ----------
 
-  const filteredPanchayats = panchayats.filter((p) =>
-    (p.panchayat_name_en || '').toLowerCase().includes(query.toLowerCase())
+  const filteredPanchayats = panchayats.filter(p =>
+    (p.panchayat_name_en || '').toLowerCase().includes(query.toLowerCase()),
   );
 
-  const filteredVillages = villages.filter((v) =>
+  const filteredVillages = villages.filter(v =>
     (v.village_name_english || v.village_name || '')
       .toLowerCase()
-      .includes(query.toLowerCase())
+      .includes(query.toLowerCase()),
   );
 
-  const filteredShgs = shgs.filter((s) =>
-    (s.name || s.name_en || '').toLowerCase().includes(query.toLowerCase())
+  const filteredShgs = shgs.filter(s =>
+    (s.name || s.name_en || '').toLowerCase().includes(query.toLowerCase()),
   );
 
-  const filteredBeneficiaries = beneficiaries.filter((b) =>
-    (b.member_name || '').toLowerCase().includes(benefQuery.toLowerCase())
+  const filteredBeneficiaries = beneficiaries.filter(b =>
+    (b.member_name || '').toLowerCase().includes(benefQuery.toLowerCase()),
   );
 
   const paging = getPagingForStep(
     filteredPanchayats,
     filteredVillages,
     filteredShgs,
-    filteredBeneficiaries
+    filteredBeneficiaries,
   );
 
   const handlePrevPage = () => {
     if (paging.currentPage <= 1) return;
-    if (step === 'gp') setPageGp((p) => Math.max(1, p - 1));
-    else if (step === 'village') setPageVillage((p) => Math.max(1, p - 1));
-    else if (step === 'shg') setPageShg((p) => Math.max(1, p - 1));
-    else setPageBenef((p) => Math.max(1, p - 1));
+    if (step === 'gp') setPageGp(p => Math.max(1, p - 1));
+    else if (step === 'village') setPageVillage(p => Math.max(1, p - 1));
+    else if (step === 'shg') setPageShg(p => Math.max(1, p - 1));
+    else setPageBenef(p => Math.max(1, p - 1));
   };
 
   const handleNextPage = () => {
     if (paging.currentPage >= paging.totalPages) return;
-    if (step === 'gp') setPageGp((p) => Math.min(paging.totalPages, p + 1));
+    if (step === 'gp') setPageGp(p => Math.min(paging.totalPages, p + 1));
     else if (step === 'village')
-      setPageVillage((p) => Math.min(paging.totalPages, p + 1));
-    else if (step === 'shg') setPageShg((p) => Math.min(paging.totalPages, p + 1));
-    else setPageBenef((p) => Math.min(paging.totalPages, p + 1));
+      setPageVillage(p => Math.min(paging.totalPages, p + 1));
+    else if (step === 'shg')
+      setPageShg(p => Math.min(paging.totalPages, p + 1));
+    else setPageBenef(p => Math.min(paging.totalPages, p + 1));
   };
 
   // ---------- UI helpers ----------
@@ -856,7 +767,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       return (
         <FlatList
           data={data}
-          keyExtractor={(item) => String(item.panchayat_id)}
+          keyExtractor={item => String(item.panchayat_id)}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
@@ -872,7 +783,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
                 {t.recorded}{' '}
                 {
                   recorded.filter(
-                    (r) => String(r.panchayat_id) === String(item.panchayat_id)
+                    r => String(r.panchayat_id) === String(item.panchayat_id),
                   ).length
                 }
               </Text>
@@ -887,7 +798,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       return (
         <FlatList
           data={data}
-          keyExtractor={(item) => String(item.village_id)}
+          keyExtractor={item => String(item.village_id)}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
           }
@@ -936,58 +847,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       );
     }
 
-//     const data = paginate(filteredBeneficiaries, currentPage);
-//     return (
-//       <FlatList
-//         data={data}
-//         keyExtractor={(item, idx) => item.member_code ?? String(idx)}
-//         refreshControl={
-//           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-//         }
-//         renderItem={({ item }) => {
-//   const isPLD = item?.pld_status === true;
-
-//   return (
-//     <TouchableOpacity
-//       style={[
-//         styles.listItem,
-//         isPLD && styles.pldListItem, // ✅ green highlight
-//       ]}
-//       onPress={() => handleBeneficiaryPress(item)}
-//     >
-//       {/* ✅ TOP-RIGHT STICKY PLD LABEL */}
-//       {isPLD && (
-//         <View style={styles.pldBadge}>
-//           <Text style={styles.pldBadgeText}>PLD</Text>
-//         </View>
-//       )}
-
-//       <View style={{ flex: 1 }}>
-//         <Text style={styles.listText}>
-//           {item.member_name}
-//           {item._isRecorded ? ' (Recorded)' : ''}
-//         </Text>
-//         <Text style={styles.metaText}>
-//           {t.memberCode}{item.member_code}
-//         </Text>
-//       </View>
-
-//       <Text
-//         style={[
-//           styles.statusBadge,
-//           item._isRecorded
-//             ? { backgroundColor: '#D4EDDA', color: '#155724' }
-//             : { backgroundColor: '#F8D7DA', color: '#721C24' },
-//         ]}
-//       >
-//         {item._isRecorded ? t.recordedStatus : t.notRecordedStatus}
-//       </Text>
-//     </TouchableOpacity>
-//   );
-// }}
-
-
-const data = paginate(filteredBeneficiaries, currentPage);
+    const data = paginate(filteredBeneficiaries, currentPage);
     return (
       <FlatList
         data={data}
@@ -995,75 +855,44 @@ const data = paginate(filteredBeneficiaries, currentPage);
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
+        renderItem={({ item }) => {
+          const isPLD = item._isPLD === true;
 
-renderItem={({ item }) => {
-  const isPLD = item._isPLD === true;
+          return (
+            <TouchableOpacity
+              style={[styles.listItem, isPLD && styles.pldListItem]}
+              onPress={() => handleBeneficiaryPress(item)}
+            >
+              {isPLD && (
+                <View style={styles.pldBadge}>
+                  <Text style={styles.pldBadgeText}>PLD</Text>
+                </View>
+              )}
 
-  return (
-    <TouchableOpacity
-      style={[
-        styles.listItem,
-        isPLD && styles.pldListItem,
-      ]}
-      onPress={() => handleBeneficiaryPress(item)}
-    >
-      {isPLD && (
-        <View style={styles.pldBadge}>
-          <Text style={styles.pldBadgeText}>PLD</Text>
-        </View>
-      )}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.listText}>
+                  {item.member_name}
+                  {item._isRecorded ? ' (Recorded)' : ''}
+                </Text>
+                <Text style={styles.metaText}>
+                  {t.memberCode}
+                  {item.member_code}
+                </Text>
+              </View>
 
-      <View style={{ flex: 1 }}>
-        <Text style={styles.listText}>
-          {item.member_name}
-          {item._isRecorded ? ' (Recorded)' : ''}
-        </Text>
-        <Text style={styles.metaText}>
-          {t.memberCode}{item.member_code}
-        </Text>
-      </View>
-
-      <Text
-        style={[
-          styles.statusBadge,
-          item._isRecorded
-            ? { backgroundColor: '#D4EDDA', color: '#155724' }
-            : { backgroundColor: '#F8D7DA', color: '#721C24' },
-        ]}
-      >
-        {item._isRecorded ? t.recordedStatus : t.notRecordedStatus}
-      </Text>
-    </TouchableOpacity>
-  );
-}}
-
-
-
-        // renderItem={({ item }) => (
-        //   <TouchableOpacity
-        //     style={styles.listItem}
-        //     onPress={() => handleBeneficiaryPress(item)}
-        //   >
-        //     <View style={{ flex: 1 }}>
-        //       <Text style={styles.listText}>
-        //         {item.member_name}
-        //         {item._isRecorded ? ' (Recorded)' : ''}
-        //       </Text>
-        //       <Text style={styles.metaText}>{t.memberCode}{item.member_code}</Text>
-        //     </View>
-        //     <Text
-        //       style={[
-        //         styles.statusBadge,
-        //         item._isRecorded
-        //           ? { backgroundColor: '#D4EDDA', color: '#155724' }
-        //           : { backgroundColor: '#F8D7DA', color: '#721C24' },
-        //       ]}
-        //     >
-        //       {item._isRecorded ? t.recordedStatus : t.notRecordedStatus}
-        //     </Text>
-        //   </TouchableOpacity>
-        // )}
-
+              <Text
+                style={[
+                  styles.statusBadge,
+                  item._isRecorded
+                    ? { backgroundColor: '#D4EDDA', color: '#155724' }
+                    : { backgroundColor: '#F8D7DA', color: '#721C24' },
+                ]}
+              >
+                {item._isRecorded ? t.recordedStatus : t.notRecordedStatus}
+              </Text>
+            </TouchableOpacity>
+          );
+        }}
       />
     );
   };
@@ -1073,19 +902,13 @@ renderItem={({ item }) => {
   return (
     <View style={styles.container}>
       <LoaderModal visible={loading} message={t.loading} />
-
-      {/* <View style={styles.headerRow}>
+      <View style={styles.headerRow}>
         <BackButton onPress={handleStepBack} />
-        <Text style={styles.headerTitle}>{getTitle()}</Text>
-      </View> */}
-      
-       <View style={styles.headerRow}>
-  <BackButton onPress={handleStepBack} />
-  <View style={{ flex: 1 }}>
-    <Text style={styles.headerTitle}>{getTitle()}</Text>
-  </View>
-  <LanguageToggle />
-</View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{getTitle()}</Text>
+        </View>
+        <LanguageToggle />
+      </View>
 
       <SearchBar
         placeholder={step === 'beneficiaries' ? t.searchBeneficiary : t.search}
@@ -1129,25 +952,19 @@ renderItem={({ item }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 12, marginTop: 40, backgroundColor: '#fff' },
-  // headerRow: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 12,
-  // },
-  // headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '600' },
 
   headerRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 12,
-  justifyContent: 'space-between',     
-  paddingRight: 8,                     
-},
-headerTitle: { 
-  textAlign: 'center', 
-  fontSize: 16,                        
-  fontWeight: '600' 
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    justifyContent: 'space-between',
+    paddingRight: 8,
+  },
+  headerTitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1189,45 +1006,25 @@ headerTitle: {
     fontSize: 14,
     fontWeight: '500',
   },
-//   pldListItem: {
-//   backgroundColor: '#E8F5E9',   // light green
-// },
 
-// pldBadge: {
-//   position: 'absolute',
-//   top: 1,
-//   right: 6,
-//   backgroundColor: '#2E7D32',
-//   paddingHorizontal: 8,
-//   paddingVertical: 2,
-//   borderRadius: 10,
-//   zIndex: 10,
-// },
+  pldListItem: {
+    backgroundColor: '#E8F5E9',
+  },
 
-// pldBadgeText: {
-//   color: '#fff',
-//   fontSize: 10,
-//   fontWeight: '700',
-// },
+  pldBadge: {
+    position: 'absolute',
+    top: 1,
+    right: 6,
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    zIndex: 10,
+  },
 
-pldListItem: {
-  backgroundColor: '#E8F5E9',
-},
-
-pldBadge: {
-  position: 'absolute',
-  top: 1,
-  right: 6,
-  backgroundColor: '#2E7D32',
-  paddingHorizontal: 8,
-  paddingVertical: 2,
-  borderRadius: 10,
-  zIndex: 10,
-},
-
-pldBadgeText: {
-  color: '#fff',
-  fontSize: 10,
-  fontWeight: '700',
-},
+  pldBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
 });

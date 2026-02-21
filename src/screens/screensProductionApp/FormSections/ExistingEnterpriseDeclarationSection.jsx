@@ -14,24 +14,19 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import LanguageToggle from '../../../components/LanguageToggle';
 import { LanguageContext } from '../../../components/LanguageContext';
 import { useContext } from 'react';
-// Yes/No toggle that works with STRING values: "Yes" / "No"
 const YesNoToggle = ({ value, onChange, language }) => {
   const current = value === 'Yes' ? 'Yes' : value === 'No' ? 'No' : '';
 
-  const handlePress = (opt) => {
-    // we store strings so that parent validation `=== 'Yes'` works
+  const handlePress = opt => {
     onChange(opt);
   };
 
   return (
     <View style={styles.yesNoRow}>
-      {['Yes', 'No'].map((opt) => (
+      {['Yes', 'No'].map(opt => (
         <TouchableOpacity
           key={opt}
-          style={[
-            styles.yesNoBtn,
-            current === opt && styles.yesNoBtnActive,
-          ]}
+          style={[styles.yesNoBtn, current === opt && styles.yesNoBtnActive]}
           onPress={() => handlePress(opt)}
         >
           <Text
@@ -41,11 +36,7 @@ const YesNoToggle = ({ value, onChange, language }) => {
             ]}
           >
             {/* {opt} */}
-             {language === 'hi'
-              ? opt === 'Yes'
-                ? 'हाँ'
-                : 'नहीं'
-              : opt}
+            {language === 'hi' ? (opt === 'Yes' ? 'हाँ' : 'नहीं') : opt}
           </Text>
         </TouchableOpacity>
       ))}
@@ -59,16 +50,12 @@ export default function ExistingEnterpriseDeclarationSection({
   onSubmit,
   submitting = false,
 }) {
-  // parent passes a "patch" function; just forward patches to it
-  const update = (patch) => setExistingForm(patch);
-const { language } = useContext(LanguageContext);
-  // Local state for date picker (DD / MM / YYYY)
+  const update = patch => setExistingForm(patch);
+  const { language } = useContext(LanguageContext);
   const [declDay, setDeclDay] = useState('');
   const [declMonth, setDeclMonth] = useState('');
   const [declYear, setDeclYear] = useState('');
   const [dateModalVisible, setDateModalVisible] = useState(false);
-
-  // Sync local pickers when declaration_date changes
   useEffect(() => {
     const d = existingForm.declaration_date;
     if (!d) {
@@ -105,15 +92,19 @@ const { language } = useContext(LanguageContext);
   const pickSignature = async () => {
     try {
       const res = await launchImageLibrary({
-        mediaType: 'mixed',
+        mediaType: 'photo',
         selectionLimit: 1,
       });
-      if (res.didCancel) return;
-      const assets = res.assets || [];
-      if (!assets.length) return;
 
+      if (res.didCancel || !res.assets) return;
+      const assets = res.assets || [];
+
+      const currentMedia = existingForm.media || {};
       update({
-        declaration_signature_files: assets,
+        media: {
+          ...currentMedia,
+          declaration_signature: assets,
+        },
       });
     } catch (e) {
       console.warn('Signature pick failed', e);
@@ -149,39 +140,48 @@ const { language } = useContext(LanguageContext);
   return (
     <View style={styles.sectionContainer}>
       <View
-                                          style={{
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                            marginBottom: 10,
-                                          }}
-                                        >
-      <Text style={styles.sectionTitle}> {language === 'hi'
-    ? '9) घोषणा एवं जमा करें'
-    : '9) Declaration & Submit'}</Text>
-<LanguageToggle/></View>
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
+        }}
+      >
+        <Text style={styles.sectionTitle}>
+          {' '}
+          {language === 'hi'
+            ? '9) घोषणा एवं जमा करें'
+            : '9) Declaration & Submit'}
+        </Text>
+        <LanguageToggle />
+      </View>
       {/* 1) Declaration confirmed */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>{language === 'hi' ? 'घोषणा' : 'Declaration'}</Text>
+        <Text style={styles.label}>
+          {language === 'hi' ? 'घोषणा' : 'Declaration'}
+        </Text>
         <Text style={styles.helpText}>
           {language === 'hi'
-    ? 'मैं यह घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी मेरे द्वारा जाँची गई है और सही है।'
-    : 'I hereby declare that all information provided above is correct and checked by me.'}
+            ? 'मैं यह घोषणा करता/करती हूँ कि ऊपर दी गई सभी जानकारी मेरे द्वारा जाँची गई है और सही है।'
+            : 'I hereby declare that all information provided above is correct and checked by me.'}
         </Text>
 
         <YesNoToggle
           value={existingForm.declaration_confirmed || ''}
-          onChange={(val) => update({ declaration_confirmed: val })}
+          onChange={val => update({ declaration_confirmed: val })}
         />
       </View>
 
       {/* 2) Declaration Date */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}> {language === 'hi' ? 'घोषणा तिथि' : 'Declaration Date'}</Text>
+        <Text style={styles.label}>
+          {' '}
+          {language === 'hi' ? 'घोषणा तिथि' : 'Declaration Date'}
+        </Text>
         <Text style={styles.helpText}>
-         {language === 'hi'
-    ? 'कृपया वह तिथि चुनें जिस दिन यह फॉर्म भरा जा रहा है। चयनित तिथि YYYY-MM-DD प्रारूप में सुरक्षित की जाएगी।'
-    : 'Please select the date on which this form is being completed. The selected date will be clearly stored as YYYY-MM-DD.'}
+          {language === 'hi'
+            ? 'कृपया वह तिथि चुनें जिस दिन यह फॉर्म भरा जा रहा है। चयनित तिथि YYYY-MM-DD प्रारूप में सुरक्षित की जाएगी।'
+            : 'Please select the date on which this form is being completed. The selected date will be clearly stored as YYYY-MM-DD.'}
         </Text>
 
         <TouchableOpacity
@@ -189,9 +189,10 @@ const { language } = useContext(LanguageContext);
           onPress={() => setDateModalVisible(true)}
         >
           <Text style={styles.dateDisplayText}>
-            {existingForm.declaration_date || (language === 'hi'
-    ? 'घोषणा तिथि चुनें'
-    : 'Select Declaration Date')}
+            {existingForm.declaration_date ||
+              (language === 'hi'
+                ? 'घोषणा तिथि चुनें'
+                : 'Select Declaration Date')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -205,20 +206,28 @@ const { language } = useContext(LanguageContext);
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>  {language === 'hi'
-    ? 'घोषणा तिथि चुनें'
-    : 'Select Declaration Date'}</Text>
+            <Text style={styles.modalTitle}>
+              {' '}
+              {language === 'hi'
+                ? 'घोषणा तिथि चुनें'
+                : 'Select Declaration Date'}
+            </Text>
             <View style={styles.modalPickerRow}>
               {/* Day */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>{language === 'hi' ? 'दिन' : 'Day'}</Text>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'दिन' : 'Day'}
+                </Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declDay || ''}
-                    onValueChange={(v) => setDeclDay(v)}
+                    onValueChange={v => setDeclDay(v)}
                   >
-                    <Picker.Item label={language === 'hi' ? 'दिन' : 'Day'} value="" />
-                    {dayOptions.map((d) => (
+                    <Picker.Item
+                      label={language === 'hi' ? 'दिन' : 'Day'}
+                      value=""
+                    />
+                    {dayOptions.map(d => (
                       <Picker.Item key={d} label={d} value={d} />
                     ))}
                   </Picker>
@@ -227,14 +236,19 @@ const { language } = useContext(LanguageContext);
 
               {/* Month */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>{language === 'hi' ? 'माह' : 'Month'}</Text>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'माह' : 'Month'}
+                </Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declMonth || ''}
-                    onValueChange={(v) => setDeclMonth(v)}
+                    onValueChange={v => setDeclMonth(v)}
                   >
-                    <Picker.Item label={language === 'hi' ? 'माह' : 'MM'} value="" />
-                    {monthOptions.map((m) => (
+                    <Picker.Item
+                      label={language === 'hi' ? 'माह' : 'MM'}
+                      value=""
+                    />
+                    {monthOptions.map(m => (
                       <Picker.Item
                         key={m.value}
                         label={m.label}
@@ -247,14 +261,19 @@ const { language } = useContext(LanguageContext);
 
               {/* Year */}
               <View style={styles.modalPickerCol}>
-                <Text style={styles.modalLabel}>{language === 'hi' ? 'वर्ष' : 'Year'}</Text>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'वर्ष' : 'Year'}
+                </Text>
                 <View style={styles.modalPickerBox}>
                   <Picker
                     selectedValue={declYear || ''}
-                    onValueChange={(v) => setDeclYear(v)}
+                    onValueChange={v => setDeclYear(v)}
                   >
-                    <Picker.Item label={language === 'hi' ? 'वर्ष' : 'YYYY'} value="" />
-                    {yearOptions.map((y) => (
+                    <Picker.Item
+                      label={language === 'hi' ? 'वर्ष' : 'YYYY'}
+                      value=""
+                    />
+                    {yearOptions.map(y => (
                       <Picker.Item key={y} label={y} value={y} />
                     ))}
                   </Picker>
@@ -267,13 +286,18 @@ const { language } = useContext(LanguageContext);
                 style={[styles.modalBtn, styles.modalBtnSecondary]}
                 onPress={() => setDateModalVisible(false)}
               >
-                <Text style={styles.modalBtnSecondaryText}>{language === 'hi' ? 'रद्द करें' : 'Cancel'}</Text>
+                <Text style={styles.modalBtnSecondaryText}>
+                  {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.modalBtnPrimary]}
                 onPress={applyDate}
               >
-                <Text style={styles.modalBtnPrimaryText}> {language === 'hi' ? 'पुष्टि करें' : 'Confirm'}</Text>
+                <Text style={styles.modalBtnPrimaryText}>
+                  {' '}
+                  {language === 'hi' ? 'पुष्टि करें' : 'Confirm'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -282,54 +306,56 @@ const { language } = useContext(LanguageContext);
 
       {/* 3) Applicant Signature upload */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}>  {language === 'hi'
-    ? 'आवेदक के हस्ताक्षर'
-    : 'Applicant Signature'}</Text>
+        <Text style={styles.label}>
+          {' '}
+          {language === 'hi' ? 'आवेदक के हस्ताक्षर' : 'Applicant Signature'}
+        </Text>
         <Text style={styles.helpText}>
           {language === 'hi'
-    ? 'कृपया अपने हस्ताक्षर की स्पष्ट फोटो या स्कैन कॉपी अपलोड करें। यह आपकी आवेदन के साथ सुरक्षित रखा जाएगा।'
-    : 'Please upload a clear photo or scanned copy of your signature. This will be stored securely with your application.'}
+            ? 'कृपया अपने हस्ताक्षर की स्पष्ट फोटो या स्कैन कॉपी अपलोड करें। यह आपकी आवेदन के साथ सुरक्षित रखा जाएगा।'
+            : 'Please upload a clear photo or scanned copy of your signature. This will be stored securely with your application.'}
         </Text>
 
         <TouchableOpacity style={styles.mediaBtn} onPress={pickSignature}>
-          <Text style={styles.mediaBtnText}>{language === 'hi'
-    ? 'हस्ताक्षर अपलोड करें'
-    : 'Upload Signature'}</Text>
+          <Text style={styles.mediaBtnText}>
+            {language === 'hi' ? 'हस्ताक्षर अपलोड करें' : 'Upload Signature'}
+          </Text>
         </TouchableOpacity>
 
         {signatureCount > 0 && (
           <Text style={styles.mediaInfo}>
-            {/* Selected Signature File(s): {signatureCount} */}
             {language === 'hi'
-  ? `चयनित हस्ताक्षर फ़ाइल: ${signatureCount}`
-  : `Selected Signature File(s): ${signatureCount}`}
+              ? `चयनित हस्ताक्षर फ़ाइल: ${signatureCount}`
+              : `Selected Signature File(s): ${signatureCount}`}
           </Text>
         )}
       </View>
 
       {/* Optional verifier name */}
       <View style={styles.fieldBlock}>
-        <Text style={styles.label}> {language === 'hi'
-    ? 'सत्यापनकर्ता का नाम (वैकल्पिक)'
-    : 'Verifier Name (optional)'}</Text>
+        <Text style={styles.label}>
+          {' '}
+          {language === 'hi'
+            ? 'सत्यापनकर्ता का नाम (वैकल्पिक)'
+            : 'Verifier Name (optional)'}
+        </Text>
         <Text style={styles.helpText}>
           {language === 'hi'
-    ? 'यदि कोई CRP या अधिकारी यह फॉर्म भरने में आपकी सहायता कर रहा है, तो कृपया उनका नाम यहाँ लिखें (वैकल्पिक)।'
-    : 'If a CRP or official is helping you fill this form, please mention their name here (optional).'}
+            ? 'यदि कोई CRP या अधिकारी यह फॉर्म भरने में आपकी सहायता कर रहा है, तो कृपया उनका नाम यहाँ लिखें (वैकल्पिक)।'
+            : 'If a CRP or official is helping you fill this form, please mention their name here (optional).'}
         </Text>
         <TextInput
           style={styles.input}
           value={existingForm.verifier_name || ''}
-          onChangeText={(v) => update({ verifier_name: v })}
+          onChangeText={v => update({ verifier_name: v })}
           placeholder={
-  language === 'hi'
-    ? 'सत्यापनकर्ता का नाम दर्ज करें (यदि कोई हो)'
-    : 'Enter verifier name (if any)'
-}
+            language === 'hi'
+              ? 'सत्यापनकर्ता का नाम दर्ज करें (यदि कोई हो)'
+              : 'Enter verifier name (if any)'
+          }
         />
       </View>
 
-      {/* Section-level submit (optional). If you don't pass onSubmit from parent, this will do nothing. */}
       {onSubmit && (
         <View style={styles.submitRow}>
           <TouchableOpacity
@@ -343,12 +369,12 @@ const { language } = useContext(LanguageContext);
           >
             <Text style={styles.submitBtnText}>
               {submitting
-    ? language === 'hi'
-      ? 'जमा किया जा रहा है...'
-      : 'Submitting...'
-    : language === 'hi'
-    ? 'मौजूदा उद्यम फॉर्म जमा करें'
-    : 'Submit Existing Enterprise Form'}
+                ? language === 'hi'
+                  ? 'जमा किया जा रहा है...'
+                  : 'Submitting...'
+                : language === 'hi'
+                ? 'मौजूदा उद्यम फॉर्म जमा करें'
+                : 'Submit Existing Enterprise Form'}
             </Text>
           </TouchableOpacity>
         </View>

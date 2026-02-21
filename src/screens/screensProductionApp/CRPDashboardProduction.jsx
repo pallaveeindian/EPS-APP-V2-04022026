@@ -35,27 +35,27 @@ export default function CRPDashboardProduction({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [crpName, setCrpName] = useState('');
   const [draftsVisible, setDraftsVisible] = useState(false);
-const [drafts, setDrafts] = useState([]);
-const [activeButton, setActiveButton] = useState(null);
+  const [drafts, setDrafts] = useState([]);
+  const [activeButton, setActiveButton] = useState(null);
 
   const translations = {
     en: {
       headerTitle: 'CRP Dashboard',
       recordNew: 'Record New Beneficiary Enterprise Detail',
       viewRecorded: 'View Recorded Beneficiaries',
-      viewDrafts: 'View Drafts', 
+      viewDrafts: 'View Drafts',
       logout: 'Logout',
       loading: 'Loading analytics...',
       noData: 'No beneficiaries recorded yet.',
       totalLabel: 'Total recorded in your GPs',
-      welcome: 'Welcome {name}, thank you for your work!', 
+      welcome: 'Welcome {name}, thank you for your work!',
       panchayatsTitle: 'Gram Panchayats assigned to you,',
     },
     hi: {
       headerTitle: 'सीआरपी डैशबोर्ड',
       recordNew: 'नया लाभार्थी उद्यम विवरण रिकॉर्ड करें',
       viewRecorded: 'रिकॉर्ड किए गए लाभार्थी देखें',
-       viewDrafts: 'ड्राफ्ट देखें',
+      viewDrafts: 'ड्राफ्ट देखें',
       logout: 'लॉग आउट',
       loading: 'एनालिटिक्स लोड हो रहा है...',
       noData: 'अभी तक कोई लाभार्थी रिकॉर्ड नहीं है।',
@@ -66,11 +66,11 @@ const [activeButton, setActiveButton] = useState(null);
   };
 
   const t = translations[language] || translations.en;
-   const translate = (key) => {
-  return t[key] || translations.en[key] || key;
-};
+  const translate = key => {
+    return t[key] || translations.en[key] || key;
+  };
   // Safely extract userId from saved user object
-  const getUserIdFromAuth = (u) => {
+  const getUserIdFromAuth = u => {
     if (!u) return null;
     // Login API: { access, refresh, user: { id: 1993, ... } }
     // Stored payload (from LoginForm): flattened, so u.id is present
@@ -82,13 +82,10 @@ const [activeButton, setActiveButton] = useState(null);
   };
 
   // Detect token-expired / unauthorized error
-  const isAuthExpiredError = (err) => {
+  const isAuthExpiredError = err => {
     const status = err?.status || err?.response?.status;
     const detail =
-      err?.data?.detail ||
-      err?.response?.data?.detail ||
-      err?.message ||
-      '';
+      err?.data?.detail || err?.response?.data?.detail || err?.message || '';
 
     if (status === 401) return true;
     if (
@@ -120,7 +117,7 @@ const [activeButton, setActiveButton] = useState(null);
             handleLogout();
           },
         },
-      ]
+      ],
     );
   };
 
@@ -139,11 +136,10 @@ const [activeButton, setActiveButton] = useState(null);
       }
 
       await bootstrapCrpData(u);
-
     })();
   }, []);
 
-  const bootstrapCrpData = async (u) => {
+  const bootstrapCrpData = async u => {
     try {
       setLoading(true);
 
@@ -151,7 +147,7 @@ const [activeButton, setActiveButton] = useState(null);
       if (!userId) {
         Alert.alert(
           'Error',
-          'Unable to determine user ID from login data. Please login again.'
+          'Unable to determine user ID from login data. Please login again.',
         );
         return;
       }
@@ -161,7 +157,7 @@ const [activeButton, setActiveButton] = useState(null);
       if (!detail) {
         const res = await gsApi.getCrpDetailByUserId(
           userId,
-          'id,name,block_id'
+          'id,name,block_id',
         );
         // CRP detail API returns direct object:
         // { id, name, block_id, ... }
@@ -171,10 +167,7 @@ const [activeButton, setActiveButton] = useState(null);
       // Ensure we have a name even if detail came from tempStore
       if (!detail?.name) {
         try {
-          const resNameOnly = await gsApi.getCrpDetailByUserId(
-            userId,
-            'name'
-          );
+          const resNameOnly = await gsApi.getCrpDetailByUserId(userId, 'name');
           detail = { ...detail, ...resNameOnly };
           setCrpDetail(detail);
         } catch (e) {
@@ -212,7 +205,7 @@ const [activeButton, setActiveButton] = useState(null);
       }
 
       const panchayatIds = crpPanchayats
-        .map((p) => p.panchayat_id)
+        .map(p => p.panchayat_id)
         .filter(Boolean);
 
       if (!panchayatIds.length) {
@@ -237,13 +230,13 @@ const [activeButton, setActiveButton] = useState(null);
 
       // Build analytics per Panchayat
       const countsByPanchayat = {};
-      recorded.forEach((row) => {
+      recorded.forEach(row => {
         const pid = row.panchayat_id;
         if (!pid) return;
         countsByPanchayat[pid] = (countsByPanchayat[pid] || 0) + 1;
       });
 
-      const analyticsRows = crpPanchayats.map((p) => ({
+      const analyticsRows = crpPanchayats.map(p => ({
         panchayat_id: p.panchayat_id,
         panchayat_name_en:
           p.panchayat_name_en || p.name || `Panchayat ${p.panchayat_id}`,
@@ -263,12 +256,11 @@ const [activeButton, setActiveButton] = useState(null);
     }
   };
 
-
-const loadDrafts = async () => {
+  const loadDrafts = async () => {
     try {
       const allKeys = await AsyncStorage.getAllKeys();
-      const draftKeys = allKeys.filter((key) =>
-        key.startsWith('NO_ENTERPRISE_FORM_DRAFT_')
+      const draftKeys = allKeys.filter(key =>
+        key.startsWith('NO_ENTERPRISE_FORM_DRAFT_'),
       );
       const entries = await AsyncStorage.multiGet(draftKeys);
 
@@ -297,14 +289,11 @@ const loadDrafts = async () => {
 
   const total = analytics.reduce(
     (acc, row) => acc + (row.total_recorded || 0),
-    0
+    0,
   );
 
   const headerUsername =
-    crpName ||
-    user?.user?.username ||
-    user?.username ||
-    'CRP';
+    crpName || user?.user?.username || user?.username || 'CRP';
 
   const onRefresh = async () => {
     if (!user) return;
@@ -314,7 +303,7 @@ const loadDrafts = async () => {
   };
 
   return (
-      <ScrollView
+    <ScrollView
       contentContainerStyle={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -340,7 +329,7 @@ const loadDrafts = async () => {
       <Text style={styles.title}>{t.headerTitle}</Text>
 
       <Text style={styles.greetingText}>
-         {translate('welcome').replace('{name}', headerUsername)}
+        {translate('welcome').replace('{name}', headerUsername)}
         {/* Welcome {headerUsername}, thank you for your work! */}
       </Text>
 
@@ -348,22 +337,22 @@ const loadDrafts = async () => {
         <Text style={styles.cardTitle}>{t.totalLabel}</Text>
         <Text style={styles.totalNumber}>{total}/100</Text>
       </View>
-<View style={styles.cardOuter}>
-      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
-        {/* Gram Panchayats assigned to you, */}
-         {translate('panchayatsTitle')}
-      </Text>
-      {analytics.length === 0 ? (
-        <Text style={{ marginTop: 8, color: '#666' }}>{t.noData}</Text>
-      ) : (
-        analytics.map((row) => (
-          <View key={row.panchayat_id} style={styles.analyticsRow}>
-            <Text style={styles.analyticsName}>{row.panchayat_name_en}</Text>
-            <Text style={styles.analyticsValue}>{row.total_recorded}</Text>
-          </View>
-        ))
-      )}
-</View>
+      <View style={styles.cardOuter}>
+        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+          {/* Gram Panchayats assigned to you, */}
+          {translate('panchayatsTitle')}
+        </Text>
+        {analytics.length === 0 ? (
+          <Text style={{ marginTop: 8, color: '#666' }}>{t.noData}</Text>
+        ) : (
+          analytics.map(row => (
+            <View key={row.panchayat_id} style={styles.analyticsRow}>
+              <Text style={styles.analyticsName}>{row.panchayat_name_en}</Text>
+              <Text style={styles.analyticsValue}>{row.total_recorded}</Text>
+            </View>
+          ))
+        )}
+      </View>
       <View style={{ marginTop: 32, gap: 12 }}>
         <TouchableOpacity
           style={styles.primaryButton}
@@ -374,14 +363,16 @@ const loadDrafts = async () => {
 
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => navigation.navigate('CRPViewRecorded', {
-            userId,
-          })}
+          onPress={() =>
+            navigation.navigate('CRPViewRecorded', {
+              userId,
+            })
+          }
         >
           <Text style={styles.secondaryButtonText}>{t.viewRecorded}</Text>
         </TouchableOpacity>
 
-        {/* View Drafts Button */}
+        {/* View Drafts Button
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={async () => {
@@ -390,23 +381,32 @@ const loadDrafts = async () => {
           }}
         >
           <Text style={styles.secondaryButtonText}>{t.viewDrafts}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
-      {/* Drafts Modal */}
+      {/* Drafts Modal
       <Modal
         visible={draftsVisible}
         transparent={true}
         animationType="slide"
         onRequestClose={() => setDraftsVisible(false)}
       >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'center',
-          padding: 16
-        }}>
-          <View style={{ backgroundColor: '#fff', borderRadius: 10, maxHeight: '80%', padding: 16 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: 10,
+              maxHeight: '80%',
+              padding: 16,
+            }}
+          >
             <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}>
               Draft Beneficiaries
             </Text>
@@ -415,13 +415,13 @@ const loadDrafts = async () => {
               <Text>No drafts saved yet.</Text>
             ) : (
               <ScrollView>
-                {drafts.map((d) => (
+                {drafts.map(d => (
                   <TouchableOpacity
                     key={d.key}
                     style={{
                       padding: 12,
                       borderBottomWidth: 1,
-                      borderBottomColor: '#EEE'
+                      borderBottomColor: '#EEE',
                     }}
                     onPress={() => {
                       setDraftsVisible(false);
@@ -429,7 +429,9 @@ const loadDrafts = async () => {
                       navigation.navigate('CRPRecordFlow', { draftKey: d.key });
                     }}
                   >
-                    <Text style={{ fontWeight: '600' }}>{d.applicant_name}</Text>
+                    <Text style={{ fontWeight: '600' }}>
+                      {d.applicant_name}
+                    </Text>
                     <Text style={{ color: '#666' }}>{d.member_code}</Text>
                   </TouchableOpacity>
                 ))}
@@ -444,7 +446,7 @@ const loadDrafts = async () => {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
 
       <BurgerMenu
         visible={menuOpen}
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
   userText: {
     fontSize: 16,
     fontWeight: '600',
-     color: '#FF7E00'
+    color: '#FF7E00',
   },
   title: {
     fontSize: 20,
@@ -496,16 +498,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9ECEC',
     alignItems: 'center',
 
-        borderColor: '#FF7E00',
-  borderWidth: 1.5,
+    borderColor: '#FF7E00',
+    borderWidth: 1.5,
 
-  // shadow 
- shadowColor: '#FF7E00',
-  shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.12,
-  shadowRadius: 6,
+    // shadow
+    shadowColor: '#FF7E00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
 
-  elevation: 4, 
+    elevation: 4,
   },
   cardTitle: {
     fontSize: 14,
@@ -553,20 +555,20 @@ const styles = StyleSheet.create({
     color: '#EE6969',
     fontWeight: '500',
   },
-   cardOuter: {
- marginTop: 24,
-  padding: 16,
-  borderRadius: 12,
-  backgroundColor: '#FFF7F0',
-  borderWidth: 1.5,
-  borderColor: '#FF7E00',
+  cardOuter: {
+    marginTop: 24,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#FFF7F0',
+    borderWidth: 1.5,
+    borderColor: '#FF7E00',
 
-  //  Lifted / floating effect
-  shadowColor: '#FF7E00',
-  shadowOffset: { width: 0, height: 3 },
-  shadowOpacity: 0.12,
-  shadowRadius: 6,
+    //  Lifted / floating effect
+    shadowColor: '#FF7E00',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
 
-  elevation: 4, 
-},
+    elevation: 4,
+  },
 });
