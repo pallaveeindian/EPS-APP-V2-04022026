@@ -1,5 +1,4 @@
 // src/screens/screensProductionApp/CRPViewComponents/EPSTable.jsx
-
 import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
@@ -138,25 +137,14 @@ export default function EPSTable({ filters }) {
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
 
-  /* ================= Delete ================= */
-
   const handleDelete = id => {
     Alert.alert(
       translate('delete'),
-      translate('confirmDelete'),
+      'Delete feature to be implemented.',
       [
-        { text: translate('cancel'), style: 'cancel' },
         {
-          text: translate('delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await gsApi.deleteRecordedBeneficiary(id);
-              fetchData(page);
-            } catch (err) {
-              console.error('Delete error', err);
-            }
-          },
+          text: 'OK',
+          style: 'default',
         },
       ],
       { cancelable: true },
@@ -180,6 +168,8 @@ export default function EPSTable({ filters }) {
   /* ================= Render Card ================= */
 
   const renderCard = ({ item, index }) => {
+    console.log('FULL ITEM DATA:', item);
+    console.log('Member Code:', item.looks_member_code);
     const serialNumber = (page - 1) * PAGE_SIZE + index + 1;
 
     return (
@@ -198,7 +188,7 @@ export default function EPSTable({ filters }) {
               style={styles.viewButton}
               onPress={() =>
                 navigation.navigate('EPSDetail', {
-                  epsId: item.id,
+                  epsId: item.lokos_member_code,
                 })
               }
             >

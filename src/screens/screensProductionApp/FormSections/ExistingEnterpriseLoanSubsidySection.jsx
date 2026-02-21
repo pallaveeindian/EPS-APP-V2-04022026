@@ -1,6 +1,7 @@
 // src/screens/screensProductionApp/FormSections/ExistingEnterpriseLoanSubsidySection.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  Modal,
   View,
   Text,
   TextInput,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import LanguageToggle from '../../../components/LanguageToggle';
 import { LanguageContext } from '../../../components/LanguageContext';
+import { Picker } from '@react-native-picker/picker';
 import { useContext } from 'react';
 const YES_NO = [
   { en: 'Yes', hi: 'हाँ' },
@@ -411,6 +413,103 @@ export default function ExistingEnterpriseLoanSubsidySection({
 
   const updateLoans = next => update({ loans: next });
   const updateSubsidies = next => update({ subsidies: next });
+
+  const [loanDateModal, setLoanDateModal] = useState({
+    visible: false,
+    loanIndex: null,
+  });
+
+  const [loanDay, setLoanDay] = useState('');
+  const [loanMonth, setLoanMonth] = useState('');
+  const [loanYear, setLoanYear] = useState('');
+
+  const yearOptions = [];
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= 1950; y--) yearOptions.push(String(y));
+
+  const dayOptions = [];
+  for (let d = 1; d <= 31; d++) dayOptions.push(String(d));
+
+  const monthOptions = [
+    { label: 'Jan', value: '1' },
+    { label: 'Feb', value: '2' },
+    { label: 'Mar', value: '3' },
+    { label: 'Apr', value: '4' },
+    { label: 'May', value: '5' },
+    { label: 'Jun', value: '6' },
+    { label: 'Jul', value: '7' },
+    { label: 'Aug', value: '8' },
+    { label: 'Sep', value: '9' },
+    { label: 'Oct', value: '10' },
+    { label: 'Nov', value: '11' },
+    { label: 'Dec', value: '12' },
+  ];
+
+  const openLoanDatePicker = index => {
+    const existing = loans[index]?.date_taken;
+
+    if (existing) {
+      const parts = existing.split('-');
+      if (parts.length === 3) {
+        setLoanYear(parts[0]);
+        setLoanMonth(String(parseInt(parts[1], 10)));
+        setLoanDay(String(parseInt(parts[2], 10)));
+      }
+    } else {
+      setLoanDay('');
+      setLoanMonth('');
+      setLoanYear('');
+    }
+
+    setLoanDateModal({ visible: true, loanIndex: index });
+  };
+
+  const applyLoanDate = () => {
+    if (!loanDay || !loanMonth || !loanYear) {
+      alert(
+        language === 'hi'
+          ? 'कृपया दिन, माह और वर्ष चुनें'
+          : 'Please select day, month and year',
+      );
+      return;
+    }
+
+    const day = Number(loanDay);
+    const month = Number(loanMonth);
+    const year = Number(loanYear);
+
+    const constructed = new Date(year, month - 1, day);
+
+    // 🔒 Strict validation
+    if (
+      constructed.getFullYear() !== year ||
+      constructed.getMonth() !== month - 1 ||
+      constructed.getDate() !== day
+    ) {
+      alert(
+        language === 'hi' ? 'अमान्य तिथि चुनी गई है' : 'Invalid date selected',
+      );
+      return;
+    }
+
+    const today = new Date();
+    if (constructed > today) {
+      alert(
+        language === 'hi'
+          ? 'भविष्य की तिथि मान्य नहीं है'
+          : 'Future date is not allowed',
+      );
+      return;
+    }
+
+    const iso = `${year}-${String(month).padStart(2, '0')}-${String(
+      day,
+    ).padStart(2, '0')}`;
+
+    updateLoanRow(loanDateModal.loanIndex, { date_taken: iso });
+
+    setLoanDateModal({ visible: false, loanIndex: null });
+  };
 
   const addLoanRow = () => {
     const newRow = {
@@ -815,7 +914,7 @@ export default function ExistingEnterpriseLoanSubsidySection({
                         : 'Please enter the date when the loan was sanctioned or first disbursed. Use format YYYY-MM-DD.'}
                     </Text>
 
-                    <TextInput
+                    {/* <TextInput
                       style={styles.input}
                       placeholder="YYYY-MM-DD"
                       maxLength={10}
@@ -841,17 +940,19 @@ export default function ExistingEnterpriseLoanSubsidySection({
 
                         updateLoanRow(index, { date_taken: cleaned });
                       }}
-                    />
+                    /> */}
 
-                    {/* Future date validation */}
-                    {row.date_taken &&
-                      new Date(row.date_taken) > new Date() && (
-                        <Text style={{ color: 'red', marginTop: 4 }}>
-                          {language === 'hi'
-                            ? 'भविष्य की तिथि मान्य नहीं है'
-                            : 'Future date is not allowed'}
-                        </Text>
-                      )}
+                    <TouchableOpacity
+                      style={styles.dateDisplay}
+                      onPress={() => openLoanDatePicker(index)}
+                    >
+                      <Text style={styles.dateDisplayText}>
+                        {row.date_taken ||
+                          (language === 'hi'
+                            ? 'तिथि चुनें'
+                            : 'Select Loan Date')}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}
@@ -921,7 +1022,7 @@ export default function ExistingEnterpriseLoanSubsidySection({
               {row.expanded && (
                 <View style={styles.cardBody}>
                   {/* 2) Institution / scheme tree */}
-                  <View className={styles.fieldBlock}>
+                  <View style={styles.fieldBlock}>
                     <Text style={styles.label}>
                       {language === 'hi'
                         ? 'जिस संस्था/विभाग से आपने सब्सिडी प्राप्त की, उसे चुनें'
@@ -986,6 +1087,104 @@ export default function ExistingEnterpriseLoanSubsidySection({
           </TouchableOpacity>
         </View>
       )}
+      <Modal
+        visible={loanDateModal.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() =>
+          setLoanDateModal({ visible: false, loanIndex: null })
+        }
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>
+              {language === 'hi' ? 'ऋण की तिथि चुनें' : 'Select Loan Date'}
+            </Text>
+
+            <View style={styles.modalPickerRow}>
+              {/* Day */}
+              <View style={styles.modalPickerCol}>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'दिन' : 'Day'}
+                </Text>
+                <View style={styles.modalPickerBox}>
+                  <Picker
+                    selectedValue={loanDay}
+                    onValueChange={v => setLoanDay(v)}
+                  >
+                    <Picker.Item label="Day" value="" />
+                    {dayOptions.map(d => (
+                      <Picker.Item key={d} label={d} value={d} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+
+              {/* Month */}
+              <View style={styles.modalPickerCol}>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'माह' : 'Month'}
+                </Text>
+                <View style={styles.modalPickerBox}>
+                  <Picker
+                    selectedValue={loanMonth}
+                    onValueChange={v => setLoanMonth(v)}
+                  >
+                    <Picker.Item label="Month" value="" />
+                    {monthOptions.map(m => (
+                      <Picker.Item
+                        key={m.value}
+                        label={m.label}
+                        value={m.value}
+                      />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+
+              {/* Year */}
+              <View style={styles.modalPickerCol}>
+                <Text style={styles.modalLabel}>
+                  {language === 'hi' ? 'वर्ष' : 'Year'}
+                </Text>
+                <View style={styles.modalPickerBox}>
+                  <Picker
+                    selectedValue={loanYear}
+                    onValueChange={v => setLoanYear(v)}
+                  >
+                    <Picker.Item label="Year" value="" />
+                    {yearOptions.map(y => (
+                      <Picker.Item key={y} label={y} value={y} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnSecondary]}
+                onPress={() =>
+                  setLoanDateModal({ visible: false, loanIndex: null })
+                }
+              >
+                <Text style={styles.modalBtnSecondaryText}>
+                  {language === 'hi' ? 'रद्द करें' : 'Cancel'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnPrimary]}
+                onPress={applyLoanDate}
+              >
+                <Text style={styles.modalBtnPrimaryText}>
+                  {language === 'hi' ? 'पुष्टि करें' : 'Confirm'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1161,15 +1360,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 8,
-    borderRadius: 6,
-  },
-  helpText: {
-    color: '#666',
-  },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1190,5 +1380,81 @@ const styles = StyleSheet.create({
     height: 12,
     backgroundColor: '#d9534f',
     borderRadius: 2,
+  },
+  dateDisplay: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    marginTop: 4,
+  },
+  dateDisplayText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: '#0009',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalPickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  modalPickerCol: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  modalLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+    color: '#555',
+  },
+  modalPickerBox: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    backgroundColor: '#fff',
+  },
+  modalBtnRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+  },
+  modalBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  modalBtnPrimary: {
+    backgroundColor: '#EE6969',
+  },
+  modalBtnPrimaryText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  modalBtnSecondary: {
+    backgroundColor: '#eee',
+  },
+  modalBtnSecondaryText: {
+    color: '#333',
+    fontWeight: '500',
   },
 });

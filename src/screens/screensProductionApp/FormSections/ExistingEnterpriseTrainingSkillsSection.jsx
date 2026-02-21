@@ -10,6 +10,7 @@ import {
 import { launchImageLibrary } from 'react-native-image-picker';
 import { launchCamera } from 'react-native-image-picker';
 import { Picker } from '@react-native-picker/picker';
+import { pick } from '@react-native-documents/picker';
 import { useState } from 'react';
 import LanguageToggle from '../../../components/LanguageToggle';
 import { LanguageContext } from '../../../components/LanguageContext';
@@ -653,22 +654,42 @@ export default function ExistingEnterpriseTrainingSkillsSection({
 
   const pickCertificates = async rowIndex => {
     try {
-      const res = await launchImageLibrary({
-        mediaType: 'mixed',
-        selectionLimit: 5,
+      const results = await pick({
+        type: ['application/pdf', 'image/jpeg'],
+        allowMultiSelection: true,
       });
-      if (res.didCancel) return;
-      const assets = res.assets || [];
+
+      // Strict filter (extra safety)
+      const filtered = results.filter(file => {
+        const name = (file.name || '').toLowerCase();
+        return (
+          name.endsWith('.pdf') ||
+          name.endsWith('.jpg') ||
+          name.endsWith('.jpeg')
+        );
+      });
+
+      if (filtered.length === 0) {
+        alert(
+          language === 'hi'
+            ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
+            : 'Only PDF or JPG files are allowed',
+        );
+        return;
+      }
+
       const row = trainingReceived[rowIndex];
       const current = Array.isArray(row.certificates_files)
         ? row.certificates_files
         : [];
-      const combined = [...current, ...assets];
+
       updateTrainingReceivedRow(rowIndex, {
-        certificates_files: combined,
+        certificates_files: [...current, ...filtered],
       });
     } catch (err) {
-      console.warn('Certificate pick failed', err);
+      if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+        console.warn('Certificate pick failed', err);
+      }
     }
   };
 
@@ -891,11 +912,13 @@ export default function ExistingEnterpriseTrainingSkillsSection({
 
                     {Array.isArray(row.certificates_files) &&
                       row.certificates_files.length > 0 && (
-                        <Text style={styles.mediaInfo}>
-                          {language === 'hi'
-                            ? `चयनित: ${row.certificates_files.length} फ़ाइल`
-                            : `Selected: ${row.certificates_files.length} file(s)`}
-                        </Text>
+                        <View style={{ marginTop: 6 }}>
+                          {row.certificates_files.map((file, i) => (
+                            <Text key={i} style={styles.mediaInfo}>
+                              • {file.name}
+                            </Text>
+                          ))}
+                        </View>
                       )}
                   </View>
                 </View>

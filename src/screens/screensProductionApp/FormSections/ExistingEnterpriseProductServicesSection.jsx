@@ -799,7 +799,17 @@ export default function ExistingEnterpriseProductServicesSection({
                       : 'Enter sales amount'
                   }
                   value={row.avg_monthly_sales}
-                  onChangeText={v => updateRow(index, { avg_monthly_sales: v })}
+                  onChangeText={v => {
+                    const numericValue = v.replace(/[^0-9]/g, '');
+                    const annual = numericValue
+                      ? String(Number(numericValue) * 12)
+                      : '';
+
+                    updateRow(index, {
+                      avg_monthly_sales: numericValue,
+                      avg_annual_sales: annual,
+                    });
+                  }}
                 />
               </View>
               <View style={styles.fieldBlock}>
@@ -811,22 +821,23 @@ export default function ExistingEnterpriseProductServicesSection({
                 </Text>
                 <Text style={styles.helpText}>
                   {language === 'hi'
-                    ? 'कृपया अपनी मासिक वार्षिक बिक्री दर्ज करें। आप अनुमानित मूल्य भी डाल सकते हैं।'
-                    : 'Please enter your monthly annual sale. You may put an approximate value.'}
+                    ? 'यह स्वचालित रूप से मासिक बिक्री × 12 के आधार पर गणना की जाती है।'
+                    : 'This is automatically calculated as Average Monthly Sales × 12.'}
                 </Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={row.annual_sale || ''}
-                  onChangeText={v => {
-                    updateRow(index, { annual_sale: v });
-                  }}
-                  placeholder={
-                    language === 'hi'
-                      ? 'मासिक राशि दर्ज करें'
-                      : 'Enter monthly amount'
-                  }
-                />
+                <View style={styles.estimatedContainer}>
+                  <Text style={styles.estimatedLabel}>
+                    {language === 'hi'
+                      ? 'मासिक बिक्री × 12'
+                      : 'Average Monthly Sales × 12'}
+                  </Text>
+
+                  <Text style={styles.estimatedValue}>
+                    ₹{' '}
+                    {row.avg_annual_sales
+                      ? Number(row.avg_annual_sales).toLocaleString('en-IN')
+                      : '0'}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.fieldBlock}>

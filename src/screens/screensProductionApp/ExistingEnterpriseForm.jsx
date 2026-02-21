@@ -469,22 +469,17 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
     const createdBy = getCreatedByNumeric();
 
-    const sourceOfInvestmentDict = {};
-
-    (source_of_investment_tree || []).forEach(row => {
-      if (
-        !row.parent ||
-        !Array.isArray(row.children) ||
-        row.children.length === 0
+    const sourceOfInvestmentString = (source_of_investment_tree || [])
+      .filter(
+        row =>
+          row.parent && Array.isArray(row.children) && row.children.length > 0,
       )
-        return;
-
-      sourceOfInvestmentDict[row.parent] = row.children.join(', ');
-    });
+      .map(row => `${row.parent}: ${row.children.join(', ')}`)
+      .join(' | ');
 
     const payload = {
       ...rest,
-      source_of_investment: JSON.stringify(sourceOfInvestmentDict),
+      source_of_investment: sourceOfInvestmentString,
 
       recorded_benef_id:
         recordedBenefId && !isNaN(recordedBenefId)
@@ -527,7 +522,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   // 1) Enterprise type sub-table
   const saveEnterpriseTypes = async (enterpriseId, tree) => {
     if (!enterpriseId || !Array.isArray(tree)) return;
-
+    const createdBy = getCreatedByNumeric();
     for (const row of tree) {
       if (
         !row.parent ||
@@ -536,7 +531,23 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       )
         continue;
 
-      const mapped = `[${row.parent}: ${(row.children || []).join(', ')}]`;
+      const parentName = row.parent?.en || '';
+
+      const childNames = (row.children || [])
+        .map(child => {
+          // If "Others" selected and user typed custom text
+          if (
+            child.en === 'Others' &&
+            row.childOtherText &&
+            row.childOtherText[child.en]
+          ) {
+            return `${child.en} (${row.childOtherText[child.en]})`;
+          }
+          return child.en;
+        })
+        .join(', ');
+
+      const mapped = `[${parentName}: ${childNames}]`;
 
       await gsApi.createEnterpriseType({
         //  enterprise_id uses TH_urid of ExistingEnterpriseForm
@@ -546,6 +557,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         parent_category: String(row.parent.en),
         // parent_category: String(parentName),
         sub_category: mapped,
+        created_by: createdBy,
       });
     }
   };
@@ -1052,7 +1064,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
   const saveTrainingReqs = async (enterpriseTHurid, rows, formType) => {
     if (!enterpriseTHurid || !Array.isArray(rows) || rows.length === 0) return;
-
+    const EcreatedBy = getCreatedByNumeric();
     console.log(
       `>>> SAVING TRAINING ${formType.toUpperCase()} FOR:`,
       enterpriseTHurid,
@@ -1074,6 +1086,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         duration: r.duration || '',
         location: r.location || '',
         expected_income: String(r.expected_income || '0'),
+        created_by: EcreatedBy,
       };
 
       try {
@@ -1105,6 +1118,9 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
               name: asset.fileName || 'certificate.jpg',
               type: asset.type || 'image/jpeg',
             });
+            if (EcreatedBy) {
+              fd.append('created_by', String(EcreatedBy));
+            }
 
             await gsApi.uploadTrainingCertificate(fd);
           }
@@ -1147,6 +1163,17 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         trainingRequiredRows,
         media,
       } = buildMainPayload(recordedBenefId);
+
+      // 🔁 Ensure avg_annual_sales is always correct before saving
+      const sanitizedProducts = (products || []).map(prod => {
+        const monthly = parseFloat(prod.avg_monthly_sales || 0);
+
+        return {
+          ...prod,
+          avg_monthly_sales: monthly ? monthly.toFixed(2) : '0.00',
+          avg_annual_sales: monthly ? (monthly * 12).toFixed(2) : '0.00',
+        };
+      });
 
       // basic validation
       if (!payload.enterprise_name) {
@@ -1198,7 +1225,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         console.warn('Failed to save enterprise types', e);
       }
       try {
-        await saveProductsAndMedia(enterpriseId, products);
+        await saveProductsAndMedia(enterpriseId, sanitizedProducts);
       } catch (e) {
         console.warn('Failed to save products/media', e);
       }

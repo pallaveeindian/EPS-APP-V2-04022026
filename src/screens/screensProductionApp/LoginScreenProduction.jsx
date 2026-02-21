@@ -40,20 +40,21 @@ export default function LoginScreenProduction({ navigation }) {
     }
   };
 
-  const handleSuccess = async (userPayload) => {
+  const handleSuccess = async userPayload => {
     // Persist + prime auth header (access + refresh)
     if (userPayload.access) {
       setAuthToken(userPayload.access, userPayload.refresh);
     }
     await saveUser(userPayload);
 
-    const role = String(userPayload.role || '').toLowerCase();
-    if (role === 'crp') {
+    const roleId = Number(userPayload.user?.role);
+
+    if (roleId === 6) {
       navigation.replace('CRPDashboard');
-    } else if (role === 'admin') {
+    } else if (roleId === 8) {
       navigation.replace('AdminDashboard');
     } else {
-      Alert.alert('Error', 'Unknown role. Please select CRP or Admin.');
+      Alert.alert('Error', 'Unknown role. Please contact admin.');
     }
   };
 
