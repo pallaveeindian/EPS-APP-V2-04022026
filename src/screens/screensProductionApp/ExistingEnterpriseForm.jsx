@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
+  StatusBar,
   StyleSheet,
 } from 'react-native';
 import gsApi from '../../api/gsApi';
@@ -415,10 +417,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       category: beneficiary.social_category || beneficiary.socialCategory || '',
       education: beneficiary.education || '',
       address: addressText,
-      district_id: district_id || null,
-      block_id: block_id || null,
-      panchayat_id: panchayat_id || null,
-      village_id: village_id || null,
+      district: district_id || null,
+      block: block_id || null,
+      panchayat: panchayat_id || null,
+      village: village_id || null,
       mobile: member_mobile || null,
       email: beneficiary.email || null,
       lokos_shg_code: lokos_shg || null,
@@ -1721,7 +1723,11 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.sectionWrapper}>
         <View
           style={
@@ -1855,7 +1861,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   );
 }
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 14, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    padding: 14,
+    backgroundColor: '#fff',
+    paddingTop:
+      Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 12 : 16,
+  },
 
   // NEW: section visibility helpers
   sectionWrapper: {
