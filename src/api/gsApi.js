@@ -46,19 +46,23 @@ function buildUrl(path) {
 async function handleResponse(response) {
   const text = await response.text();
 
-  if (!text) {
-    if (!response.ok) throw { status: response.status, data: null };
-    return null;
-  }
+  let data;
 
   try {
-    const data = JSON.parse(text);
-    if (!response.ok) throw { status: response.status, data };
-    return data;
-  } catch (err) {
-    if (response.ok) return text;
-    throw err;
+    data = text ? JSON.parse(text) : null;
+  } catch (e) {
+    // Not JSON — wrap raw text properly
+    data = { detail: text };
   }
+
+  if (!response.ok) {
+    throw {
+      status: response.status,
+      data,
+    };
+  }
+
+  return data;
 }
 
 function authHeaders(extra = {}) {
