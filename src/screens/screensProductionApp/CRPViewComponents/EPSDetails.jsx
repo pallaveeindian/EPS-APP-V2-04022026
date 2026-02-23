@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import gsApi from '../../../api/gsApi';
-
+import { Linking, TouchableOpacity } from 'react-native';
 export default function EPSDetail() {
   const route = useRoute();
   const { epsId } = route.params || {};
@@ -52,10 +52,13 @@ export default function EPSDetail() {
   if (!detail) {
     return <Text style={styles.noData}>No details found.</Text>;
   }
-
+  const trainingData =
+    detail?.existing_enterprise?.training?.length > 0
+      ? detail.existing_enterprise.training
+      : detail?.shared?.training;
   const isExisting = detail?.enterprise_type === 'existing';
   const isNew = detail?.enterprise_type === 'new';
-  const BASE_URL = 'http://72.61.255.170:8080';
+  const BASE_URL = 'http://66.116.207.88:8088';
 
   return (
     <ScrollView style={styles.container}>
@@ -85,10 +88,6 @@ export default function EPSDetail() {
         <DetailRow
           label="Enterprise Type"
           value={detail.beneficiary?.enterprise_type}
-        />
-        <DetailRow
-          label="Special Category"
-          value={detail.beneficiary?.special_category}
         />
         <DetailRow label="Education" value={detail.beneficiary?.education} />
         <DetailRow label="Address" value={detail.beneficiary?.address} />
@@ -196,6 +195,22 @@ export default function EPSDetail() {
           label="Industry Location"
           value={detail.enterprise?.industry_loc}
         />
+        <DetailRow
+          label="Special Category"
+          value={detail.enterprise?.owner_special_category}
+        />
+        <DetailRow
+          label="Year Of Establishment"
+          value={detail.enterprise?.year_of_establishment}
+        />
+        <DetailRow
+          label="Total Employee"
+          value={detail.enterprise?.total_emp}
+        />
+        <DetailRow
+          label="Number of shg"
+          value={detail.enterprise?.number_of_shg_emp}
+        />
       </Section>
 
       {/* ================= EXISTING ENTERPRISE ONLY SECTIONS ================= */}
@@ -220,12 +235,12 @@ export default function EPSDetail() {
               value={detail.enterprise?.transportation_availability}
             />
             <DetailRow
-              label="Expansion Plan"
-              value={detail.enterprise?.expansion_plan}
+              label="Send to bijnor"
+              value={detail.enterprise?.can_send_to_bijnor}
             />
             <DetailRow
-              label="Info About Govt Scheme"
-              value={detail.enterprise?.info_abt_gov_scheme}
+              label="Need Transport Help"
+              value={detail.enterprise?.need_transport_help}
             />
           </Section>
 
@@ -244,6 +259,10 @@ export default function EPSDetail() {
                 <DetailRow
                   label="Product Features"
                   value={prod.product_features}
+                />
+                <DetailRow
+                  label="Target Customers"
+                  value={prod.target_customers}
                 />
                 <DetailRow
                   label="Production Capacity"
@@ -457,7 +476,13 @@ export default function EPSDetail() {
                 />
                 <DetailRow label="License Name" value={lic.license_name} />
                 <DetailRow label="License No" value={lic.license_no} />
-                <DetailRow label="License File" value={lic.license_file} />
+                <DetailRow
+                  label="License File"
+                  value={
+                    lic.license_file ? `${BASE_URL}${lic.license_file}` : null
+                  }
+                  isLink={true}
+                />
               </View>
             ))}
           </Section>
@@ -473,8 +498,86 @@ export default function EPSDetail() {
             ))}
           </Section>
 
+          <Section title="10. Training Details">
+            {detail.shared?.training?.length > 0 ? (
+              detail.shared.training.map((train, i) => (
+                <View key={i}>
+                  <DetailRow label="Form Type" value={train.form_type} />
+                  <DetailRow label="Sector Type" value={train.sector_type} />
+                  <DetailRow label="Sector" value={train.sector} />
+                  <DetailRow label="Department" value={train.department} />
+                  <DetailRow
+                    label="Training Type"
+                    value={train.training_type}
+                  />
+                  <DetailRow label="Duration" value={train.duration} />
+                  <DetailRow label="Location" value={train.location} />
+                  <DetailRow
+                    label="Expected Income"
+                    value={train.expected_income}
+                  />
+
+                  {train.certificates?.map((cert, cIndex) => (
+                    <DetailRow
+                      key={cIndex}
+                      label="Certificate"
+                      value={
+                        cert.certificates
+                          ? `${BASE_URL}${cert.certificates}`
+                          : null
+                      }
+                      isLink={true}
+                    />
+                  ))}
+                </View>
+              ))
+            ) : (
+              <DetailRow label="Training" value="No Training Data Found" />
+            )}
+          </Section>
+
+          {/* 10 Support */}
+          <Section title="11. Support & Mandatory Fund">
+            {detail.shared?.enterprise_support?.map((sup, i) => (
+              <View key={i}>
+                <DetailRow
+                  label="Support Category"
+                  value={sup.support_category}
+                />
+                <DetailRow
+                  label="Sub Category"
+                  value={sup.support_sub_category}
+                />
+                <DetailRow
+                  label="Description"
+                  value={sup.support_description}
+                />
+                <DetailRow label="Other Support" value={sup.other_support} />
+              </View>
+            ))}
+
+            {detail.shared?.mandatory_fund?.map((fund, i) => (
+              <View key={i}>
+                <DetailRow label="Fund Type" value={fund.fund_type} />
+                <DetailRow
+                  label="Have Received Part"
+                  value={fund.have_received_part ? 'Yes' : 'No'}
+                />
+                <DetailRow
+                  label="Amount Received"
+                  value={fund.amount_received}
+                />
+                <DetailRow label="Amount Repaid" value={fund.amount_repaid} />
+                <DetailRow
+                  label="Repayment Status"
+                  value={fund.repayment_status}
+                />
+              </View>
+            ))}
+          </Section>
+
           {/*  Declaration */}
-          <Section title="10. Declaration">
+          <Section title="12. Declaration">
             <DetailRow
               label="Declaration Confirmed"
               value={detail.enterprise?.declaration_confirmed ? 'Yes' : 'No'}
@@ -588,6 +691,7 @@ export default function EPSDetail() {
               </View>
             ))}
           </Section>
+
           <Section title="10. Declaration">
             <DetailRow
               label="Declaration Confirmed"
@@ -630,15 +734,34 @@ function Section({ title, children }) {
   );
 }
 
-function DetailRow({ label, value }) {
+function DetailRow({ label, value, isLink }) {
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value || '-'}</Text>
+
+      {isLink && value ? (
+        <TouchableOpacity
+          onPress={() => {
+            Linking.openURL(value).catch(() =>
+              Alert.alert('Error', 'Unable to open PDF'),
+            );
+          }}
+        >
+          <Text
+            style={[
+              styles.value,
+              { color: 'blue', textDecorationLine: 'underline' },
+            ]}
+          >
+            View PDF
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <Text style={styles.value}>{value || '-'}</Text>
+      )}
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     padding: 16,

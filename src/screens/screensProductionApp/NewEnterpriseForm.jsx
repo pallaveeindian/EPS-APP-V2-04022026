@@ -25,7 +25,7 @@ import { Picker } from '@react-native-picker/picker';
 import { pick } from '@react-native-documents/picker';
 import { LanguageContext } from '../../components/LanguageContext';
 import LanguageToggle from '../../components/LanguageToggle';
-import { getUser } from '../../utils/auth';
+import { getUser, saveUser } from '../../utils/auth';
 import { X_API_ID, X_API_KEY } from '@env';
 
 /**
@@ -34,7 +34,7 @@ import { X_API_ID, X_API_KEY } from '@env';
  * New flow:
  *  1) Ensure / create RecordedBeneficiary from SHG member.
  *  2) Create NewEnterprise (/api/v1/new-enterprise/).
- *  3) Update recorded_beneficiaries.enterprise_id.
+ *  3) Update recorded_beneficiaries.enterprise_TH_urid.
  *  4) Create sub-forms:
  *     - /enterprise-types/ (enterprise type + categories)
  *     - /enterprise-training-reqs/ (form_type = "rec" for received, "req" for required)
@@ -57,6 +57,61 @@ const computeAgeFromDob = dobStr => {
     age -= 1;
   }
   return age;
+};
+
+// 🔥 SAFE FETCH WITH AUTO REFRESH
+const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
+  const user = await getUser();
+  let access = user?.access;
+  let refresh = user?.refresh;
+
+  const doFetch = async token => {
+    const headers = {
+      ...(options.headers || {}),
+      Authorization: token ? `Bearer ${token}` : undefined,
+      'X-API-ID': MULTIPART_X_API_ID,
+      'X-API-KEY': MULTIPART_X_API_KEY,
+    };
+
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  };
+
+  let response = await doFetch(access);
+
+  // If not 401 → return
+  if (response.status !== 401) return response;
+
+  // If already retried → fail
+  if (!retry || !refresh) return response;
+
+  // 🔥 Try refresh
+  const refreshResp = await fetch(`${BASE_URL}/api/v1/auth/refresh/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh }),
+  });
+
+  if (!refreshResp.ok) {
+    return response; // refresh failed
+  }
+
+  const refreshData = await refreshResp.json();
+
+  if (!refreshData?.access) {
+    return response;
+  }
+
+  // 🔥 Save new access token
+  const updatedUser = { ...user, access: refreshData.access };
+  await saveUser(updatedUser);
+
+  gsApi.setAuthToken?.(refreshData.access, refresh);
+
+  // Retry original request ONCE
+  return doFetch(refreshData.access);
 };
 
 // normalize SHG location info
@@ -1526,9 +1581,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
   // ---------- NewEnterprise creation (multipart for signature) ----------
 
   const performMultipartCreateNewEnterprise = async (payloadObj, signature) => {
-    const token = gsApi.getAuthToken ? gsApi.getAuthToken() : null;
     const headers = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     headers['X-API-ID'] = MULTIPART_X_API_ID;
     headers['X-API-KEY'] = MULTIPART_X_API_KEY;
 
@@ -1549,7 +1602,11 @@ export default function NewEnterpriseForm({ route, navigation }) {
       });
     }
 
-    const res = await fetch(url, { method: 'POST', headers, body: formData });
+    const res = await safeFetchWithRefresh(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
     const text = await res.text();
     try {
       const data = text ? JSON.parse(text) : null;
@@ -1575,7 +1632,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
   };
 
   const activateRow = async url => {
-    const res = await fetch(url, {
+    const res = await safeFetchWithRefresh(url, {
       method: 'PATCH',
       headers: authHeadersJson(),
       body: JSON.stringify({ is_active: true }),
@@ -1604,11 +1661,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
     const createdBy = getCreatedByNumeric();
     if (createdBy !== null) payload.created_by = createdBy;
 
-    const res = await fetch(`${BASE_URL}/api/v1/enterprise-types/`, {
-      method: 'POST',
-      headers: authHeadersJson(),
-      body: JSON.stringify(payload),
-    });
+    const res = await safeFetchWithRefresh(
+      `${BASE_URL}/api/v1/enterprise-types/`,
+      {
+        method: 'POST',
+        headers: authHeadersJson(),
+        body: JSON.stringify(payload),
+      },
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -1766,11 +1826,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
         payload.created_by = createdBy;
       }
 
-      const res = await fetch(`${BASE_URL}/api/v1/mandatory-fund/`, {
-        method: 'POST',
-        headers: authHeadersJson(),
-        body: JSON.stringify(payload),
-      });
+      const res = await safeFetchWithRefresh(
+        `${BASE_URL}/api/v1/mandatory-fund/`,
+        {
+          method: 'POST',
+          headers: authHeadersJson(),
+          body: JSON.stringify(payload),
+        },
+      );
 
       if (!res.ok) {
         const text = await res.text();
@@ -1797,11 +1860,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
       payload.form_type = 'newep';
       payload.is_active = false;
 
-      const res = await fetch(`${BASE_URL}/api/v1/enterprise-support/`, {
-        method: 'POST',
-        headers: authHeadersJson(),
-        body: JSON.stringify(payload),
-      });
+      const res = await safeFetchWithRefresh(
+        `${BASE_URL}/api/v1/enterprise-support/`,
+        {
+          method: 'POST',
+          headers: authHeadersJson(),
+          body: JSON.stringify(payload),
+        },
+      );
 
       if (!res.ok) {
         const text = await res.text();
@@ -1926,11 +1992,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
         trainingPayload.created_by = createdBy;
       }
 
-      const res = await fetch(`${BASE_URL}/api/v1/enterprise-training-reqs/`, {
-        method: 'POST',
-        headers: authHeadersJson(),
-        body: JSON.stringify(trainingPayload),
-      });
+      const res = await safeFetchWithRefresh(
+        `${BASE_URL}/api/v1/enterprise-training-reqs/`,
+        {
+          method: 'POST',
+          headers: authHeadersJson(),
+          body: JSON.stringify(trainingPayload),
+        },
+      );
 
       if (!res.ok) {
         const text = await res.text();
@@ -1961,10 +2030,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
   const uploadTrainingCertificate = async (trainingId, enterpriseId, asset) => {
     if (!trainingId || !enterpriseId || !asset?.uri) return;
 
-    const token = gsApi.getAuthToken ? gsApi.getAuthToken() : null;
     const headers = {};
-
-    if (token) headers['Authorization'] = `Bearer ${token}`;
     headers['X-API-ID'] = MULTIPART_X_API_ID;
     headers['X-API-KEY'] = MULTIPART_X_API_KEY;
 
@@ -1984,11 +2050,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
       type: asset.type || 'application/octet-stream',
     });
 
-    const res = await fetch(`${BASE_URL}/api/v1/training-certificates/`, {
-      method: 'POST',
-      headers,
-      body: formData,
-    });
+    const res = await safeFetchWithRefresh(
+      `${BASE_URL}/api/v1/training-certificates/`,
+      {
+        method: 'POST',
+        headers,
+        body: formData,
+      },
+    );
 
     if (!res.ok) {
       const text = await res.text();
@@ -2038,11 +2107,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
     const createdBy = getCreatedByNumeric();
     if (createdBy !== null) payload.created_by = createdBy;
 
-    const res = await fetch(`${BASE_URL}/api/v1/enterprise-training-reqs/`, {
-      method: 'POST',
-      headers: authHeadersJson(),
-      body: JSON.stringify(payload),
-    });
+    const res = await safeFetchWithRefresh(
+      `${BASE_URL}/api/v1/enterprise-training-reqs/`,
+      {
+        method: 'POST',
+        headers: authHeadersJson(),
+        body: JSON.stringify(payload),
+      },
+    );
 
     if (!res.ok) {
       const text = await res.text();
