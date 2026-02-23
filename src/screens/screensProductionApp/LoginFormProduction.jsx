@@ -51,6 +51,11 @@ const translations = {
   },
 };
 
+const ROLE_MAP = {
+  CRP: 6,
+  Admin: 8,
+};
+
 export default function LoginFormProduction({
   onLogin,
   onSuccess,
@@ -70,7 +75,7 @@ export default function LoginFormProduction({
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-const [focusedField, setFocusedField] = useState(null);
+  const [focusedField, setFocusedField] = useState(null);
   const validate = () => {
     const e = {};
     if (!username.trim()) e.username = t.usernameRequired;
@@ -85,7 +90,7 @@ const [focusedField, setFocusedField] = useState(null);
   const refreshCaptcha = () => {
     setCaptcha(randomCaptcha());
     setCaptchaInput('');
-    setErrors((prev) => ({ ...prev, captcha: undefined }));
+    setErrors(prev => ({ ...prev, captcha: undefined }));
   };
 
   const handleSubmit = async () => {
@@ -105,9 +110,21 @@ const [focusedField, setFocusedField] = useState(null);
       if (!result || !result.success) {
         const msg =
           result?.message ||
-          (result?.data && (result.data.detail || JSON.stringify(result.data))) ||
+          (result?.data &&
+            (result.data.detail || JSON.stringify(result.data))) ||
           'Login failed. Please check credentials.';
         setErrors({ general: msg });
+        return;
+      }
+
+      // 🔒 Prevent role mismatch
+      const backendRoleId = Number(result.user?.role_id);
+      const selectedRoleId = ROLE_MAP[selectedRole];
+
+      if (backendRoleId !== selectedRoleId) {
+        setErrors({
+          general: `Please select Correct Role, You have selected : ${selectedRole}.`,
+        });
         return;
       }
 
@@ -115,7 +132,7 @@ const [focusedField, setFocusedField] = useState(null);
         ...(result.user || {}),
         // normalise shape
         username: result.user?.username || username.trim(),
-        role: selectedRole,
+        role: result.user?.role_id,
         access: result.access || result.token || result.user?.access,
         refresh: result.refresh || result.user?.refresh,
       };
@@ -139,19 +156,21 @@ const [focusedField, setFocusedField] = useState(null);
   return (
     <View style={[styles.container, containerStyle]}>
       <Text style={styles.title}>{t.loginTitle}</Text>
-<View style={styles.titleUnderline} />
+      <View style={styles.titleUnderline} />
       {errors.general ? (
-        <Text style={[styles.error, { marginBottom: 8 }]}>{errors.general}</Text>
+        <Text style={[styles.error, { marginBottom: 8 }]}>
+          {errors.general}
+        </Text>
       ) : null}
 
       {/* Username */}
       <Text style={styles.label}>{t.username}</Text>
       <TextInput
         // style={styles.input}
-           style={[
-    styles.input,
-    focusedField === 'username' && { borderColor: '#FF7E00' }
-  ]}
+        style={[
+          styles.input,
+          focusedField === 'username' && { borderColor: '#FF7E00' },
+        ]}
         placeholder={t.enterUsername}
         autoCapitalize="none"
         value={username}
@@ -164,33 +183,32 @@ const [focusedField, setFocusedField] = useState(null);
       <Text style={styles.label}>{t.password}</Text>
       <TextInput
         // style={styles.input}
-          style={[
-    styles.input,
-    focusedField === 'password' && { borderColor: '#FF7E00' }
-  ]}
+        style={[
+          styles.input,
+          focusedField === 'password' && { borderColor: '#FF7E00' },
+        ]}
         placeholder={t.enterPassword}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-         onFocus={() => setFocusedField('password')}
+        onFocus={() => setFocusedField('password')}
       />
       {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
       {/* Role selector */}
       <Text style={[styles.label, { marginTop: 8 }]}>{t.role}</Text>
       <View style={styles.roleRow}>
-        {roles.map((r) => {
+        {roles.map(r => {
           const selected = selectedRole === r;
           return (
             <TouchableOpacity
               key={r}
-              style={[
-                styles.roleButton,
-                selected && styles.roleButtonSelected,
-              ]}
+              style={[styles.roleButton, selected && styles.roleButtonSelected]}
               onPress={() => setSelectedRole(r)}
             >
-              <Text style={selected ? styles.roleTextSelected : styles.roleText}>
+              <Text
+                style={selected ? styles.roleTextSelected : styles.roleText}
+              >
                 {r}
               </Text>
             </TouchableOpacity>
@@ -211,7 +229,9 @@ const [focusedField, setFocusedField] = useState(null);
                 backgroundColor: '#F9ECEC',
               }}
             >
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#EE6969' }}>
+              <Text
+                style={{ fontSize: 18, fontWeight: '600', color: '#EE6969' }}
+              >
                 {captcha.q}
               </Text>
             </View>
@@ -224,17 +244,16 @@ const [focusedField, setFocusedField] = useState(null);
           </View>
           <TextInput
             // style={[styles.input, { marginTop: 8 }]}
-                  style={[
-    styles.input,
-    { marginTop: 8 },
-    focusedField === 'captcha' && { borderColor: '#FF7E00' }
-  ]}
-      
+            style={[
+              styles.input,
+              { marginTop: 8 },
+              focusedField === 'captcha' && { borderColor: '#FF7E00' },
+            ]}
             placeholder={t.enterCaptcha}
             keyboardType="number-pad"
             value={captchaInput}
             onChangeText={setCaptchaInput}
-             onFocus={() => setFocusedField('captcha')}
+            onFocus={() => setFocusedField('captcha')}
           />
           {errors.captcha && <Text style={styles.error}>{errors.captcha}</Text>}
         </View>
@@ -317,10 +336,10 @@ const styles = StyleSheet.create({
   },
   submitText: { color: 'white', fontWeight: '600', fontSize: 16 },
   titleUnderline: {
-  width: '100%',
-  height: 2,
-  backgroundColor: '#FF7E00',
-  marginTop: 8,
-  marginBottom: 16,
-},
+    width: '100%',
+    height: 2,
+    backgroundColor: '#FF7E00',
+    marginTop: 8,
+    marginBottom: 16,
+  },
 });

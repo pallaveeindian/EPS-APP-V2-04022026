@@ -33,7 +33,7 @@ import { X_API_ID, X_API_KEY } from '@env';
  *
  * New flow:
  *  1) Ensure / create RecordedBeneficiary from SHG member.
- *  2) Create NewEnterprise (/api/v1/new-enterprise/).
+ *  2) Create NewEnterprise (/api/v1/epsakhi/new-enterprise/).
  *  3) Update recorded_beneficiaries.enterprise_TH_urid.
  *  4) Create sub-forms:
  *     - /enterprise-types/ (enterprise type + categories)
@@ -1585,7 +1585,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     headers['X-API-ID'] = MULTIPART_X_API_ID;
     headers['X-API-KEY'] = MULTIPART_X_API_KEY;
 
-    const url = `${BASE_URL}/api/v1/new-enterprise/`;
+    const url = `${BASE_URL}/api/v1/epsakhi/new-enterprise/`;
     const formData = new FormData();
 
     Object.entries(payloadObj).forEach(([k, v]) => {
@@ -1662,7 +1662,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     if (createdBy !== null) payload.created_by = createdBy;
 
     const res = await safeFetchWithRefresh(
-      `${BASE_URL}/api/v1/enterprise-types/`,
+      `${BASE_URL}/api/v1/epsakhi/enterprise-types/`,
       {
         method: 'POST',
         headers: authHeadersJson(),
@@ -1827,7 +1827,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       }
 
       const res = await safeFetchWithRefresh(
-        `${BASE_URL}/api/v1/mandatory-fund/`,
+        `${BASE_URL}/api/v1/epsakhi/mandatory-fund/`,
         {
           method: 'POST',
           headers: authHeadersJson(),
@@ -1861,7 +1861,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       payload.is_active = false;
 
       const res = await safeFetchWithRefresh(
-        `${BASE_URL}/api/v1/enterprise-support/`,
+        `${BASE_URL}/api/v1/epsakhi/enterprise-support/`,
         {
           method: 'POST',
           headers: authHeadersJson(),
@@ -1993,7 +1993,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       }
 
       const res = await safeFetchWithRefresh(
-        `${BASE_URL}/api/v1/enterprise-training-reqs/`,
+        `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/`,
         {
           method: 'POST',
           headers: authHeadersJson(),
@@ -2051,7 +2051,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     });
 
     const res = await safeFetchWithRefresh(
-      `${BASE_URL}/api/v1/training-certificates/`,
+      `${BASE_URL}/api/v1/epsakhi/training-certificates/`,
       {
         method: 'POST',
         headers,
@@ -2108,7 +2108,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     if (createdBy !== null) payload.created_by = createdBy;
 
     const res = await safeFetchWithRefresh(
-      `${BASE_URL}/api/v1/enterprise-training-reqs/`,
+      `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/`,
       {
         method: 'POST',
         headers: authHeadersJson(),
@@ -2458,8 +2458,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         }
 
         // Training Required
-        created.trainingReqId =
-          (await createTrainingRequired(enterpriseId)) || [];
+        created.trainingReqId = await createTrainingRequired(enterpriseId);
 
         // Support
         created.supportIds =
@@ -2467,58 +2466,67 @@ export default function NewEnterpriseForm({ route, navigation }) {
       } catch (subErr) {
         throw subErr; // immediately stop
       }
-      created.fundIds = created.fundIds || [];
-      created.trainingRecIds = created.trainingRecIds || [];
-      created.trainingCertIds = created.trainingCertIds || [];
-      created.supportIds = created.supportIds || [];
+      created.fundIds = created.fundIds;
+      created.trainingRecIds = created.trainingRecIds;
+      created.trainingCertIds = created.trainingCertIds;
+      created.supportIds = created.supportIds;
       try {
         // Activate Recorded Beneficiary
         await activateRow(
-          `${BASE_URL}/api/v1/recorded-beneficiaries/${recordedBenefId}/`,
+          `${BASE_URL}/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
         );
 
         // Activate New Enterprise
         console.log('ACTIVATING ENTERPRISE ID:', enterpriseRes.id);
         await activateRow(
-          `${BASE_URL}/api/v1/new-enterprise/${enterpriseRes.id}/`,
+          `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
         );
 
         // Activate Enterprise Type
         if (created.enterpriseTypeId)
           await activateRow(
-            `${BASE_URL}/api/v1/enterprise-types/${created.enterpriseTypeId}/`,
+            `${BASE_URL}/api/v1/epsakhi/enterprise-types/${created.enterpriseTypeId}/`,
           );
 
         // Activate Funds
         for (const id of created.fundIds) {
           console.log('ACTIVATING FUND IDS:', created.fundIds);
-          await activateRow(`${BASE_URL}/api/v1/mandatory-fund/${id}/`);
+          await activateRow(`${BASE_URL}/api/v1/epsakhi/mandatory-fund/${id}/`);
         }
 
         // Activate Training Received
         for (const id of created.trainingRecIds) {
           console.log('ACTIVATING TRAINING REC IDS:', created.trainingRecIds);
           await activateRow(
-            `${BASE_URL}/api/v1/enterprise-training-reqs/${id}/`,
+            `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${id}/`,
           );
         }
 
         // Activate Training Certificates
         for (const id of created.trainingCertIds) {
           console.log('ACTIVATING TRAINING CERT IDS:', created.trainingCertIds);
-          await activateRow(`${BASE_URL}/api/v1/training-certificates/${id}/`);
+          await activateRow(
+            `${BASE_URL}/api/v1/epsakhi/training-certificates/${id}/`,
+          );
         }
 
         // Activate Training Required
-        if (created.trainingReqId)
+        if (
+          created.trainingReqId &&
+          typeof created.trainingReqId === 'number'
+        ) {
+          console.log('ACTIVATING TRAINING REQ IDS:', created.trainingReqId);
           await activateRow(
-            `${BASE_URL}/api/v1/enterprise-training-reqs/${created.trainingReqId}/`,
+            `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${created.trainingReqId}/`,
           );
+        }
 
         // Activate Support
         for (const id of created.supportIds) {
           console.log('ACTIVATING SUPPORT IDS:', created.supportIds);
-          await activateRow(`${BASE_URL}/api/v1/enterprise-support/${id}/`);
+          await activateRow(
+            `${BASE_URL}/api/v1/epsakhi/enterprise-support/${id}/`,
+          );
         }
       } catch (activationErr) {
         throw new Error(

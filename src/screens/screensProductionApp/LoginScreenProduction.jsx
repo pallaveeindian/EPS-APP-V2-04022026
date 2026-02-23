@@ -47,7 +47,7 @@ export default function LoginScreenProduction({ navigation }) {
     }
     await saveUser(userPayload);
 
-    const roleId = Number(userPayload.user?.role);
+    const roleId = Number(userPayload.role);
 
     if (roleId === 6) {
       navigation.replace('CRPDashboard');
