@@ -1471,6 +1471,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           ...payload,
           is_active: false,
         });
+        console.log("Enterprise Response:", enterpriseRes);
+        console.log("TH_urid:", enterpriseRes?.TH_urid);
       }
       const enterpriseTHurId =
         enterpriseRes.TH_urid || existingEnterprise?.TH_urid;
@@ -1610,13 +1612,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         }
       };
 
-      // Activate main enterprise
-      await activate(`/api/v1/epsakhi/existing-enterprise/${enterpriseId}/`);
-
       // Activate recorded beneficiary
       await activate(
         `/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
       );
+      
+      // Activate main enterprise
+      await activate(`/api/v1/epsakhi/existing-enterprise/${enterpriseId}/`);
 
       // Activate child rows
       for (const id of results.loans) {
@@ -1626,6 +1628,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       for (const id of results.enterpriseTypes) {
         await activate(`/api/v1/epsakhi/enterprise-types/${id}/`);
       }
+
+      for (const id of results.licenses) {
+        await activate(`/api/v1/epsakhi/enterprise-licenses/${id}/`);
+      }      
 
       for (const id of results.subsidies) {
         await activate(`/api/v1/epsakhi/enterprise-subsidy-details/${id}/`);

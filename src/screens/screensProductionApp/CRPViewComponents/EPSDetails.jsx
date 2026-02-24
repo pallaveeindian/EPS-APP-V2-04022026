@@ -58,7 +58,7 @@ export default function EPSDetail() {
       : detail?.shared?.training;
   const isExisting = detail?.enterprise_type === 'existing';
   const isNew = detail?.enterprise_type === 'new';
-  const BASE_URL = 'http://66.116.207.88:8088';
+  const BASE_URL = 'http://72.61.255.170:8080';
 
   return (
     <ScrollView style={styles.container}>
