@@ -1,3 +1,4 @@
+
 // src/screens/epsakhi/CRPDashboardProduction.jsx
 import React, { useEffect, useState, useContext } from 'react';
 import {
@@ -9,6 +10,7 @@ import {
   Alert,
   RefreshControl,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { getUser, clearUser } from '../../utils/auth';
 import gsApi from '../../api/gsApi';
@@ -36,8 +38,7 @@ export default function CRPDashboardProduction({ navigation }) {
   const [crpName, setCrpName] = useState('');
   const [draftsVisible, setDraftsVisible] = useState(false);
   const [drafts, setDrafts] = useState([]);
-  const [activeButton, setActiveButton] = useState(null);
-
+  const [loadingDrafts, setLoadingDrafts] = useState(false);
   const translations = {
     en: {
       headerTitle: 'CRP Dashboard',
@@ -224,8 +225,8 @@ export default function CRPDashboardProduction({ navigation }) {
       recorded = Array.isArray(res?.results)
         ? res.results
         : Array.isArray(res)
-        ? res
-        : [];
+          ? res
+          : [];
       setCrpRecordedBeneficiaries(recorded);
 
       // Build analytics per Panchayat
@@ -256,27 +257,134 @@ export default function CRPDashboardProduction({ navigation }) {
     }
   };
 
+  // const loadDrafts = async () => {
+  //   try {
+  //     const allKeys = await AsyncStorage.getAllKeys();
+  //     const draftKeys = allKeys.filter(key =>
+  //       key.startsWith('NO_ENTERPRISE_FORM_DRAFT_'),
+  //     );
+  //     const entries = await AsyncStorage.multiGet(draftKeys);
+
+  //     const loadedDrafts = entries.map(([key, value]) => {
+  //       const draft = JSON.parse(value || '{}');
+  //       return {
+  //         key,
+  //         member_code: key.replace('NO_ENTERPRISE_FORM_DRAFT_', ''),
+  //         applicant_name: draft?.memberName || 'Unnamed',
+  //         draft,
+  //       };
+  //     });
+
+  //     setDrafts(loadedDrafts);
+  //   } catch (e) {
+  //     console.error('Failed to load drafts', e);
+  //   }
+  // };
+
+  // [+++ ADD THIS FUNCTION: Scans storage for keys starting with DRAFT_ENTERPRISE_FORM_]
   const loadDrafts = async () => {
     try {
+      setLoadingDrafts(true);
       const allKeys = await AsyncStorage.getAllKeys();
+
+      // Filter for BOTH prefixes
       const draftKeys = allKeys.filter(key =>
-        key.startsWith('NO_ENTERPRISE_FORM_DRAFT_'),
+        key.startsWith('DRAFT_ENTERPRISE_FORM_') || key.startsWith('DRAFT_EXEP_')
       );
+
       const entries = await AsyncStorage.multiGet(draftKeys);
 
       const loadedDrafts = entries.map(([key, value]) => {
-        const draft = JSON.parse(value || '{}');
+        if (!value) return null;
+        const data = JSON.parse(value);
+
+        const isExisting = key.startsWith('DRAFT_EXEP_');
+
+        // 1. Extract the ID (Member Code)
+        const id = isExisting
+          ? key.replace('DRAFT_EXEP_', '')
+          : key.replace('DRAFT_ENTERPRISE_FORM_', '');
+
+        // 2. Extract the Name (Existing uses 'formData', New uses 'form')
+        let displayName = "Unnamed";
+        if (isExisting) {
+          displayName = data.formData?.enterprise_name ||
+            data.beneficiary?.member_name ||
+            "Existing Enterprise Draft";
+        } else {
+          displayName = data.form?.applicant_name ||
+            data.beneficiary?.member_name ||
+            "New Enterprise Draft";
+        }
+
         return {
           key,
-          member_code: key.replace('NO_ENTERPRISE_FORM_DRAFT_', ''),
-          applicant_name: draft?.memberName || 'Unnamed',
-          draft,
+          id,
+          name: displayName,
+          data,
+          type: isExisting ? 'EXISTING' : 'NEW'
         };
-      });
+      }).filter(Boolean);
 
       setDrafts(loadedDrafts);
+      setDraftsVisible(true);
     } catch (e) {
-      console.error('Failed to load drafts', e);
+      console.error("Load Drafts Error:", e);
+      Alert.alert('Error', 'Could not load drafts');
+    } finally {
+      setLoadingDrafts(false);
+    }
+  };
+
+  // [+++ ADD THIS FUNCTION: Opens form and passes ID so it resumes]
+  const handleDraftClick = (draft) => {
+    setDraftsVisible(false);
+
+    // Reconstruct beneficiary object
+    const mockBeneficiary = {
+      member_code: draft.id,
+      member_name: draft.name,
+      ...(draft.data.beneficiary || {})
+    };
+
+    if (draft.type === 'EXISTING') {
+      navigation.navigate('ExistingEnterpriseForm', {
+        beneficiary: mockBeneficiary,
+        crpUserId: userId,
+        // Pass other saved params if they exist in your blob
+        tempShg: draft.data.tempShg || null,
+      });
+    } else {
+      navigation.navigate('NewEnterpriseForm', {
+        beneficiary: mockBeneficiary,
+        recordedBenef: draft.data.recordedBenef || null,
+        crpUserId: userId
+      });
+    }
+  };
+  const deleteDraft = async (draftKey) => {
+    try {
+      Alert.alert(
+        "Delete Draft",
+        "Are you sure you want to delete this draft?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              await AsyncStorage.removeItem(draftKey);
+
+              // Remove from current list
+              const updatedDrafts = drafts.filter(d => d.key !== draftKey);
+              setDrafts(updatedDrafts);
+
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Delete draft error:", error);
     }
   };
   const menuItems = [
@@ -371,82 +479,84 @@ export default function CRPDashboardProduction({ navigation }) {
         >
           <Text style={styles.secondaryButtonText}>{t.viewRecorded}</Text>
         </TouchableOpacity>
-
-        {/* View Drafts Button
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={async () => {
-            await loadDrafts();
-            setDraftsVisible(true);
-          }}
-        >
-          <Text style={styles.secondaryButtonText}>{t.viewDrafts}</Text>
-        </TouchableOpacity> */}
       </View>
 
-      {/* Drafts Modal
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={loadDrafts}
+      >
+        {loadingDrafts ? (
+          <ActivityIndicator size="small" color="#EE6969" />
+        ) : (
+          <Text style={styles.secondaryButtonText}>{t.viewDrafts}</Text>
+        )}
+      </TouchableOpacity>
+
+      {/* ... existing buttons ... */}
+
+      {/* [+++ ADD VIEW DRAFTS BUTTON] */}
+
+
+      {/* [+++ ADD DRAFTS MODAL] */}
+      {/* [+++ UPDATED DRAFTS MODAL] */}
       <Modal
         visible={draftsVisible}
         transparent={true}
         animationType="slide"
         onRequestClose={() => setDraftsVisible(false)}
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            padding: 16,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              maxHeight: '80%',
-              padding: 16,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}>
-              Draft Beneficiaries
-            </Text>
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalHeader}>{t.draftsHeader || 'Drafts'}</Text>
+            <View style={styles.divider} />
 
             {drafts.length === 0 ? (
-              <Text>No drafts saved yet.</Text>
+              <Text style={{ textAlign: 'center', margin: 20, color: '#666' }}>{t.noDrafts}</Text>
             ) : (
-              <ScrollView>
-                {drafts.map(d => (
+              <ScrollView style={{ maxHeight: 400 }}>
+                {drafts.map((d) => (
                   <TouchableOpacity
                     key={d.key}
-                    style={{
-                      padding: 12,
-                      borderBottomWidth: 1,
-                      borderBottomColor: '#EEE',
-                    }}
-                    onPress={() => {
-                      setDraftsVisible(false);
-                      //Navigate to CRPRecordFlow and pass draftKey
-                      navigation.navigate('CRPRecordFlow', { draftKey: d.key });
-                    }}
+                    style={styles.draftItem}
+                    onPress={() => handleDraftClick(d)}
                   >
-                    <Text style={{ fontWeight: '600' }}>
-                      {d.applicant_name}
-                    </Text>
-                    <Text style={{ color: '#666' }}>{d.member_code}</Text>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.draftName}>{d.name}</Text>
+                        {/* Type Badge */}
+                        <View style={[
+                          styles.typeBadge,
+                          { backgroundColor: d.type === 'EXISTING' ? '#4CAF50' : '#2196F3' }
+                        ]}>
+                          <Text style={styles.typeBadgeText}>
+                            {d.type === 'EXISTING' ? 'EXISTING' : 'NEW'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={styles.draftId}>Code: {d.id}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ color: '#EE6969', fontWeight: 'bold' }}>Resume ➤</Text>
+                      <TouchableOpacity onPress={() => deleteDraft(d.key)}>
+                        <Text style={{ color: '#EE6969', fontWeight: 'bold' }}>
+                          Delete ➤
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             )}
 
             <TouchableOpacity
-              style={{ marginTop: 12, alignSelf: 'flex-end' }}
+              style={styles.closeModalButton}
               onPress={() => setDraftsVisible(false)}
             >
-              <Text style={{ color: '#EE6969', fontWeight: '600' }}>Close</Text>
+              <Text style={{ color: '#fff', fontWeight: '600' }}>{t.close} Close</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </Modal> */}
+      </Modal>
 
       <BurgerMenu
         visible={menuOpen}
@@ -550,6 +660,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
+    marginBottom: 12
   },
   secondaryButtonText: {
     color: '#EE6969',
@@ -570,5 +681,75 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
 
     elevation: 4,
+  },
+  // [+++ ADD NEW STYLES]
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    maxHeight: '80%',
+    elevation: 5,
+  },
+  modalHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#ddd',
+    marginBottom: 10,
+  },
+  draftItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fafafa',
+    marginBottom: 6,
+    borderRadius: 6,
+  },
+  draftName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  draftId: {
+    fontSize: 12,
+    color: '#888',
+  },
+  closeModalButton: {
+    backgroundColor: '#EE6969',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  typeBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  typeBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  draftName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    maxWidth: '70%',
   },
 });

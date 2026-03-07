@@ -1,3 +1,4 @@
+
 // src/screens/screensProductionApp/ExistingEnterpriseForm.jsx
 import React, { useEffect, useState } from 'react';
 import {
@@ -12,7 +13,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import gsApi from '../../api/gsApi';
-import { getUser, saveUser } from '../../utils/auth';
+import { getUser } from '../../utils/auth';
 import {
   getShgListForPanchayat,
   getCrpPanchayats,
@@ -32,68 +33,7 @@ import ExistingEnterpriseTrainingSkillsSection from './FormSections/ExistingEnte
 import ExistingEnterpriseSupportSection from './FormSections/ExistingEnterpriseSupportSection';
 import ExistingEnterpriseMediaSection from './FormSections/ExistingEnterpriseMediaSection';
 import ExistingEnterpriseDeclarationSection from './FormSections/ExistingEnterpriseDeclarationSection';
-import { X_API_ID, X_API_KEY } from '@env';
-
-// NOTE: api.
-const MULTIPART_X_API_ID = X_API_ID;
-const MULTIPART_X_API_KEY = X_API_KEY;
-const BASE_URL = 'http://72.61.255.170:8080';
-
-// 🔥 SAFE FETCH WITH AUTO REFRESH
-const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
-  const user = await getUser();
-  let access = user?.access;
-  let refresh = user?.refresh;
-
-  const doFetch = async token => {
-    const headers = {
-      ...(options.headers || {}),
-      Authorization: token ? `Bearer ${token}` : undefined,
-      'X-API-ID': MULTIPART_X_API_ID,
-      'X-API-KEY': MULTIPART_X_API_KEY,
-    };
-
-    return fetch(url, {
-      ...options,
-      headers,
-    });
-  };
-
-  let response = await doFetch(access);
-
-  // If not 401 → return
-  if (response.status !== 401) return response;
-
-  // If already retried → fail
-  if (!retry || !refresh) return response;
-
-  // 🔥 Try refresh
-  const refreshResp = await fetch(`${BASE_URL}/api/v1/auth/refresh/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh }),
-  });
-
-  if (!refreshResp.ok) {
-    return response; // refresh failed
-  }
-
-  const refreshData = await refreshResp.json();
-
-  if (!refreshData?.access) {
-    return response;
-  }
-
-  // 🔥 Save new access token
-  const updatedUser = { ...user, access: refreshData.access };
-  await saveUser(updatedUser);
-
-  gsApi.setAuthToken?.(refreshData.access, refresh);
-
-  // Retry original request ONCE
-  return doFetch(refreshData.access);
-};
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // ---- helpers (same style as NewEnterpriseForm) ----
 
 const computeAgeFromDob = dobStr => {
@@ -124,8 +64,11 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   const existingEnterprise = route?.params?.existing;
   const { language } = useContext(LanguageContext);
 
+
   // extra params from CRPRecordFlowProduction (same as NewEnterpriseForm)
   const beneficiary = route?.params?.beneficiary || null;
+  const memberCode = beneficiary?.member_code || beneficiary?.nic_member_code;
+  const beneficiaryName = beneficiary?.member_name || "Unknown Beneficiary";
   const tempShg = route?.params?.tempShg || null;
   const routeCrpUserId =
     route?.params?.crpUserId ||
@@ -243,12 +186,18 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
   // NEW: pagination state (one section per "page")
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
   const TOTAL_SECTIONS = 9; // total number of sections in this form
 
   const updateForm = patch => {
     setExistingForm(prev => ({ ...prev, ...patch }));
   };
 
+  const clearDraft = async () => {
+    if (memberCode) {
+      await AsyncStorage.removeItem(`DRAFT_EXEP_${memberCode}`);
+    }
+  };
   const getCreatedByNumeric = () => {
     const candidate =
       loggedUser?.id ?? loggedUser?.user_id ?? loggedUser?.pk ?? routeCrpUserId;
@@ -259,6 +208,76 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     }
     return null;
   };
+
+
+
+  const saveProgress = async (state, index) => {
+    if (!memberCode) return;
+    try {
+      const draftBlob = JSON.stringify({
+        formData: state, // This is 'state' (existingForm)
+        sectionIndex: index,
+        beneficiary: beneficiary, // Store this to help the dashboard identify the name
+        lastSaved: new Date().toISOString(),
+      });
+
+      // !!! MUST MATCH Dashboard Prefix !!!
+      await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
+
+    } catch (e) {
+      console.warn("Failed to save draft", e);
+    }
+  };
+
+  const checkAndLoadDraft = async () => {
+    if (!memberCode) return;
+    try {
+      const savedDraft = await AsyncStorage.getItem(`DRAFT_EXEP_${memberCode}`);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+
+        Alert.alert(
+          "Resume Draft?",
+          `We found a saved form for ${beneficiaryName}. Would you like to continue where you left off?`,
+          [
+            {
+              text: "Start New",
+              onPress: async () => {
+                await AsyncStorage.removeItem(`DRAFT_EXEP_${memberCode}`);
+                setIsDraftLoaded(true);
+              }
+            },
+            {
+              text: "Resume",
+              onPress: () => {
+                setExistingForm(parsed.formData);
+                setCurrentSectionIndex(parsed.sectionIndex);
+                setIsDraftLoaded(true);
+              },
+            },
+          ]
+        );
+      } else {
+        setIsDraftLoaded(true);
+      }
+    } catch (e) {
+      console.warn("Error loading draft", e);
+      setIsDraftLoaded(true);
+    }
+  };
+
+  // 1. Load Draft on Mount
+  useEffect(() => {
+    checkAndLoadDraft();
+  }, [memberCode]);
+
+  // 2. Auto-save whenever form or section changes
+  useEffect(() => {
+    if (isDraftLoaded) {
+      saveProgress(existingForm, currentSectionIndex);
+    }
+  }, [existingForm, currentSectionIndex]);
+
 
   // Load logged user + set auth token
   useEffect(() => {
@@ -353,13 +372,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-      beneficiary.member_addresses.length > 0
+        beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-      beneficiary.member_phones.length > 0
+        beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -443,10 +462,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-            ? shgRes.results
-            : Array.isArray(shgRes)
-            ? shgRes
-            : [];
+              ? shgRes.results
+              : Array.isArray(shgRes)
+                ? shgRes
+                : [];
           const found = shgRows.find(s => {
             const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
             return String(code) === String(lokos_shg);
@@ -490,10 +509,9 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-          ? 'No'
-          : beneficiary.pld_status || null,
+            ? 'No'
+            : beneficiary.pld_status || null,
       enterprise_type: 'exep',
-      is_active: 'false',
     };
 
     if (createdBy !== null) {
@@ -583,9 +601,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
   // 1) Enterprise type sub-table
   const saveEnterpriseTypes = async (enterpriseId, tree) => {
-    const createdIds = [];
-    const errors = [];
-
     if (!enterpriseId || !Array.isArray(tree)) return;
     const createdBy = getCreatedByNumeric();
     for (const row of tree) {
@@ -612,34 +627,22 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         })
         .join(', ');
 
-      const mapped = `${parentName}: ${childNames}`;
-      try {
-        const res = await gsApi.createEnterpriseType({
-          //  enterprise_id uses TH_urid of ExistingEnterpriseForm
-          enterprise_id: enterpriseId,
-          form_type: 'exep',
-          // parent_category: row.parent,
-          parent_category: String(row.parent.en),
-          // parent_category: String(parentName),
-          sub_category: mapped,
-          created_by: createdBy,
-          is_active: false,
-        });
-        if (res?.id) {
-          createdIds.push(res.id);
-        }
-      } catch (e) {
-        errors.push({
-          error: e?.data || e?.message || e,
-        });
-      }
+      const mapped = `[${parentName}: ${childNames}]`;
+
+      await gsApi.createEnterpriseType({
+        //  enterprise_id uses TH_urid of ExistingEnterpriseForm
+        enterprise_id: enterpriseId,
+        form_type: 'exep',
+        // parent_category: row.parent,
+        parent_category: String(row.parent.en),
+        // parent_category: String(parentName),
+        sub_category: mapped,
+        created_by: createdBy,
+      });
     }
-    return { ids: createdIds, errors };
   };
 
   const saveLicenses = async (enterpriseId, licenses) => {
-    const createdIds = [];
-    const errors = [];
     if (!enterpriseId || !Array.isArray(licenses) || licenses.length === 0) {
       console.log('Skipping Licenses: No enterpriseId or licenses provided.');
       return;
@@ -662,7 +665,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       formData.append('license_category', String(lic.license_category || ''));
       formData.append('license_name', String(lic.license_name || ''));
       formData.append('license_no', String(lic.license_no || ''));
-      formData.append('is_active', 'false');
+      formData.append('is_active', 'true');
       if (EcreatedBy) {
         formData.append('created_by', String(EcreatedBy));
       }
@@ -689,34 +692,21 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             '⚠️ Warning: Server created the row but enterprise_id is still null. Check backend field names.',
           );
         }
-        if (res?.id) {
-          createdIds.push(res.id);
-        }
       } catch (e) {
         console.error('❌ License Saved Error:', e);
-        errors.push({
-          error: e?.data || e?.message || e,
-        });
       }
     }
     console.log('>>> LICENSE UPLOAD PROCESS COMPLETE');
-    return { ids: createdIds, errors };
   };
 
   // 1) Shop Based Enterprise Saver
   const saveEnterpriseShop = async (enterpriseId, form) => {
-    const createdShopIds = [];
-    const createdShopMediaIds = [];
-    const ShopErrors = [];
-    const ShopMediaErrors = [];
-
     if (!enterpriseId || form.has_shop_product !== 'Yes') return;
 
     const EcreatedBy = getCreatedByNumeric();
     console.log('>>> SAVING SHOP DATA FOR ENTERPRISE:', enterpriseId);
 
-    let shopRowId = null; // ✅ Declare outside try
-
+    // 1️ Map Frontend State to Backend DB Keys
     const shopPayload = {
       enterprise_id: enterpriseId,
       shop_type: form.shop_type || '',
@@ -726,50 +716,43 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       target_customers: form.target_customers || '',
       sales_area: form.sales_area || '',
       marketing_strategy: form.marketing_strategy || '',
+
+      // These 3 were null in your logs, mapping them now:
       marketing_channels: form.marketing_channels || '',
       marketing_challenges: form.marketing_challenges || '',
+
+      // market_linkage: form.market_linkage || '',
+
       accept_digital_payment: form.accept_digital_payment === 'Yes',
       avg_monthly_sales: form.avg_monthly_sales || '0.00',
       avg_annual_sales: form.annual_sale || '0.00',
-      is_active: false,
+
+      is_active: true,
       created_by: EcreatedBy,
     };
 
-    try {
-      const shopRes = await gsApi.createEnterpriseShop(shopPayload);
+    const shopRes = await gsApi.createEnterpriseShop(shopPayload);
+    const shopRowId = shopRes?.id;
 
-      // ⚠️ VERY IMPORTANT — verify response shape
-      shopRowId = shopRes?.id;
-      // If axios: shopRowId = shopRes?.data?.id;
-
-      if (!shopRowId) {
-        throw new Error('Shop ID not returned from API');
-      }
-
-      createdShopIds.push(shopRowId);
-      console.log(' Shop Row Saved. ID:', shopRowId);
-    } catch (e) {
-      console.error(' Shop Row failed to create.', e);
-      ShopErrors.push({
-        error: e?.data || e?.message || e,
-      });
-
-      return; // ❗ STOP if shop not created
+    if (!shopRowId) {
+      console.error(' Shop Row failed to create.');
+      return;
     }
 
-    // ===============================
-    // Upload Shop Media
-    // ===============================
+    console.log(' Shop Row Saved. ID:', shopRowId);
+
+    // 2️ Upload Shop Media (Mapping photos to backend keys)
     const uploadShopMedia = async (backendKey, assets) => {
       if (!Array.isArray(assets) || assets.length === 0) return;
 
       for (const asset of assets) {
         const fd = new FormData();
-
+        // Link to the Shop ID (product_id in your media table)
         fd.append('product_id', String(shopRowId));
-        fd.append('is_active', '0');
+        fd.append('is_active', '1');
         if (EcreatedBy) fd.append('created_by', String(EcreatedBy));
 
+        // Use the backend keys: 'front_photo' and 'inside_photo'
         fd.append(backendKey, {
           uri: asset.uri,
           name: asset.fileName || 'shop_img.jpg',
@@ -777,33 +760,22 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         });
 
         try {
-          const res = await gsApi.uploadShopMedia(fd);
-          createdShopMediaIds.push(res?.id);
+          await gsApi.uploadShopMedia(fd);
           console.log(`   - Success: ${backendKey} uploaded`);
         } catch (e) {
           console.error(`   - Error uploading ${backendKey}:`, e);
-          ShopMediaErrors.push({
-            backendKey,
-            error: e?.data || e?.message || e,
-          });
         }
       }
     };
 
+    // Mapping: Frontend 'shop_front' -> Backend 'front_photo'
     if (form.media?.shop_front) {
       await uploadShopMedia('front_photo', form.media.shop_front);
     }
-
+    // Mapping: Frontend 'shop_inside' -> Backend 'inside_photo'
     if (form.media?.shop_inside) {
       await uploadShopMedia('inside_photo', form.media.shop_inside);
     }
-
-    return {
-      createdShopIds,
-      createdShopMediaIds,
-      ShopErrors,
-      ShopMediaErrors,
-    };
   };
 
   const saveProductsAndMedia = async (enterpriseId, products) => {
@@ -813,14 +785,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     const ProdcreatedBy = getCreatedByNumeric();
     const updatedProductsList = [...products];
 
-    const createdProductIds = [];
-    const createdProductMediaIds = [];
-    const productErrors = [];
-    const productMediaErrors = [];
-
     for (let i = 0; i < updatedProductsList.length; i++) {
       const product = updatedProductsList[i];
 
+      // 1. Prepare Payload
       const payload = {
         enterprise_id: enterpriseId,
         main_product_name: product.main_product_name || '',
@@ -841,106 +809,83 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         accept_digital_payment: product.accept_digital_payment === 'Yes',
         avg_monthly_sales: product.avg_monthly_sales || '0.00',
         avg_annual_sales: product.avg_annual_sales || '0.00',
+        is_active: true,
         created_by: ProdcreatedBy,
-        is_active: false,
       };
 
       let productPkId = null;
 
-      // =========================
-      // 1️⃣ Create Product Record
-      // =========================
+      // 2. CREATE PRODUCT TEXT RECORD (This was missing!)
       try {
         const res = await gsApi.createEnterpriseProduct(payload);
-
-        // ⚠️ VERY IMPORTANT — adjust based on axios structure
-        productPkId = res?.id || res?.data?.id;
-
-        if (!productPkId) {
-          throw new Error('Product ID not returned from API');
+        if (res && res.id) {
+          productPkId = res.id;
+          console.log(
+            ` Product Created: ${product.main_product_name} (ID: ${productPkId})`,
+          );
+        } else {
+          console.warn(
+            'Server returned success but no ID for product:',
+            product.main_product_name,
+          );
         }
-
-        createdProductIds.push(productPkId);
-
-        console.log(
-          ` Product Created: ${product.main_product_name} (ID: ${productPkId})`,
-        );
       } catch (e) {
         console.error(
-          ' Failed to create product:',
-          product.main_product_name,
-          e?.response?.data || e?.message,
+          'Failed to create product record:',
+          e.response?.data || e.message,
         );
-
-        productErrors.push({
-          product: product.main_product_name,
-          error: e?.response?.data || e?.message,
-        });
-
-        continue; // 🚨 Skip media upload if product creation fails
+        continue;
       }
 
-      // =========================
-      // 2️⃣ Upload Product Media
-      // =========================
-      const createMediaRows = async (mediaKey, mediaArray = []) => {
-        if (!Array.isArray(mediaArray) || mediaArray.length === 0) return;
+      // 3. Upload Media linked to the Product ID
+      try {
+        if (productPkId && product?.media) {
+          const createMediaRows = async (mediaKey, mediaArray = []) => {
+            if (!Array.isArray(mediaArray) || mediaArray.length === 0) return;
 
-        for (const asset of mediaArray) {
-          if (!asset?.uri) continue;
-          if (asset.uri.startsWith('http')) continue; // Skip already uploaded
+            for (const asset of mediaArray) {
+              if (!asset?.uri) continue;
+              if (asset.uri.startsWith('http')) continue;
 
-          const formData = new FormData();
-          formData.append('product_id', String(productPkId));
-          formData.append('is_active', '0'); // safer than 'false'
-          if (ProdcreatedBy) {
-            formData.append('created_by', String(ProdcreatedBy));
-          }
+              const formData = new FormData();
+              formData.append('product_id', String(productPkId));
+              formData.append('is_active', 'true');
+              if (ProdcreatedBy) {
+                formData.append('created_by', String(ProdcreatedBy));
+              }
 
-          formData.append(mediaKey, {
-            uri: asset.uri,
-            name: asset.fileName || `product_${Date.now()}.jpg`,
-            type: asset.type || 'image/jpeg',
-          });
+              formData.append(mediaKey, {
+                uri: asset.uri,
+                name: asset.fileName || `product_${Date.now()}.jpg`,
+                type: asset.type || 'image/jpeg',
+              });
 
-          try {
-            const response = await gsApi.uploadProductMedia(formData);
-            createdProductMediaIds.push(response?.id || response?.data?.id);
-            console.log(`   - Uploaded ${mediaKey}`);
-          } catch (uploadErr) {
-            console.error(
-              `   - Upload failed for ${mediaKey}:`,
-              uploadErr?.response?.data || uploadErr?.message,
-            );
+              try {
+                const response = await gsApi.uploadProductMedia(formData);
+                console.log(`   - Uploaded ${mediaKey}`);
+              } catch (uploadErr) {
+                console.error(
+                  `   - Upload failed for ${mediaKey}:`,
+                  uploadErr?.message,
+                );
+              }
+            }
+          };
 
-            productMediaErrors.push({
-              product_id: productPkId,
-              mediaKey,
-              error: uploadErr?.response?.data || uploadErr?.message,
-            });
-          }
+          await createMediaRows('open_box_photo', product.media?.open_box);
+          await createMediaRows('close_box_photo', product.media?.close_box);
+          await createMediaRows('others', product.media?.others);
         }
-      };
-
-      await createMediaRows('open_box_photo', product.media?.open_box);
-      await createMediaRows('close_box_photo', product.media?.close_box);
-      await createMediaRows('others', product.media?.others);
+      } catch (e) {
+        console.error('Product Media Error:', e?.message);
+      }
     }
 
     updateForm({ products: updatedProductsList });
-
-    return {
-      createdProductIds,
-      createdProductMediaIds,
-      productErrors,
-      productMediaErrors,
-    };
   };
 
   // 11) Loan Details Saver (Links to Numeric Enterprise ID)
   const saveLoans = async (enterpriseId, loans) => {
-    const createdIds = [];
-    const errors = [];
     if (!enterpriseId || !Array.isArray(loans) || loans.length === 0) return;
 
     const LoanscreatedBy = getCreatedByNumeric();
@@ -962,21 +907,12 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           parseFloat(loan.repaid_amount) >= parseFloat(loan.loan_amount)
             ? 'PAID'
             : 'PARTIALLY PAID',
-        is_active: false,
+        is_active: true,
         created_by: LoanscreatedBy,
       };
-      try {
-        const res = await gsApi.createEnterpriseLoanDetail(payload);
-        if (res?.id) {
-          createdIds.push(res.id);
-        }
-      } catch (e) {
-        errors.push({
-          error: e?.data || e?.message || e,
-        });
-      }
+
+      await gsApi.createEnterpriseLoanDetail(payload);
     }
-    return { ids: createdIds, errors };
   };
   // 5) Subsidy / support details sub-table
   const saveSubsidies = async (enterpriseId, subsidies) => {
@@ -986,28 +922,23 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     const SubsidycreatedBy = getCreatedByNumeric();
     const updatedSubsidies = [...subsidies];
 
-    const createdSubsidyIds = [];
-    const updatedSubsidyIds = [];
-    const subsidyErrors = [];
-
     for (let i = 0; i < updatedSubsidies.length; i++) {
       const sub = updatedSubsidies[i];
 
-      let subsidyTypeText = '';
-      let subsidyNameText = '';
+      // 2. Transform the UI Tree into strings for the Database
+      let subsidyTypeText = ''; // Will store Parents (Departments)
+      let subsidyNameText = ''; // Will store Children (Schemes)
 
-      // ===============================
-      // 1️⃣ Transform Tree to Strings
-      // ===============================
       if (
         Array.isArray(sub.subsidy_name_tree) &&
         sub.subsidy_name_tree.length > 0
       ) {
+        // Map Parents -> "MSME Department, Agriculture Department"
         subsidyTypeText = sub.subsidy_name_tree
           .map(item => item.parent)
-          .filter(Boolean)
           .join(', ');
 
+        // Map Children -> "ODOP, CM Yuva Scheme | Kamdhenu Dairy"
         subsidyNameText = sub.subsidy_name_tree
           .map(item => {
             let childList =
@@ -1015,78 +946,47 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
                 ? item.children.join(', ')
                 : 'General Support';
 
+            // If 'Others' was selected and a custom value typed
             if (item.others_specify) {
               childList = `${childList} (${item.others_specify})`;
             }
-
             return childList;
           })
           .join(' | ');
       }
 
+      // 3. Prepare Payload matching your Django Model
       const payload = {
         enterprise_id: enterpriseId,
         subsidy_type: subsidyTypeText || 'Other',
         subsidy_name: subsidyNameText || 'N/A',
         subsidy_detail: sub.subsidy_detail || '',
         created_by: SubsidycreatedBy,
-        is_active: false,
       };
 
       try {
-        // ===============================
-        // 2️⃣ UPDATE Existing
-        // ===============================
         if (sub.id && typeof sub.id === 'number') {
+          // UPDATE existing record
           await gsApi.updateEnterpriseSubsidyDetail(sub.id, payload);
-
-          updatedSubsidyIds.push(sub.id);
-
-          console.log(` Updated Subsidy: ${sub.id}`);
-        }
-        // ===============================
-        // 3️⃣ CREATE New
-        // ===============================
-        else {
+          console.log(`Updated Subsidy: ${sub.id}`);
+        } else {
+          // CREATE new record
           const res = await gsApi.createEnterpriseSubsidyDetail(payload);
-
-          const newId = res?.id || res?.data?.id;
-
-          if (!newId) {
-            throw new Error('Subsidy ID not returned from API');
-          }
-
-          updatedSubsidies[i].id = newId;
-          createdSubsidyIds.push(newId);
-
-          console.log(` Created Subsidy: ${newId}`);
+          // Store the new ID back into state to avoid duplicates on next click
+          updatedSubsidies[i].id = res.id;
+          console.log(`Created Subsidy: ${res.id}`);
         }
       } catch (e) {
-        console.error(' Subsidy Save Error:', e?.response?.data || e?.message);
-
-        subsidyErrors.push({
-          subsidy_index: i,
-          subsidy_id: sub.id || null,
-          error: e?.response?.data || e?.message,
-        });
-
-        continue; // move to next subsidy
+        console.error('Subsidy Save Error:', e.response?.data || e.message);
       }
     }
 
+    // Sync state so the 'id' fields are preserved
     updateForm({ subsidies: updatedSubsidies });
-
-    return {
-      createdSubsidyIds,
-      updatedSubsidyIds,
-      subsidyErrors,
-    };
   };
 
   // 7) Standalone enterprise media + declaration signature
   const saveStandaloneMedia = async (enterpriseId, media) => {
-    const createdIds = [];
-    const errors = [];
     if (!enterpriseId || !media) return;
 
     const EcreatedBy = getCreatedByNumeric();
@@ -1116,25 +1016,19 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         });
 
         // 3. Optional metadata
-        formData.append('is_active', 'false');
+        formData.append('is_active', 'true');
         if (EcreatedBy) {
           formData.append('created_by', String(EcreatedBy));
         }
 
         try {
-          const res = await gsApi.uploadEnterpriseMedia(formData);
-          if (res?.id) {
-            createdIds.push(res.id);
-            console.log(`✅ Uploaded to field: ${backendFieldName}`);
-          }
+          await gsApi.uploadEnterpriseMedia(formData);
+          console.log(`✅ Uploaded to field: ${backendFieldName}`);
         } catch (e) {
           console.error(
             `❌ Media Upload Error (${backendFieldName}):`,
             e.response?.data || e.message,
           );
-          errors.push({
-            error: e?.data || e?.message || e,
-          });
         }
       }
     };
@@ -1149,13 +1043,9 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     await upload('others', media.others || []);
     // 3. Declaration Signature (Mapped to 'others' field in your model)
     await upload('others', media.declaration_signature || []);
-
-    return { ids: createdIds, errors };
   };
 
   const saveMandatoryFunds = async (enterpriseTHurid, fundCards) => {
-    const createdIds = [];
-    const errors = [];
     const ShgcreatedBy = getCreatedByNumeric();
     if (
       !enterpriseTHurid ||
@@ -1180,28 +1070,18 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         amount_repaid: String(card.amount_repaid || '0'),
         repayment_status: status,
         created_by: ShgcreatedBy,
-        is_active: false,
       };
 
       try {
-        const res = await gsApi.createEnterpriseMandatoryFund(payload);
-        if (res?.id) {
-          createdIds.push(res.id);
-        }
+        await gsApi.createEnterpriseMandatoryFund(payload);
         console.log(` Fund saved: ${payload.fund_type}`);
       } catch (e) {
         console.error(' Fund Save Error:', e);
-        errors.push({
-          error: e?.data || e?.message || e,
-        });
       }
     }
-    return { ids: createdIds, errors };
   };
   // 10) Enterprise Support Saver (Shared Table: epSakhi_epSupport)
   const saveEnterpriseSupport = async (enterpriseTHurid, supportData) => {
-    const createdIds = [];
-    const errors = [];
     // If user said 'No' to support or didn't check boxes, skip
     if (
       !enterpriseTHurid ||
@@ -1222,7 +1102,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       let payload = {
         enterprise_id: enterpriseTHurid, // Links via TH_urid string
         form_type: 'exep',
-        is_active: false,
+        is_active: true,
         created_by: InvestcreatedBy ? parseInt(InvestcreatedBy, 10) : null,
       };
 
@@ -1256,45 +1136,28 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         console.log(
           ` Stored Support Row: ${payload.support_category} (Status: ${mainStatus})`,
         );
-        if (res?.id) {
-          createdIds.push(res.id);
-        }
       } catch (e) {
         console.error(` Support Save Error for ${cat}:`, e);
-        errors.push({
-          error: e?.data || e?.message || e,
-        });
       }
     }
-    return { ids: createdIds, errors };
   };
 
   const saveTrainingReqs = async (enterpriseTHurid, rows, formType) => {
     if (!enterpriseTHurid || !Array.isArray(rows) || rows.length === 0) return;
-
     const EcreatedBy = getCreatedByNumeric();
-
     console.log(
-      `>>> SAVING TRAINING ${formType?.toUpperCase()} FOR:`,
+      `>>> SAVING TRAINING ${formType.toUpperCase()} FOR:`,
       enterpriseTHurid,
     );
 
-    const createdTrainingIds = [];
-    const createdCertificateIds = [];
-    const trainingErrors = [];
-    const certificateErrors = [];
-
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-
-      // ===============================
-      // 1️⃣ Transform Tree Structure
-      // ===============================
+    for (const r of rows) {
+      // 1. Prepare Main Training Data
+      // Map the tree structure to simple strings for the database
       const sectorType = r.sector_tree?.[0]?.parent || '';
       const sectorNames = r.sector_tree?.[0]?.children?.join(', ') || '';
 
       const trainingPayload = {
-        enterprise_id: enterpriseTHurid,
+        enterprise_id: enterpriseTHurid, // TH_urid string
         form_type: formType, // 'rec' or 'req'
         sector_type: sectorType,
         sector: sectorNames,
@@ -1304,103 +1167,59 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         location: r.location || '',
         expected_income: String(r.expected_income || '0'),
         created_by: EcreatedBy,
-        is_active: false,
       };
 
-      let trainingId = null;
-
-      // ===============================
-      // 2️⃣ Create Training Row
-      // ===============================
       try {
+        // Step A: Create the Training Entry
         const trRes = await gsApi.createEnterpriseTrainingReq(trainingPayload);
 
-        trainingId = trRes?.id || trRes?.data?.id;
+        // Step B: Get the PK (ID) of the newly created training row
+        const trainingId = trRes?.id;
 
-        if (!trainingId) {
-          throw new Error('Training ID not returned from API');
-        }
+        if (
+          trainingId &&
+          formType === 'rec' &&
+          Array.isArray(r.certificates_files)
+        ) {
+          console.log(
+            `   - Training saved (ID: ${trainingId}). Uploading ${r.certificates_files.length} certificates...`,
+          );
 
-        createdTrainingIds.push(trainingId);
+          // Step C: Upload each certificate to the certificates table
+          for (const asset of r.certificates_files) {
+            if (!asset?.uri) continue;
 
-        console.log(` Training saved (ID: ${trainingId})`);
-      } catch (e) {
-        console.error(
-          ` Training Save Error (row ${i}):`,
-          e?.response?.data || e?.message,
-        );
-
-        trainingErrors.push({
-          row_index: i,
-          error: e?.response?.data || e?.message,
-        });
-
-        continue; // 🚨 Skip certificate upload
-      }
-
-      // ===============================
-      // 3️⃣ Upload Certificates (REC only)
-      // ===============================
-      if (
-        trainingId &&
-        formType === 'rec' &&
-        Array.isArray(r.certificates_files) &&
-        r.certificates_files.length > 0
-      ) {
-        console.log(
-          `   - Uploading ${r.certificates_files.length} certificates...`,
-        );
-
-        for (const asset of r.certificates_files) {
-          if (!asset?.uri) continue;
-          if (asset.uri.startsWith('http')) continue; // skip already uploaded
-
-          const fd = new FormData();
-          fd.append('enterprise_id', enterpriseTHurid);
-          fd.append('training_id', String(trainingId));
-          fd.append('is_active', '1'); // safer than 'true'
-          if (EcreatedBy) {
-            fd.append('created_by', String(EcreatedBy));
-          }
-
-          fd.append('certificates', {
-            uri: asset.uri,
-            name: asset.fileName || `certificate_${Date.now()}.jpg`,
-            type: asset.type || 'image/jpeg',
-          });
-
-          try {
-            const certRes = await gsApi.uploadTrainingCertificate(fd);
-
-            const certId = certRes?.id || certRes?.data?.id;
-            if (certId) {
-              createdCertificateIds.push(certId);
-            }
-          } catch (uploadErr) {
-            console.error(
-              `   - Certificate upload failed:`,
-              uploadErr?.response?.data || uploadErr?.message,
-            );
-
-            certificateErrors.push({
-              training_id: trainingId,
-              error: uploadErr?.response?.data || uploadErr?.message,
+            const fd = new FormData();
+            fd.append('enterprise_id', enterpriseTHurid); // TH_urid
+            fd.append('training_id', String(trainingId)); // FK to training row PK
+            fd.append('is_active', 'true');
+            fd.append('certificates', {
+              uri: asset.uri,
+              name: asset.fileName || 'certificate.jpg',
+              type: asset.type || 'image/jpeg',
             });
-          }
-        }
+            if (EcreatedBy) {
+              fd.append('created_by', String(EcreatedBy));
+            }
 
-        console.log(` Certificates processed for Training ID: ${trainingId}`);
+            await gsApi.uploadTrainingCertificate(fd);
+          }
+          console.log(
+            `    Certificates uploaded for Training ID: ${trainingId}`,
+          );
+        } else {
+          console.log(`    Training ${formType} saved (ID: ${trainingId})`);
+        }
+      } catch (e) {
+        console.error(` Training Save Error:`, e.response?.data || e.message);
       }
     }
-
-    return {
-      createdTrainingIds,
-      createdCertificateIds,
-      trainingErrors,
-      certificateErrors,
-    };
   };
-
+  const originalHandleSubmit = handleSubmit;
+  const wrappedHandleSubmit = async () => {
+    await handleSubmit(); // Call your existing logic
+    // Inside your existing handleSubmit logic, if (success) { await clearDraft(); }
+  };
   const handleSubmit = async () => {
     try {
       // 1) ensure recorded beneficiary exists (inspired by NewEnterpriseForm)
@@ -1467,12 +1286,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           payload,
         );
       } else {
-        enterpriseRes = await gsApi.createExistingEnterprise({
-          ...payload,
-          is_active: false,
-        });
-        console.log("Enterprise Response:", enterpriseRes);
-        console.log("TH_urid:", enterpriseRes?.TH_urid);
+        enterpriseRes = await gsApi.createExistingEnterprise(payload);
       }
       const enterpriseTHurId =
         enterpriseRes.TH_urid || existingEnterprise?.TH_urid;
@@ -1488,199 +1302,88 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         console.warn('Failed to link recorded beneficiary with enterprise', e);
       }
 
-      // ===============================
-      // CHILD TABLE SAVE PHASE
-      // ===============================
-
       // 5) child tables (best-effort, do not hard-fail)
-      const results = {};
-      const allErrors = [];
-
-      const typesResult = await saveEnterpriseTypes(
-        enterpriseTHurId,
-        enterpriseTypesTree,
-      );
-      results.enterpriseTypes = typesResult?.ids || [];
-      allErrors.push(...(typesResult?.errors || []));
-
-      const productResult = await saveProductsAndMedia(
-        enterpriseId,
-        sanitizedProducts,
-      );
-      results.products = productResult?.createdProductIds || [];
-      results.productMedia = productResult?.createdProductMediaIds || [];
-      allErrors.push(...(productResult?.productErrors || []));
-      allErrors.push(...(productResult?.productMediaErrors || []));
-
-      // Pass the Numeric ID (e.g., 9)
-      const loanResult = await saveLoans(enterpriseId, existingForm.loans);
-      results.loans = loanResult?.ids || [];
-      allErrors.push(...(loanResult?.errors || []));
-
-      // Pass the Numeric Enterprise ID (e.g., 9) and the array from state
-      const subsidyResult = await saveSubsidies(
-        enterpriseId,
-        existingForm.subsidies,
-      );
-      results.subsidies = subsidyResult?.createdSubsidyIds || [];
-      allErrors.push(...(subsidyResult?.subsidyErrors || []));
-
-      const mediaResult = await saveStandaloneMedia(
-        enterpriseId,
-        existingForm.media,
-      );
-      results.media = mediaResult?.ids || [];
-      allErrors.push(...(mediaResult?.errors || []));
-
-      const licenseResult = await saveLicenses(
-        enterpriseId,
-        existingForm.licenses,
-      );
-      results.licenses = licenseResult?.ids || [];
-      allErrors.push(...(licenseResult?.errors || []));
-
-      const fundResult = await saveMandatoryFunds(
-        enterpriseTHurId,
-        existingForm.fund_cards,
-      );
-      results.funds = fundResult?.ids || [];
-      allErrors.push(...(fundResult?.errors || []));
-
-      // Pass the TH_urid and the nested support object
-      const supportResult = await saveEnterpriseSupport(
-        enterpriseTHurId,
-        existingForm.support_required,
-      );
-      results.support = supportResult?.ids || [];
-      allErrors.push(...(supportResult?.errors || []));
-
-      // Pass the string TH_urid
-      const trainingRecResult = await saveTrainingReqs(
-        enterpriseTHurId,
-        existingForm.training_received_rows,
-        'rec',
-      );
-      results.trainingRec = trainingRecResult?.createdTrainingIds || [];
-      results.trainingRecCert = trainingRecResult?.createdCertificateIds || [];
-      allErrors.push(...(trainingRecResult?.trainingErrors || []));
-      allErrors.push(...(trainingRecResult?.certificateErrors || []));
-
-      const trainingReqResult = await saveTrainingReqs(
-        enterpriseTHurId,
-        existingForm.training_required_rows,
-        'req',
-      );
-      results.trainingReq = trainingReqResult?.createdTrainingIds || [];
-      allErrors.push(...(trainingReqResult?.trainingErrors || []));
-
-      const shopResult = await saveEnterpriseShop(enterpriseId, existingForm);
-      results.shop = shopResult?.createdShopIds || [];
-      results.shopMedia = shopResult?.createdShopMediaIds || [];
-      allErrors.push(...(shopResult?.ShopErrors || []));
-      allErrors.push(...(shopResult?.ShopMediaErrors || []));
-
-      // ===============================
-      // ACTIVATION PHASE
-      // ===============================
-
-      if (allErrors.length > 0) {
-        console.error('Child table errors:', allErrors);
-
-        Alert.alert(
-          'Partial Save',
-          `${allErrors.length} child records failed. Activation skipped.`,
+      try {
+        await saveEnterpriseTypes(enterpriseTHurId, enterpriseTypesTree);
+      } catch (e) {
+        console.warn('Failed to save enterprise types', e);
+      }
+      try {
+        await saveProductsAndMedia(enterpriseId, sanitizedProducts);
+      } catch (e) {
+        console.warn('Failed to save products/media', e);
+      }
+      try {
+        // Pass the Numeric ID (e.g., 9)
+        await saveLoans(enterpriseId, existingForm.loans);
+      } catch (e) {
+        console.warn('Failed to save loan details', e);
+      }
+      try {
+        // Pass the Numeric Enterprise ID (e.g., 9) and the array from state
+        await saveSubsidies(enterpriseId, existingForm.subsidies);
+      } catch (e) {
+        console.warn('Failed to save subsidies', e);
+      }
+      try {
+        await saveStandaloneMedia(enterpriseId, existingForm.media);
+      } catch (e) {
+        console.warn('Failed to upload standalone media', e);
+      }
+      try {
+        await saveLicenses(enterpriseId, existingForm.licenses);
+      } catch (e) {
+        console.warn('Failed to save licenses', e);
+      }
+      try {
+        await saveMandatoryFunds(enterpriseTHurId, existingForm.fund_cards);
+      } catch (e) {
+        console.warn('Failed to save mandatory funds', e);
+      }
+      try {
+        // Pass the TH_urid and the nested support object
+        await saveEnterpriseSupport(
+          enterpriseTHurId,
+          existingForm.support_required,
         );
-
-        return; // DO NOT ACTIVATE
+      } catch (e) {
+        console.warn('Failed to save support requirements', e);
       }
-
-      console.log('ACTIVATING ENTERPRISE ID:', enterpriseId);
-      console.log('ACTIVATING TH_URID:', enterpriseTHurId);
-
-      const activate = async url => {
-        const res = await safeFetchWithRefresh(`${BASE_URL}${url}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ is_active: true }),
-        });
-
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Activation failed: ${text}`);
-        }
-      };
-
-      // Activate recorded beneficiary
-      await activate(
-        `/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
-      );
-      
-      // Activate main enterprise
-      await activate(`/api/v1/epsakhi/existing-enterprise/${enterpriseId}/`);
-
-      // Activate child rows
-      for (const id of results.loans) {
-        await activate(`/api/v1/epsakhi/enterprise-loan-details/${id}/`);
+      try {
+        // Pass the string TH_urid
+        await saveTrainingReqs(
+          enterpriseTHurId,
+          existingForm.training_received_rows,
+          'rec',
+        );
+        await saveTrainingReqs(
+          enterpriseTHurId,
+          existingForm.training_required_rows,
+          'req',
+        );
+      } catch (e) {
+        console.warn('Failed to save training records', e);
       }
-
-      for (const id of results.enterpriseTypes) {
-        await activate(`/api/v1/epsakhi/enterprise-types/${id}/`);
+      try {
+        await saveEnterpriseShop(enterpriseId, existingForm);
+      } catch (e) {
+        console.warn('Failed to save shop enterprise', e);
       }
-
-      for (const id of results.licenses) {
-        await activate(`/api/v1/epsakhi/enterprise-licenses/${id}/`);
-      }      
-
-      for (const id of results.subsidies) {
-        await activate(`/api/v1/epsakhi/enterprise-subsidy-details/${id}/`);
-      }
-
-      for (const id of results.funds) {
-        await activate(`/api/v1/epsakhi/mandatory-fund/${id}/`);
-      }
-
-      for (const id of results.support) {
-        await activate(`/api/v1/epsakhi/enterprise-support/${id}/`);
-      }
-
-      for (const id of results.trainingRec) {
-        await activate(`/api/v1/epsakhi/enterprise-training-reqs/${id}/`);
-      }
-
-      for (const id of results.trainingRecCert) {
-        await activate(`/api/v1/epsakhi/training-certificates/${id}/`);
-      }
-
-      for (const id of results.trainingReq) {
-        await activate(`/api/v1/epsakhi/enterprise-training-reqs/${id}/`);
-      }
-
-      for (const id of results.products) {
-        await activate(`/api/v1/epsakhi/enterprise-products/${id}/`);
-      }
-
-      for (const id of results.productMedia) {
-        await activate(`/api/v1/epsakhi/product-media/${id}/`);
-      }
-
-      for (const id of results.shop) {
-        await activate(`/api/v1/epsakhi/enterprise-shop/${id}/`);
-      }
-
-      for (const id of results.shopMedia) {
-        await activate(`/api/v1/epsakhi/shop-media/${id}/`);
-      }
-
-      for (const id of results.media) {
-        await activate(`/api/v1/epsakhi/enterprise-media/${id}/`);
-      }
-
       Alert.alert('Saved', 'Existing Enterprise form submitted successfully.', [
+        // {
+        //   text: 'OK',
+        //   onPress: () => {
+        //     navigation?.goBack?.();
+        //   },
+        // },
         {
           text: 'OK',
-          onPress: () => {
+          onPress: async () => {
+            // 1. DELETE THE DRAFT BLOB
+            if (memberCode) {
+              await AsyncStorage.removeItem(`DRAFT_EXEP_${memberCode}`);
+            }
+            // 2. GO BACK
             navigation?.goBack?.();
           },
         },
@@ -1790,9 +1493,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
               'Monthly Sales': p.avg_monthly_sales,
               'Annual Sales': p.avg_annual_sales,
               'Digital Pay': p.accept_digital_payment,
-              'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${
-                p.media?.close_box?.length || 0
-              } / ${p.media?.others?.length || 0}`,
+              'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${p.media?.close_box?.length || 0
+                } / ${p.media?.others?.length || 0}`,
             };
           });
           console.table(productPreview);
@@ -1903,13 +1605,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             // Get Schemes (Children) + Others specify
             const schemes = Array.isArray(s.subsidy_name_tree)
               ? s.subsidy_name_tree
-                  .map(item => {
-                    let childStr = (item.children || []).join(', ');
-                    if (item.others_specify)
-                      childStr += ` (${item.others_specify})`;
-                    return childStr;
-                  })
-                  .join(' | ')
+                .map(item => {
+                  let childStr = (item.children || []).join(', ');
+                  if (item.others_specify)
+                    childStr += ` (${item.others_specify})`;
+                  return childStr;
+                })
+                .join(' | ')
               : 'None';
 
             return {
@@ -2185,7 +1887,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             index={0}
             updateRow={(i, patch) => updateForm(patch)}
             language={language}
-            addProductRow={() => {}}
+            addProductRow={() => { }}
             ProductAndServicesComponent={
               ExistingEnterpriseProductServicesSection
             }
