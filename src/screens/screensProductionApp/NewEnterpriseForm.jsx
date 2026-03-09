@@ -1809,7 +1809,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       body: JSON.stringify({ is_active: true }),
     });
 
-    if (res.status !== 200 && res.status !== 204) {
+    if (res.status !== 200 && res.status !== 204 && res.status !== 404 && res.status !== 401) {
       const text = await res.text();
       throw new Error(`Activation failed: ${text}`);
     }

@@ -909,8 +909,373 @@ export async function updateCrp(id, payload) {
   });
 }
 
+
+// export async function deleteEpsakhiCascade(memberCode, beneficiaryId, userId) {
+//   try {
+//     const detail = await getEpsakhiDetailByMember(memberCode);
+
+//     /* ================= LICENSES ================= */
+
+//     if (detail?.licenses?.length) {
+//       for (const l of detail.licenses) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-licenses/${l.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= LOAN DETAILS ================= */
+
+//     if (detail?.loan_details?.length) {
+//       for (const loan of detail.loan_details) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-loan-details/${loan.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= SUBSIDY DETAILS ================= */
+
+//     if (detail?.subsidy_details?.length) {
+//       for (const s of detail.subsidy_details) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-subsidy-details/${s.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= ENTERPRISE MEDIA ================= */
+
+//     if (detail?.enterprise_media?.length) {
+//       for (const m of detail.enterprise_media) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-media/${m.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= PRODUCT MEDIA ================= */
+
+//     if (detail?.product_media?.length) {
+//       for (const m of detail.product_media) {
+//         await request(
+//           `/api/v1/epsakhi/product-media/${m.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= PRODUCTS ================= */
+
+//     if (detail?.products?.length) {
+//       for (const p of detail.products) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-products/${p.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= SHOP MEDIA ================= */
+
+//     if (detail?.shop_media?.length) {
+//       for (const sm of detail.shop_media) {
+//         await request(
+//           `/api/v1/epsakhi/shop-media/${sm.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= SHOP ================= */
+
+//     if (detail?.shop) {
+//       const shops = Array.isArray(detail.shop) ? detail.shop : [detail.shop];
+
+//       for (const shop of shops) {
+//         if (shop?.id) {
+//           await request(
+//             `/api/v1/epsakhi/enterprise-shop/${shop.id}/?deleted_by=${userId}`,
+//             { method: "DELETE" }
+//           );
+//         }
+//       }
+//     }
+
+//     /* ================= TRAINING CERTIFICATES ================= */
+
+//     if (detail?.training_certificates?.length) {
+//       for (const t of detail.training_certificates) {
+//         await request(
+//           `/api/v1/epsakhi/training-certificates/${t.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= TRAINING REQS ================= */
+
+//     if (detail?.enterprise_training_reqs?.length) {
+//       for (const t of detail.enterprise_training_reqs) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-training-reqs/${t.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= MANDATORY FUND ================= */
+
+//     if (detail?.mandatory_fund?.length) {
+//       for (const f of detail.mandatory_fund) {
+//         await request(
+//           `/api/v1/epsakhi/mandatory-fund/${f.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= ENTERPRISE SUPPORT ================= */
+
+//     if (detail?.enterprise_support?.length) {
+//       for (const s of detail.enterprise_support) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-support/${s.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= ENTERPRISE TYPES ================= */
+
+//     if (detail?.enterprise_types?.length) {
+//       for (const t of detail.enterprise_types) {
+//         await request(
+//           `/api/v1/epsakhi/enterprise-types/${t.id}/?deleted_by=${userId}`,
+//           { method: "DELETE" }
+//         );
+//       }
+//     }
+
+//     /* ================= EXISTING ENTERPRISE ================= */
+
+//     if (detail?.existing_enterprise) {
+//       const enterprises = Array.isArray(detail.existing_enterprise)
+//         ? detail.existing_enterprise
+//         : [detail.existing_enterprise];
+
+//       for (const ent of enterprises) {
+//         if (ent?.id) {
+//           await request(
+//             `/api/v1/epsakhi/existing-enterprise/${ent.id}/?deleted_by=${userId}`,
+//             { method: "DELETE" }
+//           );
+//         }
+//       }
+//     }
+
+//     /* ================= FINAL BENEFICIARY ================= */
+
+//     await request(
+//       `/api/v1/epsakhi/recorded-beneficiaries/${beneficiaryId}/?deleted_by=${userId}`,
+//       { method: "DELETE" }
+//     );
+
+//     return true;
+//   } catch (error) {
+//     console.error("Cascade delete failed", error);
+//     throw error;
+//   }
+// }
+
 // ======================= EXPORT AGGREGATED API =======================
 
+export async function deleteEpsakhiCascade(memberCode, beneficiaryId, userId) {
+  try {
+    const detail = await getEpsakhiDetailByMember(memberCode);
+
+    const del = async (url) => {
+      console.log("Deleting:", url);
+
+      return request(url, {
+        method: "DELETE",
+        body: {
+          deleted_by: userId,
+        },
+      });
+    };
+
+    const ex = detail?.existing_enterprise || {};
+    const shared = detail?.shared || {};
+
+    /* ================= LICENSES ================= */
+
+    for (const x of ex.licenses || []) {
+      await del(`/api/v1/epsakhi/enterprise-licenses/${x.id}/`);
+    }
+
+    /* ================= LOAN DETAILS ================= */
+
+    for (const x of ex.loan_details || []) {
+      await del(`/api/v1/epsakhi/enterprise-loan-details/${x.id}/`);
+    }
+
+    /* ================= SUBSIDY ================= */
+
+    for (const x of ex.subsidy_details || []) {
+      await del(`/api/v1/epsakhi/enterprise-subsidy-details/${x.id}/`);
+    }
+
+    /* ================= ENTERPRISE MEDIA ================= */
+
+    for (const x of ex.enterprise_media || []) {
+      await del(`/api/v1/epsakhi/enterprise-media/${x.id}/`);
+    }
+
+    /* ================= PRODUCTS ================= */
+
+    for (const x of ex.products || []) {
+      await del(`/api/v1/epsakhi/enterprise-products/${x.id}/`);
+    }
+
+    /* ================= SHOP MEDIA ================= */
+
+    for (const x of ex.shop_media || []) {
+      await del(`/api/v1/epsakhi/shop-media/${x.id}/`);
+    }
+
+    /* ================= SHOP ================= */
+
+    if (ex.shop?.id) {
+      await del(`/api/v1/epsakhi/enterprise-shop/${ex.shop.id}/`);
+    }
+
+    /* ================= SHARED ================= */
+
+    for (const x of shared.enterprise_types || []) {
+      await del(`/api/v1/epsakhi/enterprise-types/${x.id}/`);
+    }
+
+    for (const x of shared.enterprise_support || []) {
+      await del(`/api/v1/epsakhi/enterprise-support/${x.id}/`);
+    }
+
+    for (const x of shared.mandatory_fund || []) {
+      await del(`/api/v1/epsakhi/mandatory-fund/${x.id}/`);
+    }
+
+    for (const t of shared.training || []) {
+      for (const cert of t.certificates || []) {
+        await del(`/api/v1/epsakhi/training-certificates/${cert.id}/`);
+      }
+
+      await del(`/api/v1/epsakhi/enterprise-training-reqs/${t.id}/`);
+    }
+
+    /* ================= ENTERPRISE ================= */
+
+    if (detail?.enterprise?.id) {
+      await del(`/api/v1/epsakhi/existing-enterprise/${detail.enterprise.id}/`);
+    }
+
+    /* ================= BENEFICIARY ================= */
+
+    await del(`/api/v1/epsakhi/recorded-beneficiaries/${beneficiaryId}/`);
+
+    return true;
+
+  } catch (err) {
+    console.error("Cascade delete failed", err);
+    throw err;
+  }
+}
+
+export async function deleteNewEnterpriseCascade(memberCode, beneficiaryId, userId) {
+  try {
+
+    const detail = await getEpsakhiDetailByMember(memberCode);
+
+    const shared = detail?.shared || {};
+
+    const del = async (url) => {
+      console.log("Deleting:", url);
+
+      return request(url, {
+        method: "DELETE",
+        body: {
+          deleted_by: userId,
+        },
+      });
+    };
+
+    /* ================= TRAINING CERTIFICATES ================= */
+
+    for (const t of shared.training || []) {
+
+      for (const cert of t.certificates || []) {
+        await del(`/api/v1/epsakhi/training-certificates/${cert.id}/`);
+      }
+
+    }
+
+    /* ================= TRAINING REQUEST ================= */
+
+    for (const t of shared.training || []) {
+
+      await del(`/api/v1/epsakhi/enterprise-training-reqs/${t.id}/`);
+
+    }
+
+    /* ================= MANDATORY FUND ================= */
+
+    for (const f of shared.mandatory_fund || []) {
+
+      await del(`/api/v1/epsakhi/mandatory-fund/${f.id}/`);
+
+    }
+
+    /* ================= ENTERPRISE SUPPORT ================= */
+
+    for (const s of shared.enterprise_support || []) {
+
+      await del(`/api/v1/epsakhi/enterprise-support/${s.id}/`);
+
+    }
+
+    /* ================= ENTERPRISE TYPES ================= */
+
+    for (const t of shared.enterprise_types || []) {
+
+      await del(`/api/v1/epsakhi/enterprise-types/${t.id}/`);
+
+    }
+
+    /* ================= NEW ENTERPRISE ================= */
+
+    if (detail?.enterprise?.id) {
+
+      await del(`/api/v1/epsakhi/new-enterprise/${detail.enterprise.id}/`);
+
+    }
+
+    /* ================= BENEFICIARY ================= */
+
+    await del(`/api/v1/epsakhi/recorded-beneficiaries/${beneficiaryId}/`);
+
+    return true;
+
+  } catch (err) {
+
+    console.error("New enterprise cascade delete failed", err);
+
+    throw err;
+
+  }
+}
 const api = {
   // auth
   login,
@@ -1052,6 +1417,9 @@ const api = {
   updateNoEnterpriseWage,
   deleteNoEnterpriseWage,
   getNoEnterpriseWages,
+
+  deleteEpsakhiCascade,
+  deleteNewEnterpriseCascade
 };
 
 export default api;

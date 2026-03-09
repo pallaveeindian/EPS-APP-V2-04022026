@@ -137,20 +137,63 @@ export default function EPSTable({ filters }) {
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
 
-  const handleDelete = id => {
+  // const handleDelete = id => {
+  //   Alert.alert(
+  //     translate('delete'),
+  //     'Delete feature to be implemented.',
+  //     [
+  //       {
+  //         text: 'OK',
+  //         style: 'default',
+  //       },
+  //     ],
+  //     { cancelable: true },
+  //   );
+  // };
+
+
+  const handleDelete = (id, memberCode) => {
     Alert.alert(
-      translate('delete'),
-      'Delete feature to be implemented.',
+      translate("delete"),
+      translate("confirmDelete"),
       [
+        { text: translate("cancel"), style: "cancel" },
         {
-          text: 'OK',
-          style: 'default',
+          text: translate("delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+
+              // Try deleting Existing Enterprise
+              try {
+                await gsApi.deleteEpsakhiCascade(memberCode, id, userId);
+              } catch (err) {
+
+                // If existing enterprise not found, try deleting New Enterprise
+                await gsApi.deleteNewEnterpriseCascade(memberCode, id, userId);
+
+              }
+
+              Alert.alert("Success", "Deleted successfully");
+
+              fetchData(page);
+
+            } catch (err) {
+
+              console.error("Delete error:", err);
+
+              Alert.alert(
+                "Error",
+                err?.response?.data?.message || "Delete failed"
+              );
+
+            }
+          },
         },
       ],
-      { cancelable: true },
+      { cancelable: true }
     );
   };
-
   /* ================= Empty States ================= */
 
   if (!filters) {
@@ -195,9 +238,16 @@ export default function EPSTable({ filters }) {
               <Text style={styles.buttonText}>{translate('view')}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => handleDelete(item.id)}
+            >
+              <Text style={styles.buttonText}>{translate('delete')}</Text>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDelete(item.id, item.lokos_member_code)}
             >
               <Text style={styles.buttonText}>{translate('delete')}</Text>
             </TouchableOpacity>
