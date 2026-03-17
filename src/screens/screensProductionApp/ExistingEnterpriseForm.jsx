@@ -1429,6 +1429,180 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
       // SECTION 0: BASIC INFO & LICENSES
       if (currentSectionIndex === 0) {
+
+        if (!existingForm.enterprise_name?.trim()) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया उद्यम का नाम दर्ज करें।'
+              : 'Please enter the enterprise name.'
+          );
+          return;
+        }
+
+        if (!existingForm.enterprise_types_tree || existingForm.enterprise_types_tree.length === 0) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया उद्यम का प्रकार चुनें।'
+              : 'Please select enterprise type.'
+          );
+          return;
+        }
+
+        if (!existingForm.ownership_type) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया स्वामित्व प्रकार चुनें।'
+              : 'Please select ownership type.'
+          );
+          return;
+        }
+
+        if (
+          existingForm.ownership_type === 'Others' &&
+          !existingForm.ownership_type_other?.trim()
+        ) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया स्वामित्व का विवरण दें।'
+              : 'Please specify ownership type.'
+          );
+          return;
+        }
+
+        if (!existingForm.year_of_establishment) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया स्थापना वर्ष चुनें।'
+              : 'Please select year of establishment.'
+          );
+          return;
+        }
+
+        if (existingForm.total_emp === '' || existingForm.total_emp === undefined) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया कुल कर्मचारियों की संख्या दर्ज करें।'
+              : 'Please enter total employees.'
+          );
+          return;
+        }
+
+        if (
+          existingForm.number_of_shg_emp === '' ||
+          existingForm.number_of_shg_emp === undefined
+        ) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया SHG कर्मचारियों की संख्या दर्ज करें।'
+              : 'Please enter SHG employees count.'
+          );
+          return;
+        }
+
+        if (!existingForm.owner_cadre || existingForm.owner_cadre.length === 0) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया कम से कम एक कैडर गतिविधि चुनें।'
+              : 'Please select at least one cadre activity.'
+          );
+          return;
+        }
+
+        if (
+          existingForm.owner_cadre?.includes('Other') &&
+          !existingForm.owner_cadre_other?.trim()
+        ) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया अन्य कैडर गतिविधि दर्ज करें।'
+              : 'Please specify other cadre activity.'
+          );
+          return;
+        }
+        if (!existingForm.owner_designation || existingForm.owner_designation.length === 0) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया SHG में अपना पद चुनें।'
+              : 'Please select your SHG designation.'
+          );
+          return;
+        }
+        if (!existingForm.owner_special_category) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया अपनी विशेष श्रेणी चुनें।'
+              : 'Please select your special category.'
+          );
+          return;
+        }
+
+        if (
+          existingForm.owner_special_category === 'Other' &&
+          !existingForm.owner_special_category_other?.trim()
+        ) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया अन्य विशेष श्रेणी निर्दिष्ट करें।'
+              : 'Please specify the other special category.'
+          );
+          return;
+        }
+        // LICENSE VALIDATION
+        if (existingForm.licenses && existingForm.licenses.length > 0) {
+          for (let card of existingForm.licenses) {
+            for (let category in card.selectedOptions) {
+              const selectedOptions = card.selectedOptions[category] || [];
+
+              for (let opt of selectedOptions) {
+
+                // Validate Other text
+                if (opt === 'other' && !card.otherText?.[category]?.trim()) {
+                  Alert.alert(
+                    language === 'hi' ? 'सत्यापन' : 'Validation',
+                    language === 'hi'
+                      ? 'कृपया अन्य लाइसेंस का नाम दर्ज करें।'
+                      : 'Please enter other license name.'
+                  );
+                  return;
+                }
+
+                // Validate Registration Number
+                if (!card.registrationNumbers?.[opt]?.trim()) {
+                  Alert.alert(
+                    language === 'hi' ? 'सत्यापन' : 'Validation',
+                    language === 'hi'
+                      ? 'कृपया पंजीकरण संख्या दर्ज करें।'
+                      : 'Please enter registration number.'
+                  );
+                  return;
+                }
+
+                // Validate File Upload
+                if (!card.files?.[opt]) {
+                  Alert.alert(
+                    language === 'hi' ? 'सत्यापन' : 'Validation',
+                    language === 'hi'
+                      ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें।'
+                      : 'Please upload the license document.'
+                  );
+                  return;
+                }
+              }
+            }
+          }
+        }
         console.log('--- SECTION 0 (BASIC INFO) ---');
         console.log('Enterprise Name:', existingForm.enterprise_name);
         console.log('Enterprise Type:', existingForm.enterprise_types_tree);

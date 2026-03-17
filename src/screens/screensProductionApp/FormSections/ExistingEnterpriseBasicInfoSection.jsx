@@ -863,10 +863,16 @@ export default function ExistingEnterpriseBasicInfoSection({
                 let updated = [...(existingForm.owner_cadre || [])];
 
                 if (selected) {
-                  // remove
                   updated = updated.filter(i => i !== opt);
+
+                  if (opt === 'Other') {
+                    update({
+                      owner_cadre: updated,
+                      owner_cadre_other: '',
+                    });
+                    return;
+                  }
                 } else {
-                  // add
                   updated.push(opt);
                 }
 
@@ -993,7 +999,7 @@ export default function ExistingEnterpriseBasicInfoSection({
               style={[
                 styles.checkbox,
                 existingForm.owner_special_category === opt &&
-                  styles.checkboxChecked,
+                styles.checkboxChecked,
               ]}
             />
             <Text style={{ marginLeft: 8 }}>
@@ -1001,10 +1007,10 @@ export default function ExistingEnterpriseBasicInfoSection({
                 ? opt === 'Divyang'
                   ? 'दिव्यांग'
                   : opt === 'Widow'
-                  ? 'विधवा'
-                  : opt === 'Unmarried'
-                  ? 'अविवाहित'
-                  : 'अन्य'
+                    ? 'विधवा'
+                    : opt === 'Unmarried'
+                      ? 'अविवाहित'
+                      : 'अन्य'
                 : opt}
             </Text>
           </TouchableOpacity>

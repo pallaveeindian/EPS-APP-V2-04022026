@@ -1849,105 +1849,105 @@ export default function NewEnterpriseForm({ route, navigation }) {
     return data?.id;
   };
 
-  const validateMandatoryFunds = () => {
-    if (form.has_shg_cif !== 'Yes') return true;
+  // const validateMandatoryFunds = () => {
+  //   if (form.has_shg_cif !== 'Yes') return true;
 
-    if (!form.fund_cards || form.fund_cards.length === 0) {
-      Alert.alert('Validation Error', 'Please add at least one fund entry.');
-      return false;
-    }
+  //   if (!form.fund_cards || form.fund_cards.length === 0) {
+  //     Alert.alert('Validation Error', 'Please add at least one fund entry.');
+  //     return false;
+  //   }
 
-    const seenTypes = new Set();
-    let hasAtLeastOneValid = false;
+  //   const seenTypes = new Set();
+  //   let hasAtLeastOneValid = false;
 
-    for (let i = 0; i < form.fund_cards.length; i++) {
-      const fund = form.fund_cards[i];
+  //   for (let i = 0; i < form.fund_cards.length; i++) {
+  //     const fund = form.fund_cards[i];
 
-      // Skip completely empty rows
-      if (
-        !fund.loanType &&
-        !fund.receivedYesNo &&
-        !fund.amount &&
-        !fund.repaid
-      ) {
-        continue;
-      }
+  //     // Skip completely empty rows
+  //     if (
+  //       !fund.loanType &&
+  //       !fund.receivedYesNo &&
+  //       !fund.amount &&
+  //       !fund.repaid
+  //     ) {
+  //       continue;
+  //     }
 
-      hasAtLeastOneValid = true;
+  //     hasAtLeastOneValid = true;
 
-      if (!fund.loanType) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Please select loan type.`,
-        );
-        return false;
-      }
+  //     if (!fund.loanType) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Please select loan type.`,
+  //       );
+  //       return false;
+  //     }
 
-      if (!fund.receivedYesNo) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Please specify whether fund was received.`,
-        );
-        return false;
-      }
+  //     if (!fund.receivedYesNo) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Please specify whether fund was received.`,
+  //       );
+  //       return false;
+  //     }
 
-      let fundType =
-        fund.loanType === 'Other'
-          ? (fund.otherLoanTypeText || '').trim()
-          : fund.loanType;
+  //     let fundType =
+  //       fund.loanType === 'Other'
+  //         ? (fund.otherLoanTypeText || '').trim()
+  //         : fund.loanType;
 
-      if (fund.loanType === 'Other' && !fundType) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Please enter other loan type.`,
-        );
-        return false;
-      }
+  //     if (fund.loanType === 'Other' && !fundType) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Please enter other loan type.`,
+  //       );
+  //       return false;
+  //     }
 
-      if (seenTypes.has(fundType)) {
-        Alert.alert(
-          'Validation Error',
-          `Duplicate fund type detected: ${fundType}`,
-        );
-        return false;
-      }
-      seenTypes.add(fundType);
+  //     if (seenTypes.has(fundType)) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Duplicate fund type detected: ${fundType}`,
+  //       );
+  //       return false;
+  //     }
+  //     seenTypes.add(fundType);
 
-      const received = parseFloat(fund.amount || 0);
-      const repaid = parseFloat(fund.repaid || 0);
+  //     const received = parseFloat(fund.amount || 0);
+  //     const repaid = parseFloat(fund.repaid || 0);
 
-      if (fund.receivedYesNo === 'Yes' && received <= 0) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Please enter valid received amount.`,
-        );
-        return false;
-      }
+  //     if (fund.receivedYesNo === 'Yes' && received <= 0) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Please enter valid received amount.`,
+  //       );
+  //       return false;
+  //     }
 
-      if (repaid < 0) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Repaid amount cannot be negative.`,
-        );
-        return false;
-      }
+  //     if (repaid < 0) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Repaid amount cannot be negative.`,
+  //       );
+  //       return false;
+  //     }
 
-      if (repaid > received) {
-        Alert.alert(
-          'Validation Error',
-          `Fund row ${i + 1}: Repaid amount cannot exceed received amount.`,
-        );
-        return false;
-      }
-    }
+  //     if (repaid > received) {
+  //       Alert.alert(
+  //         'Validation Error',
+  //         `Fund row ${i + 1}: Repaid amount cannot exceed received amount.`,
+  //       );
+  //       return false;
+  //     }
+  //   }
 
-    if (!hasAtLeastOneValid) {
-      Alert.alert('Validation Error', 'Please fill at least one fund entry.');
-      return false;
-    }
+  //   if (!hasAtLeastOneValid) {
+  //     Alert.alert('Validation Error', 'Please fill at least one fund entry.');
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
   const createEnterpriseMandatoryFunds = async enterpriseId => {
     if (!enterpriseId) return;
@@ -2386,7 +2386,618 @@ export default function NewEnterpriseForm({ route, navigation }) {
     '';
 
   // ---------- Submit ----------
+  const validateEnterpriseType = () => {
+    const values = Object.values(enterpriseTypeSelection || {});
 
+    if (!values.length) return false;
+
+    for (const p of values) {
+      const childSelected = Object.values(p.children || {}).some(Boolean);
+
+      // Parent selected but no child selected
+      if (p.selected && !childSelected) {
+        Alert.alert(
+          'Validation',
+          'Please select at least one sub-category for the selected enterprise type.'
+        );
+        return false;
+      }
+
+      // If any child selected -> valid
+      if (childSelected) return true;
+
+      // Parent selected alone also invalid (forcing child)
+      if (p.selected && childSelected) return true;
+    }
+
+    Alert.alert('Validation', 'Please select at least one enterprise type.');
+    return false;
+  };
+
+  const validateMandatoryFunds = () => {
+
+
+    // Main option required
+    if (!form.has_shg_cif) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया बताएं कि आपकी SHG को अनिवार्य फंड प्राप्त हुआ है या नहीं।'
+          : 'Please select whether your SHG received mandatory funds.'
+      );
+      return false;
+    }
+
+
+    // No fund cards added
+    if (!form.fund_cards || form.fund_cards.length === 0) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया कम से कम एक फंड जोड़ें।'
+          : 'Please add at least one fund.'
+      );
+      return false;
+    }
+
+    for (let i = 0; i < form.fund_cards.length; i++) {
+      const fund = form.fund_cards[i];
+
+      // Loan type must be selected
+      if (!fund.loanType) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? `फंड ${i + 1}: कृपया फंड प्रकार चुनें।`
+            : `Fund ${i + 1}: Please select fund type.`
+        );
+        return false;
+      }
+
+      // If "Other" selected → text required
+      if (fund.loanType === 'Other' && !fund.otherLoanTypeText?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? `फंड ${i + 1}: कृपया अन्य फंड का विवरण दें।`
+            : `Fund ${i + 1}: Please specify other fund type.`
+        );
+        return false;
+      }
+
+      // Must answer received yes/no
+      if (!fund.receivedYesNo) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? `फंड ${i + 1}: कृपया बताएं कि फंड प्राप्त हुआ है या नहीं।`
+            : `Fund ${i + 1}: Please select whether fund was received.`
+        );
+        return false;
+      }
+
+      // If received YES → amounts required
+      if (fund.receivedYesNo === 'Yes') {
+
+        if (!fund.amount) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? `फंड ${i + 1}: कृपया प्राप्त राशि दर्ज करें।`
+              : `Fund ${i + 1}: Please enter received amount.`
+          );
+          return false;
+        }
+
+        if (!fund.repaid) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? `फंड ${i + 1}: कृपया अदा की गई राशि दर्ज करें।`
+              : `Fund ${i + 1}: Please enter repaid amount.`
+          );
+          return false;
+        }
+
+        if (Number(fund.repaid) > Number(fund.amount)) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? `फंड ${i + 1}: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
+              : `Fund ${i + 1}: Repaid amount cannot exceed received amount.`
+          );
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+  const validateTrainingReceived = () => {
+    if (form.is_training_received !== 'Yes') return true;
+
+    if (!trainingReceivedRows.length) {
+      Alert.alert('Validation', 'Please add at least one training detail.');
+      return false;
+    }
+
+    for (let i = 0; i < trainingReceivedRows.length; i++) {
+      const row = trainingReceivedRows[i];
+
+      // ✅ Sector validation
+      if (!Object.values(row.sectors || {}).some(v => v.selected)) {
+        Alert.alert(
+          'Validation',
+          `Training row ${i + 1}: Please select at least one sector.`
+        );
+        return false;
+      }
+
+      // ✅ Department validation
+      if (!row.department) {
+        Alert.alert(
+          'Validation',
+          `Training row ${i + 1}: Please select department.`
+        );
+        return false;
+      }
+
+      // ✅ "Others" department validation
+      if (
+        row.department === 'Others' &&
+        !row.department_other?.trim()
+      ) {
+        Alert.alert(
+          'Validation',
+          `Training row ${i + 1}: Please specify department name.`
+        );
+        return false;
+      }
+
+      // ✅ Certificate upload validation
+      if (!row.certificates || row.certificates.length === 0) {
+        Alert.alert(
+          'Validation',
+          `Training row ${i + 1}: Please upload at least one certificate.`
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+  const validateTrainingRequired = () => {
+    if (form.is_training_required !== 'Yes') return true;
+
+    // ✅ Sector validation
+    if (!Object.values(trainingReqSectors || {}).some(v => v.selected)) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया कम से कम एक प्रशिक्षण क्षेत्र चुनें'
+          : 'Please select at least one training sector'
+      );
+      return false;
+    }
+
+    // ✅ Training Type validation
+    if (!trainingReqType || trainingReqType.length === 0) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया प्रशिक्षण प्रकार चुनें'
+          : 'Please select training type'
+      );
+      return false;
+    }
+
+    // ✅ Duration validation
+    if (!trainingReqDuration) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया प्रशिक्षण अवधि चुनें'
+          : 'Please select training duration'
+      );
+      return false;
+    }
+
+    // ✅ Department validation
+    if (!trainingReqDept) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया विभाग चुनें'
+          : 'Please select department'
+      );
+      return false;
+    }
+
+    // ✅ Others department validation
+    if (
+      trainingReqDept === 'Others' &&
+      !trainingReqDeptOther?.trim()
+    ) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया विभाग का नाम दर्ज करें'
+          : 'Please specify department name'
+      );
+      return false;
+    }
+
+    // ✅ Location type validation
+    if (!trainingReqLocationType) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया स्थान का प्रकार चुनें'
+          : 'Please select location type'
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateNoTrainingFlow = () => {
+    if (form.is_training_required !== 'No') return true;
+
+    // Skill Centre
+    if (!form.nearest_skill_centre_known) {
+      Alert.alert(
+        'Validation',
+        'Please answer about skill centre awareness'
+      );
+      return false;
+    }
+
+    if (
+      form.nearest_skill_centre_known === 'Yes' &&
+      !form.nearest_skill_centre_name?.trim()
+    ) {
+      Alert.alert('Validation', 'Please enter skill centre name');
+      return false;
+    }
+
+    if (
+      form.nearest_skill_centre_known === 'Yes' &&
+      !form.skill_centre_loc?.trim()
+    ) {
+      Alert.alert('Validation', 'Please enter skill centre location');
+      return false;
+    }
+
+    // Industry
+    if (!form.nearest_industry_known) {
+      Alert.alert(
+        'Validation',
+        'Please answer about industry awareness'
+      );
+      return false;
+    }
+
+    if (
+      form.nearest_industry_known === 'Yes' &&
+      !form.nearest_industry_name?.trim()
+    ) {
+      Alert.alert('Validation', 'Please enter industry name');
+      return false;
+    }
+
+    if (
+      form.nearest_industry_known === 'Yes' &&
+      !form.industry_loc?.trim()
+    ) {
+      Alert.alert('Validation', 'Please enter industry location');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateSupportRequired = () => {
+    // ✅ Must answer Yes/No
+    if (!form.need_support) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया बताएं कि आपको सहायता की आवश्यकता है या नहीं'
+          : 'Please select whether you need support'
+      );
+      return false;
+    }
+
+    if (form.need_support === 'No') return true;
+
+    // ✅ At least one support type
+    if (
+      !form.support_types ||
+      Object.values(form.support_types).every(v => !v)
+    ) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया कम से कम एक सहायता प्रकार चुनें'
+          : 'Please select at least one support type'
+      );
+      return false;
+    }
+
+    // =============================
+    // 🔹 MACHINERY
+    // =============================
+    if (form.support_types?.machinery) {
+      if (!form.machinery_detail?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया मशीनरी का विवरण दें'
+            : 'Please specify machinery details'
+        );
+        return false;
+      }
+    }
+
+    // =============================
+    // 🔹 INFRASTRUCTURE
+    // =============================
+    if (form.support_types?.infrastructure) {
+      if (!form.infrastructure_support_type) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया इन्फ्रास्ट्रक्चर का प्रकार चुनें'
+            : 'Please select infrastructure type'
+        );
+        return false;
+      }
+
+      if (!form.infrastructure_support_detail?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया इन्फ्रास्ट्रक्चर विवरण दें'
+            : 'Please specify infrastructure details'
+        );
+        return false;
+      }
+    }
+
+    // =============================
+    // 🔹 BRANDING
+    // =============================
+    if (form.support_types?.branding) {
+      if (!form.branding_type) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया ब्रांडिंग प्रकार चुनें'
+            : 'Please select branding type'
+        );
+        return false;
+      }
+
+      // Online subtype required
+      if (form.branding_type === 'Online') {
+        if (!form.branding_subtype) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? 'कृपया प्लेटफॉर्म चुनें'
+              : 'Please select platform'
+          );
+          return false;
+        }
+
+        if (
+          form.branding_subtype === 'Others' &&
+          !form.branding_detail?.trim()
+        ) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? 'कृपया प्लेटफॉर्म का नाम लिखें'
+              : 'Please specify platform name'
+          );
+          return false;
+        }
+      }
+
+      // Physical / Others detail
+      if (
+        form.branding_type !== 'Online' &&
+        !form.branding_detail?.trim()
+      ) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया ब्रांडिंग विवरण दें'
+            : 'Please specify branding details'
+        );
+        return false;
+      }
+    }
+
+    // =============================
+    // 🔹 FINANCIAL
+    // =============================
+    if (form.support_types?.financial) {
+      if (!form.financial_support_type) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया वित्तीय सहायता का प्रकार चुनें'
+            : 'Please select financial support type'
+        );
+        return false;
+      }
+
+      // Loan → amount required
+      if (form.financial_support_type === 'Loan') {
+        if (!form.loan_amount_range) {
+          Alert.alert(
+            'Validation',
+            language === 'hi'
+              ? 'कृपया ऋण राशि चुनें'
+              : 'Please select loan amount range'
+          );
+          return false;
+        }
+      }
+
+      // Other financial → text required
+      if (
+        ['Grant and Subsidy', 'Interest Subvention', 'Others'].includes(
+          form.financial_support_type
+        ) &&
+        !form.financial_support_other_text?.trim()
+      ) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया वित्तीय सहायता का विवरण दें'
+            : 'Please specify financial support details'
+        );
+        return false;
+      }
+    }
+
+    // =============================
+    // 🔹 OTHER SUPPORT
+    // =============================
+    if (form.support_types?.others) {
+      if (!form.other_support?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया अन्य सहायता का विवरण दें'
+            : 'Please specify other support'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const validateCadreActivity = () => {
+    const activities = form.applicant_cadre_activity || [];
+
+    // ✅ At least one selection required
+    if (activities.length === 0) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया कम से कम एक कैडर गतिविधि चुनें'
+          : 'Please select at least one cadre activity'
+      );
+      return false;
+    }
+
+    // ✅ If "Other" selected → text required
+    if (activities.includes('Other')) {
+      if (!form.applicant_cadre_other?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया "अन्य" का विवरण दें'
+            : 'Please specify "Other" cadre activity'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+  const validateCadreDesignation = () => {
+    const designations = form.applicant_cadre_designation || [];
+
+    // ✅ At least one required
+    if (designations.length === 0) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया कम से कम एक पद चुनें'
+          : 'Please select at least one designation'
+      );
+      return false;
+    }
+
+    return true;
+  };
+  const validateSpecialCategory = () => {
+    const category = form.applicant_special_category;
+
+    // ✅ Optional → allow empty
+    if (!category) return true;
+
+    // ✅ If "Other" selected → text required
+    if (category === 'Other') {
+      if (!form.applicant_special_category_other?.trim()) {
+        Alert.alert(
+          'Validation',
+          language === 'hi'
+            ? 'कृपया विशेष श्रेणी निर्दिष्ट करें'
+            : 'Please specify special category'
+        );
+        return false;
+      }
+    }
+
+    return true;
+  };
+  const validateDeclarationSection = () => {
+    // ✅ Declaration checkbox
+    if (!form.declaration_confirmed) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया घोषणा की पुष्टि करें'
+          : 'Please confirm the declaration'
+      );
+      return false;
+    }
+
+    // ✅ Declaration date required
+    if (!form.declaration_date) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया घोषणा की तिथि चुनें'
+          : 'Please select declaration date'
+      );
+      return false;
+    }
+
+    // ✅ Date should not be in future
+    const selectedDate = new Date(form.declaration_date);
+    const today = new Date();
+
+    if (selectedDate > today) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'घोषणा की तिथि भविष्य की नहीं हो सकती'
+          : 'Declaration date cannot be in the future'
+      );
+      return false;
+    }
+
+    // ✅ Signature required
+    if (!signatureAsset || !signatureAsset.uri) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया हस्ताक्षर अपलोड करें'
+          : 'Please upload signature'
+      );
+      return false;
+    }
+
+    return true;
+  };
   const handleSubmit = async () => {
     if (!beneficiary && !recordedBenef) {
       Alert.alert(
@@ -2395,12 +3006,35 @@ export default function NewEnterpriseForm({ route, navigation }) {
       );
       return;
     }
-
-    if (!Object.values(enterpriseTypeSelection || {}).some(p => p.selected)) {
-      Alert.alert('Validation', 'Please select at least one enterprise type.');
+    if (!validateMandatoryFunds()) {
+      setLoading(false);
       return;
     }
-
+    // if (!Object.values(enterpriseTypeSelection || {}).some(p => p.selected)) {
+    //   Alert.alert('Validation', 'Please select at least one enterprise type.');
+    //   return;
+    // }
+    if (!validateEnterpriseType()) {
+      return;
+    }
+    if (!validateTrainingReceived()) {
+      return;
+    }
+    if (!validateTrainingRequired()) return;
+    if (!validateNoTrainingFlow()) return;
+    if (!validateSupportRequired()) return;
+    if (!validateCadreActivity()) return;
+    if (!validateCadreDesignation()) return;
+    if (!validateDeclarationSection()) return;
+    if (!form.prefered_location_choice) {
+      Alert.alert(
+        'Validation',
+        language === 'hi'
+          ? 'कृपया उद्यम शुरू करने के लिए एक स्थान चुनें।'
+          : 'Please select a preferred location for starting the enterprise.'
+      );
+      return;
+    }
     if (!form.is_training_received) {
       Alert.alert(
         'Validation',
@@ -2484,10 +3118,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
       setLoading(true);
 
       // 🔥 Validate funds BEFORE creating anything
-      if (!validateMandatoryFunds()) {
-        setLoading(false);
-        return;
-      }
+      // if (!validateMandatoryFunds()) {
+      //   setLoading(false);
+      //   return;
+      // }
 
       // Step 1: ensure Recorded Beneficiary
       const recordedBenefId = await ensureRecordedBeneficiary();
@@ -2795,7 +3429,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
         <TouchableOpacity
           key={opt.key}
           style={styles.checkboxRow}
-          onPress={() => setField('prefered_location_choice', opt.key)}
+          onPress={() =>
+            setField(
+              'prefered_location_choice',
+              form.prefered_location_choice === opt.key ? null : opt.key
+            )
+          }
         >
           <View
             style={[
@@ -3897,6 +4536,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
           )}
         </>
       )}
+
       <Text style={styles.label}>
         {' '}
         {language === 'hi'
