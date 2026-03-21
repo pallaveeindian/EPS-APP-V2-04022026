@@ -410,12 +410,12 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-              ...c,
-              registrationNumbers: {
-                ...c.registrationNumbers,
-                [licenseValue]: text,
-              },
-            }
+            ...c,
+            registrationNumbers: {
+              ...c.registrationNumbers,
+              [licenseValue]: text,
+            },
+          }
           : c,
       ),
     );
@@ -426,12 +426,12 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-              ...c,
-              openSections: {
-                ...c.openSections,
-                [category]: !c.openSections[category],
-              },
-            }
+            ...c,
+            openSections: {
+              ...c.openSections,
+              [category]: !c.openSections[category],
+            },
+          }
           : c,
       ),
     );
@@ -476,9 +476,9 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-              ...c,
-              otherText: { ...c.otherText, [category]: text },
-            }
+            ...c,
+            otherText: { ...c.otherText, [category]: text },
+          }
           : c,
       ),
     );

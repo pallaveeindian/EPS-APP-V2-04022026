@@ -1420,6 +1420,362 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     handleSubmit,
   }) => {
     const { language } = useContext(LanguageContext);
+    const validateLicenses = () => {
+      const licenses = existingForm.licenses || [];
+
+      if (licenses.length === 0) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया कम से कम एक लाइसेंस जोड़ें'
+            : 'Please add at least one license'
+        );
+        return false;
+      }
+
+      for (let i = 0; i < licenses.length; i++) {
+        const lic = licenses[i];
+
+        // ✅ License name
+        if (!lic.license_name || !lic.license_name.trim()) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया लाइसेंस नाम दर्ज करें'
+              : 'Please enter license name'
+          );
+          return false;
+        }
+
+        // ✅ Registration number
+        if (!lic.license_no || !lic.license_no.trim()) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया पंजीकरण संख्या दर्ज करें'
+              : 'Please enter registration number'
+          );
+          return false;
+        }
+
+        // ✅ File
+        if (!lic.file) {
+          Alert.alert(
+            language === 'hi' ? 'सत्यापन' : 'Validation',
+            language === 'hi'
+              ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें'
+              : 'Please upload license document'
+          );
+          return false;
+        }
+      }
+
+      return true;
+    };
+    const validateEnterpriseDetails = () => {
+      // 1. Workplace Type
+      if (!existingForm.workplace_type) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया कार्यस्थल का प्रकार चुनें'
+            : 'Please select workplace type'
+        );
+        return false;
+      }
+
+      if (
+        existingForm.workplace_type === 'Others' &&
+        !existingForm.workplace_type_other?.trim()
+      ) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया कार्यस्थल का विवरण दें'
+            : 'Please specify workplace type'
+        );
+        return false;
+      }
+
+      // 2. Electricity
+      if (!existingForm.electricity_available) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया बिजली की स्थिति चुनें'
+            : 'Please select electricity availability'
+        );
+        return false;
+      }
+
+      if (
+        existingForm.electricity_available === 'Others' &&
+        !existingForm.electricity_other?.trim()
+      ) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया बिजली का विवरण दें'
+            : 'Please specify electricity details'
+        );
+        return false;
+      }
+
+      // 3. Water
+      if (!existingForm.water_available) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया पानी की उपलब्धता चुनें'
+            : 'Please select water availability'
+        );
+        return false;
+      }
+
+      if (
+        existingForm.water_available === 'Others' &&
+        !existingForm.water_other?.trim()
+      ) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया पानी का विवरण दें'
+            : 'Please specify water availability'
+        );
+        return false;
+      }
+
+      // 4. Transport
+      if (!existingForm.transportation_availability) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया परिवहन उपलब्धता चुनें'
+            : 'Please select transport availability'
+        );
+        return false;
+      }
+
+      if (
+        existingForm.transportation_availability === 'Need Help' &&
+        !existingForm.need_transport_help?.trim()
+      ) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया परिवहन सहायता का विवरण दें'
+            : 'Please describe transport help required'
+        );
+        return false;
+      }
+
+      // 5. Bijnor
+      if (!existingForm.can_send_to_bijnor) {
+        Alert.alert(
+          language === 'hi' ? 'सत्यापन' : 'Validation',
+          language === 'hi'
+            ? 'कृपया चयन करें कि आप बिजनौर भेज सकते हैं या नहीं'
+            : 'Please select if you can send to Bijnor'
+        );
+        return false;
+      }
+
+      return true;
+    };
+    const isEmpty = (v) => {
+      return !v || v.toString().trim() === '';
+    };
+
+    const splitMulti = (v) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      return v.split(',').map(i => i.trim()).filter(Boolean);
+    };
+
+    const isMultiEmpty = (v) => {
+      return splitMulti(v).length === 0;
+    };
+    const validateShopSection = form => {
+      if (!form.has_shop_product) {
+        return 'Please select shop product option';
+      }
+
+      if (form.has_shop_product === 'Yes') {
+        if (isEmpty(form.shop_type)) return 'Select shop type';
+
+        if (isEmpty(form.shop_sub_category))
+          return 'Select product category';
+
+        if (
+          form.shop_sub_category === 'Others' &&
+          isEmpty(form.shop_sub_category_other)
+        )
+          return 'Specify other shop category';
+
+        if (isEmpty(form.inventory_source))
+          return 'Enter inventory source';
+
+        if (isMultiEmpty(form.target_customers))
+          return 'Select target customers';
+
+        if (
+          splitMulti(form.target_customers).includes('Others') &&
+          isEmpty(form.target_customers_other)
+        )
+          return 'Specify other target customers';
+
+        if (isMultiEmpty(form.sales_area))
+          return 'Select sales area';
+
+        if (isMultiEmpty(form.marketing_strategy))
+          return 'Select marketing strategy';
+
+        if (
+          splitMulti(form.marketing_strategy).includes('Others') &&
+          isEmpty(form.marketing_strategy_other)
+        )
+          return 'Specify other marketing strategy';
+
+        if (isMultiEmpty(form.marketing_channels))
+          return 'Select marketing channels';
+
+        if (
+          splitMulti(form.marketing_channels).includes('Others') &&
+          isEmpty(form.market_linkage)
+        )
+          return 'Specify marketing linkage';
+
+        if (isMultiEmpty(form.marketing_challenges))
+          return 'Select marketing challenges';
+
+        if (
+          splitMulti(form.marketing_challenges).includes('Others') &&
+          isEmpty(form.marketing_challenges_other)
+        )
+          return 'Specify marketing challenges';
+
+        if (!form.accept_digital_payment)
+          return 'Select digital payment option';
+
+        if (isEmpty(form.avg_monthly_sales))
+          return 'Enter monthly sales';
+
+        if (isEmpty(form.annual_sale))
+          return 'Enter annual sale';
+
+        // MEDIA VALIDATION
+        if (!form.media?.shop_front?.length)
+          return 'Upload at least 1 shop front image';
+
+        if (!form.media?.shop_inside?.length)
+          return 'Upload at least 1 shop inside image';
+      }
+
+      return null;
+    };
+    const validateProducts = products => {
+      if (!products.length) return 'Add at least one product';
+
+      for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+
+        if (isEmpty(p.main_product_name))
+          return `Product ${i + 1}: Enter product name`;
+
+        if (isEmpty(p.activity_or_product_type))
+          return `Product ${i + 1}: Select product type`;
+
+        if (
+          p.activity_or_product_type === 'Others' &&
+          isEmpty(p.product_type_other)
+        )
+          return `Product ${i + 1}: Specify product type`;
+
+        if (isEmpty(p.production_capacity))
+          return `Product ${i + 1}: Enter production capacity`;
+
+        if (isMultiEmpty(p.raw_material))
+          return `Product ${i + 1}: Select raw material`;
+
+        if (
+          splitMulti(p.raw_material).includes('Others') &&
+          isEmpty(p.raw_material_other)
+        )
+          return `Product ${i + 1}: Specify raw material`;
+
+        if (isEmpty(p.machinery_source))
+          return `Product ${i + 1}: Enter machinery source`;
+
+        if (isMultiEmpty(p.machinery_equipment))
+          return `Product ${i + 1}: Select machinery`;
+
+        if (
+          splitMulti(p.machinery_equipment).includes('Others') &&
+          isEmpty(p.machinery_equipment_other)
+        )
+          return `Product ${i + 1}: Specify machinery`;
+
+        if (isMultiEmpty(p.target_customers))
+          return `Product ${i + 1}: Select target customers`;
+
+        if (
+          splitMulti(p.target_customers).includes('Others') &&
+          isEmpty(p.target_customers_other)
+        )
+          return `Product ${i + 1}: Specify customers`;
+
+        if (isMultiEmpty(p.sales_area))
+          return `Product ${i + 1}: Select sales area`;
+
+        if (!p.packaging_branding_status)
+          return `Product ${i + 1}: Select packaging status`;
+
+        if (isMultiEmpty(p.marketing_strategy))
+          return `Product ${i + 1}: Select marketing strategy`;
+
+        if (
+          splitMulti(p.marketing_strategy).includes('Others') &&
+          isEmpty(p.marketing_strategy_other)
+        )
+          return `Product ${i + 1}: Specify strategy`;
+
+        if (isMultiEmpty(p.marketing_channels))
+          return `Product ${i + 1}: Select marketing channels`;
+
+        if (
+          splitMulti(p.marketing_channels_other).length &&
+          isEmpty(p.marketing_channels_other_input)
+        )
+          return `Product ${i + 1}: Specify channel details`;
+
+        if (isMultiEmpty(p.marketing_challenges))
+          return `Product ${i + 1}: Select challenges`;
+
+        if (
+          splitMulti(p.marketing_challenges).includes('Others') &&
+          isEmpty(p.marketing_challenges_other)
+        )
+          return `Product ${i + 1}: Specify challenges`;
+
+        if (!p.accept_digital_payment)
+          return `Product ${i + 1}: Select digital payment`;
+
+        if (isEmpty(p.product_price))
+          return `Product ${i + 1}: Enter product price`;
+
+        if (isEmpty(p.avg_monthly_sales))
+          return `Product ${i + 1}: Enter monthly sales`;
+
+        // MEDIA VALIDATION
+        if (!p.media?.open_box?.length)
+          return `Product ${i + 1}: Upload open box image`;
+
+        if (!p.media?.close_box?.length)
+          return `Product ${i + 1}: Upload closed box image`;
+      }
+
+      return null;
+    };
     const handleNext = () => {
       console.log('==================================================');
       console.log(
@@ -1439,7 +1795,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           );
           return;
         }
-
+        if (!validateLicenses()) return;
         if (!existingForm.enterprise_types_tree || existingForm.enterprise_types_tree.length === 0) {
           Alert.alert(
             language === 'hi' ? 'सत्यापन' : 'Validation',
@@ -1537,72 +1893,11 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           );
           return;
         }
-        if (!existingForm.owner_special_category) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया अपनी विशेष श्रेणी चुनें।'
-              : 'Please select your special category.'
-          );
-          return;
-        }
 
-        if (
-          existingForm.owner_special_category === 'Other' &&
-          !existingForm.owner_special_category_other?.trim()
-        ) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया अन्य विशेष श्रेणी निर्दिष्ट करें।'
-              : 'Please specify the other special category.'
-          );
-          return;
-        }
+
+
         // LICENSE VALIDATION
-        if (existingForm.licenses && existingForm.licenses.length > 0) {
-          for (let card of existingForm.licenses) {
-            for (let category in card.selectedOptions) {
-              const selectedOptions = card.selectedOptions[category] || [];
 
-              for (let opt of selectedOptions) {
-
-                // Validate Other text
-                if (opt === 'other' && !card.otherText?.[category]?.trim()) {
-                  Alert.alert(
-                    language === 'hi' ? 'सत्यापन' : 'Validation',
-                    language === 'hi'
-                      ? 'कृपया अन्य लाइसेंस का नाम दर्ज करें।'
-                      : 'Please enter other license name.'
-                  );
-                  return;
-                }
-
-                // Validate Registration Number
-                if (!card.registrationNumbers?.[opt]?.trim()) {
-                  Alert.alert(
-                    language === 'hi' ? 'सत्यापन' : 'Validation',
-                    language === 'hi'
-                      ? 'कृपया पंजीकरण संख्या दर्ज करें।'
-                      : 'Please enter registration number.'
-                  );
-                  return;
-                }
-
-                // Validate File Upload
-                if (!card.files?.[opt]) {
-                  Alert.alert(
-                    language === 'hi' ? 'सत्यापन' : 'Validation',
-                    language === 'hi'
-                      ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें।'
-                      : 'Please upload the license document.'
-                  );
-                  return;
-                }
-              }
-            }
-          }
-        }
         console.log('--- SECTION 0 (BASIC INFO) ---');
         console.log('Enterprise Name:', existingForm.enterprise_name);
         console.log('Enterprise Type:', existingForm.enterprise_types_tree);
@@ -1616,6 +1911,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
       // SECTION 1: ENTERPRISE DETAILS (INFRA)
       if (currentSectionIndex === 1) {
+        if (!validateEnterpriseDetails()) return;
+
         console.log('--- SECTION 1 (INFRASTRUCTURE) ---', {
           workplace: existingForm.workplace_type,
           electricity: existingForm.electricity_available,
@@ -1623,61 +1920,76 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           transportation: existingForm.transportation_availability,
         });
       }
-
       // SECTION 2: SHOP BASED OR PRODUCT BASED
+      // if (currentSectionIndex === 2) {
+      //   console.log('--- SECTION 2 (SHOP & PRODUCT DETAIL) ---');
+      //   console.log('Has Shop Product:', existingForm.has_shop_product);
+
+      //   if (existingForm.has_shop_product === 'Yes') {
+      //     console.log(
+      //       '%c [SHOP DATA SET]',
+      //       'color: orange; font-weight: bold;',
+      //     );
+      //     console.table({
+      //       shop_type: existingForm.shop_type,
+      //       sub_category: existingForm.shop_sub_category,
+      //       inventory_source: existingForm.inventory_source,
+      //       target_customers: existingForm.target_customers,
+      //       marketing_channels: existingForm.marketing_channels,
+      //       marketing_challenges: existingForm.marketing_challenges,
+      //       avg_monthly_sales: existingForm.avg_monthly_sales,
+      //       annual_sale: existingForm.annual_sale,
+      //     });
+
+      //     // NEW: Preview of Mapped Backend Keys (to check for NULLs)
+      //     console.log('%c [BACKEND KEY MAPPING PREVIEW]', 'color: #2b7;');
+      //     console.log({
+      //       enterprise_id: 'Will be Linked on Submit',
+      //       source_of_inventory: existingForm.inventory_source,
+      //       shop_category: existingForm.shop_sub_category,
+      //       avg_annual_sales: existingForm.annual_sale,
+      //     });
+      //   } else {
+      //     // Create a clean preview table for all products
+      //     const productPreview = existingForm.products.map((p, i) => {
+      //       return {
+      //         'Prod #': i + 1,
+      //         Name: p.main_product_name || 'N/A',
+      //         MRP: p.product_mrp || '0',
+      //         Capacity: p.production_capacity,
+      //         'Raw Material': p.raw_material
+      //           ? p.raw_material.substring(0, 15) + '...'
+      //           : 'N/A',
+      //         'Monthly Sales': p.avg_monthly_sales,
+      //         'Annual Sales': p.avg_annual_sales,
+      //         'Digital Pay': p.accept_digital_payment,
+      //         'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${p.media?.close_box?.length || 0
+      //           } / ${p.media?.others?.length || 0}`,
+      //       };
+      //     });
+      //     console.table(productPreview);
+
+      //     // Detailed log for the first product to verify raw fields
+      //     console.log(
+      //       'Full Object Preview (Product 1):',
+      //       existingForm.products[0],
+      //     );
+      //   }
+      // }
       if (currentSectionIndex === 2) {
-        console.log('--- SECTION 2 (SHOP & PRODUCT DETAIL) ---');
-        console.log('Has Shop Product:', existingForm.has_shop_product);
+        let error = null;
 
         if (existingForm.has_shop_product === 'Yes') {
-          console.log(
-            '%c [SHOP DATA SET]',
-            'color: orange; font-weight: bold;',
-          );
-          console.table({
-            shop_type: existingForm.shop_type,
-            sub_category: existingForm.shop_sub_category,
-            inventory_source: existingForm.inventory_source,
-            target_customers: existingForm.target_customers,
-            marketing_channels: existingForm.marketing_channels,
-            marketing_challenges: existingForm.marketing_challenges,
-            avg_monthly_sales: existingForm.avg_monthly_sales,
-            annual_sale: existingForm.annual_sale,
-          });
-
-          // NEW: Preview of Mapped Backend Keys (to check for NULLs)
-          console.log('%c [BACKEND KEY MAPPING PREVIEW]', 'color: #2b7;');
-          console.log({
-            enterprise_id: 'Will be Linked on Submit',
-            source_of_inventory: existingForm.inventory_source,
-            shop_category: existingForm.shop_sub_category,
-            avg_annual_sales: existingForm.annual_sale,
-          });
+          error = validateShopSection(existingForm);
+        } else if (existingForm.has_shop_product === 'No') {
+          error = validateProducts(existingForm.products);
         } else {
-          // Create a clean preview table for all products
-          const productPreview = existingForm.products.map((p, i) => {
-            return {
-              'Prod #': i + 1,
-              Name: p.main_product_name || 'N/A',
-              MRP: p.product_mrp || '0',
-              Capacity: p.production_capacity,
-              'Raw Material': p.raw_material
-                ? p.raw_material.substring(0, 15) + '...'
-                : 'N/A',
-              'Monthly Sales': p.avg_monthly_sales,
-              'Annual Sales': p.avg_annual_sales,
-              'Digital Pay': p.accept_digital_payment,
-              'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${p.media?.close_box?.length || 0
-                } / ${p.media?.others?.length || 0}`,
-            };
-          });
-          console.table(productPreview);
+          error = 'Please select Yes or No';
+        }
 
-          // Detailed log for the first product to verify raw fields
-          console.log(
-            'Full Object Preview (Product 1):',
-            existingForm.products[0],
-          );
+        if (error) {
+          Alert.alert('Validation Error', error);
+          return;
         }
       }
 
