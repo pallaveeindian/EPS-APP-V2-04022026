@@ -650,7 +650,18 @@ export default function ShopBasedProductSection({ row, index, updateRow }) {
               style={styles.input}
               keyboardType="numeric"
               value={row.avg_monthly_sales}
-              onChangeText={v => updateRow(index, { avg_monthly_sales: v })}
+              onChangeText={v => {
+                const numericValue = v.replace(/[^0-9]/g, '');
+
+                const annual = numericValue
+                  ? String(Number(numericValue) * 12)
+                  : '';
+
+                updateRow(index, {
+                  avg_monthly_sales: numericValue,
+                  annual_sale: annual, // ✅ auto calculated
+                });
+              }}
             />
           </View>
 
@@ -660,12 +671,26 @@ export default function ShopBasedProductSection({ row, index, updateRow }) {
               {language === 'hi' ? 'वार्षिक बिक्री' : 'Annual Sale'}
             </Text>
 
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={row.annual_sale}
-              onChangeText={v => updateRow(index, { annual_sale: v })}
-            />
+            <Text style={styles.helpText}>
+              {language === 'hi'
+                ? 'यह स्वचालित रूप से मासिक बिक्री × 12 के आधार पर गणना की जाती है।'
+                : 'This is automatically calculated as Average Monthly Sales × 12.'}
+            </Text>
+
+            <View style={styles.estimatedContainer}>
+              <Text style={styles.estimatedLabel}>
+                {language === 'hi'
+                  ? 'मासिक बिक्री × 12'
+                  : 'Average Monthly Sales × 12'}
+              </Text>
+
+              <Text style={styles.estimatedValue}>
+                ₹{' '}
+                {row.annual_sale
+                  ? Number(row.annual_sale).toLocaleString('en-IN')
+                  : '0'}
+              </Text>
+            </View>
           </View>
           {/* SHOP PHOTO UPLOAD SECTION */}
           <View style={styles.fieldBlock}>

@@ -1,4 +1,3 @@
-
 // src/screens/screensProductionApp/ExistingEnterpriseForm.jsx
 import React, { useEffect, useState } from 'react';
 import {
@@ -64,11 +63,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   const existingEnterprise = route?.params?.existing;
   const { language } = useContext(LanguageContext);
 
-
   // extra params from CRPRecordFlowProduction (same as NewEnterpriseForm)
   const beneficiary = route?.params?.beneficiary || null;
   const memberCode = beneficiary?.member_code || beneficiary?.nic_member_code;
-  const beneficiaryName = beneficiary?.member_name || "Unknown Beneficiary";
+  const beneficiaryName = beneficiary?.member_name || 'Unknown Beneficiary';
   const tempShg = route?.params?.tempShg || null;
   const routeCrpUserId =
     route?.params?.crpUserId ||
@@ -209,8 +207,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     return null;
   };
 
-
-
   const saveProgress = async (state, index) => {
     if (!memberCode) return;
     try {
@@ -223,9 +219,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
       // !!! MUST MATCH Dashboard Prefix !!!
       await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
-
     } catch (e) {
-      console.warn("Failed to save draft", e);
+      console.warn('Failed to save draft', e);
     }
   };
 
@@ -237,31 +232,31 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         const parsed = JSON.parse(savedDraft);
 
         Alert.alert(
-          "Resume Draft?",
+          'Resume Draft?',
           `We found a saved form for ${beneficiaryName}. Would you like to continue where you left off?`,
           [
             {
-              text: "Start New",
+              text: 'Start New',
               onPress: async () => {
                 await AsyncStorage.removeItem(`DRAFT_EXEP_${memberCode}`);
                 setIsDraftLoaded(true);
-              }
+              },
             },
             {
-              text: "Resume",
+              text: 'Resume',
               onPress: () => {
                 setExistingForm(parsed.formData);
                 setCurrentSectionIndex(parsed.sectionIndex);
                 setIsDraftLoaded(true);
               },
             },
-          ]
+          ],
         );
       } else {
         setIsDraftLoaded(true);
       }
     } catch (e) {
-      console.warn("Error loading draft", e);
+      console.warn('Error loading draft', e);
       setIsDraftLoaded(true);
     }
   };
@@ -277,7 +272,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       saveProgress(existingForm, currentSectionIndex);
     }
   }, [existingForm, currentSectionIndex]);
-
 
   // Load logged user + set auth token
   useEffect(() => {
@@ -372,13 +366,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+      beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-        beneficiary.member_phones.length > 0
+      beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -462,10 +456,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-              ? shgRes.results
-              : Array.isArray(shgRes)
-                ? shgRes
-                : [];
+            ? shgRes.results
+            : Array.isArray(shgRes)
+            ? shgRes
+            : [];
           const found = shgRows.find(s => {
             const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
             return String(code) === String(lokos_shg);
@@ -509,8 +503,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-            ? 'No'
-            : beneficiary.pld_status || null,
+          ? 'No'
+          : beneficiary.pld_status || null,
       enterprise_type: 'exep',
     };
 
@@ -1260,11 +1254,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       });
 
       // basic validation
-      if (!payload.enterprise_name) {
-        Alert.alert('Missing information', 'Please fill the Enterprise Name.');
-        return;
-      }
 
+      // 1️⃣ Declaration confirm
       if (
         !payload.declaration_confirmed ||
         payload.declaration_confirmed !== 'Yes'
@@ -1276,7 +1267,45 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         return;
       }
 
-      setSubmitting(true);
+      // 2️⃣ Declaration date
+      if (!payload.declaration_date) {
+        Alert.alert('Validation', 'Please select declaration date.');
+        return;
+      }
+
+      const declDate = new Date(payload.declaration_date);
+      const today = new Date();
+
+      if (isNaN(declDate.getTime())) {
+        Alert.alert('Validation', 'Invalid declaration date.');
+        return;
+      }
+
+      if (declDate > today) {
+        Alert.alert('Validation', 'Future date not allowed.');
+        return;
+      }
+
+      // 3️⃣ Signature validation (IMPORTANT FIX)
+      const signature = existingForm?.media?.declaration_signature || [];
+
+      if (!Array.isArray(signature) || signature.length === 0) {
+        Alert.alert('Validation', 'Please upload applicant signature.');
+        return;
+      }
+
+      // 4️⃣ Optional verifier validation
+      if (
+        payload.verifier_name &&
+        payload.verifier_name.trim().length > 0 &&
+        payload.verifier_name.trim().length < 3
+      ) {
+        Alert.alert(
+          'Validation',
+          'Verifier name must be at least 3 characters.',
+        );
+        return;
+      }
 
       // 3) create / update existing enterprise
       let enterpriseRes;
@@ -1428,7 +1457,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया कम से कम एक लाइसेंस जोड़ें'
-            : 'Please add at least one license'
+            : 'Please add at least one license',
         );
         return false;
       }
@@ -1442,7 +1471,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             language === 'hi' ? 'सत्यापन' : 'Validation',
             language === 'hi'
               ? 'कृपया लाइसेंस नाम दर्ज करें'
-              : 'Please enter license name'
+              : 'Please enter license name',
           );
           return false;
         }
@@ -1453,7 +1482,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             language === 'hi' ? 'सत्यापन' : 'Validation',
             language === 'hi'
               ? 'कृपया पंजीकरण संख्या दर्ज करें'
-              : 'Please enter registration number'
+              : 'Please enter registration number',
           );
           return false;
         }
@@ -1464,7 +1493,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             language === 'hi' ? 'सत्यापन' : 'Validation',
             language === 'hi'
               ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें'
-              : 'Please upload license document'
+              : 'Please upload license document',
           );
           return false;
         }
@@ -1479,7 +1508,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया कार्यस्थल का प्रकार चुनें'
-            : 'Please select workplace type'
+            : 'Please select workplace type',
         );
         return false;
       }
@@ -1492,7 +1521,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया कार्यस्थल का विवरण दें'
-            : 'Please specify workplace type'
+            : 'Please specify workplace type',
         );
         return false;
       }
@@ -1503,7 +1532,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया बिजली की स्थिति चुनें'
-            : 'Please select electricity availability'
+            : 'Please select electricity availability',
         );
         return false;
       }
@@ -1516,7 +1545,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया बिजली का विवरण दें'
-            : 'Please specify electricity details'
+            : 'Please specify electricity details',
         );
         return false;
       }
@@ -1527,7 +1556,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया पानी की उपलब्धता चुनें'
-            : 'Please select water availability'
+            : 'Please select water availability',
         );
         return false;
       }
@@ -1540,7 +1569,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया पानी का विवरण दें'
-            : 'Please specify water availability'
+            : 'Please specify water availability',
         );
         return false;
       }
@@ -1551,7 +1580,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया परिवहन उपलब्धता चुनें'
-            : 'Please select transport availability'
+            : 'Please select transport availability',
         );
         return false;
       }
@@ -1564,7 +1593,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया परिवहन सहायता का विवरण दें'
-            : 'Please describe transport help required'
+            : 'Please describe transport help required',
         );
         return false;
       }
@@ -1575,24 +1604,27 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           language === 'hi' ? 'सत्यापन' : 'Validation',
           language === 'hi'
             ? 'कृपया चयन करें कि आप बिजनौर भेज सकते हैं या नहीं'
-            : 'Please select if you can send to Bijnor'
+            : 'Please select if you can send to Bijnor',
         );
         return false;
       }
 
       return true;
     };
-    const isEmpty = (v) => {
+    const isEmpty = v => {
       return !v || v.toString().trim() === '';
     };
 
-    const splitMulti = (v) => {
+    const splitMulti = v => {
       if (!v) return [];
       if (Array.isArray(v)) return v;
-      return v.split(',').map(i => i.trim()).filter(Boolean);
+      return v
+        .split(',')
+        .map(i => i.trim())
+        .filter(Boolean);
     };
 
-    const isMultiEmpty = (v) => {
+    const isMultiEmpty = v => {
       return splitMulti(v).length === 0;
     };
     const validateShopSection = form => {
@@ -1603,8 +1635,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       if (form.has_shop_product === 'Yes') {
         if (isEmpty(form.shop_type)) return 'Select shop type';
 
-        if (isEmpty(form.shop_sub_category))
-          return 'Select product category';
+        if (isEmpty(form.shop_sub_category)) return 'Select product category';
 
         if (
           form.shop_sub_category === 'Others' &&
@@ -1612,8 +1643,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         )
           return 'Specify other shop category';
 
-        if (isEmpty(form.inventory_source))
-          return 'Enter inventory source';
+        if (isEmpty(form.inventory_source)) return 'Enter inventory source';
 
         if (isMultiEmpty(form.target_customers))
           return 'Select target customers';
@@ -1624,8 +1654,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         )
           return 'Specify other target customers';
 
-        if (isMultiEmpty(form.sales_area))
-          return 'Select sales area';
+        if (isMultiEmpty(form.sales_area)) return 'Select sales area';
 
         if (isMultiEmpty(form.marketing_strategy))
           return 'Select marketing strategy';
@@ -1657,11 +1686,9 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         if (!form.accept_digital_payment)
           return 'Select digital payment option';
 
-        if (isEmpty(form.avg_monthly_sales))
-          return 'Enter monthly sales';
+        if (isEmpty(form.avg_monthly_sales)) return 'Enter monthly sales';
 
-        if (isEmpty(form.annual_sale))
-          return 'Enter annual sale';
+        if (isEmpty(form.annual_sale)) return 'Enter annual sale';
 
         // MEDIA VALIDATION
         if (!form.media?.shop_front?.length)
@@ -1776,6 +1803,503 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
       return null;
     };
+    // const handleNext = () => {
+    //   console.log('==================================================');
+    //   console.log(
+    //     `%c NAVIGATING FROM SECTION: ${currentSectionIndex} `,
+    //     'background: #EE6969; color: #fff; font-weight: bold;',
+    //   );
+
+    //   // SECTION 0: BASIC INFO & LICENSES
+    //   if (currentSectionIndex === 0) {
+
+    //     if (!existingForm.enterprise_name?.trim()) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया उद्यम का नाम दर्ज करें।'
+    //           : 'Please enter the enterprise name.'
+    //       );
+    //       return;
+    //     }
+    //     if (!validateLicenses()) return;
+    //     if (!existingForm.enterprise_types_tree || existingForm.enterprise_types_tree.length === 0) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया उद्यम का प्रकार चुनें।'
+    //           : 'Please select enterprise type.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (!existingForm.ownership_type) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया स्वामित्व प्रकार चुनें।'
+    //           : 'Please select ownership type.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (
+    //       existingForm.ownership_type === 'Others' &&
+    //       !existingForm.ownership_type_other?.trim()
+    //     ) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया स्वामित्व का विवरण दें।'
+    //           : 'Please specify ownership type.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (!existingForm.year_of_establishment) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया स्थापना वर्ष चुनें।'
+    //           : 'Please select year of establishment.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (existingForm.total_emp === '' || existingForm.total_emp === undefined) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया कुल कर्मचारियों की संख्या दर्ज करें।'
+    //           : 'Please enter total employees.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (
+    //       existingForm.number_of_shg_emp === '' ||
+    //       existingForm.number_of_shg_emp === undefined
+    //     ) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया SHG कर्मचारियों की संख्या दर्ज करें।'
+    //           : 'Please enter SHG employees count.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (!existingForm.owner_cadre || existingForm.owner_cadre.length === 0) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया कम से कम एक कैडर गतिविधि चुनें।'
+    //           : 'Please select at least one cadre activity.'
+    //       );
+    //       return;
+    //     }
+
+    //     if (
+    //       existingForm.owner_cadre?.includes('Other') &&
+    //       !existingForm.owner_cadre_other?.trim()
+    //     ) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया अन्य कैडर गतिविधि दर्ज करें।'
+    //           : 'Please specify other cadre activity.'
+    //       );
+    //       return;
+    //     }
+    //     if (!existingForm.owner_designation || existingForm.owner_designation.length === 0) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया SHG में अपना पद चुनें।'
+    //           : 'Please select your SHG designation.'
+    //       );
+    //       return;
+    //     }
+
+    //     // LICENSE VALIDATION
+
+    //     console.log('--- SECTION 0 (BASIC INFO) ---');
+    //     console.log('Enterprise Name:', existingForm.enterprise_name);
+    //     console.log('Enterprise Type:', existingForm.enterprise_types_tree);
+    //     console.log('Owner Cadre:', existingForm.owner_cadre);
+    //     console.log('Owner Designation:', existingForm.owner_designation);
+    //     console.log(
+    //       'Selected Licenses:',
+    //       JSON.stringify(existingForm.licenses, null, 2),
+    //     );
+    //   }
+
+    //   // SECTION 1: ENTERPRISE DETAILS (INFRA)
+    //   if (currentSectionIndex === 1) {
+    //     if (!validateEnterpriseDetails()) return;
+
+    //     console.log('--- SECTION 1 (INFRASTRUCTURE) ---', {
+    //       workplace: existingForm.workplace_type,
+    //       electricity: existingForm.electricity_available,
+    //       water: existingForm.water_available,
+    //       transportation: existingForm.transportation_availability,
+    //     });
+    //   }
+    //   // SECTION 2: SHOP BASED OR PRODUCT BASED
+    //   // if (currentSectionIndex === 2) {
+    //   //   console.log('--- SECTION 2 (SHOP & PRODUCT DETAIL) ---');
+    //   //   console.log('Has Shop Product:', existingForm.has_shop_product);
+
+    //   //   if (existingForm.has_shop_product === 'Yes') {
+    //   //     console.log(
+    //   //       '%c [SHOP DATA SET]',
+    //   //       'color: orange; font-weight: bold;',
+    //   //     );
+    //   //     console.table({
+    //   //       shop_type: existingForm.shop_type,
+    //   //       sub_category: existingForm.shop_sub_category,
+    //   //       inventory_source: existingForm.inventory_source,
+    //   //       target_customers: existingForm.target_customers,
+    //   //       marketing_channels: existingForm.marketing_channels,
+    //   //       marketing_challenges: existingForm.marketing_challenges,
+    //   //       avg_monthly_sales: existingForm.avg_monthly_sales,
+    //   //       annual_sale: existingForm.annual_sale,
+    //   //     });
+
+    //   //     // NEW: Preview of Mapped Backend Keys (to check for NULLs)
+    //   //     console.log('%c [BACKEND KEY MAPPING PREVIEW]', 'color: #2b7;');
+    //   //     console.log({
+    //   //       enterprise_id: 'Will be Linked on Submit',
+    //   //       source_of_inventory: existingForm.inventory_source,
+    //   //       shop_category: existingForm.shop_sub_category,
+    //   //       avg_annual_sales: existingForm.annual_sale,
+    //   //     });
+    //   //   } else {
+    //   //     // Create a clean preview table for all products
+    //   //     const productPreview = existingForm.products.map((p, i) => {
+    //   //       return {
+    //   //         'Prod #': i + 1,
+    //   //         Name: p.main_product_name || 'N/A',
+    //   //         MRP: p.product_mrp || '0',
+    //   //         Capacity: p.production_capacity,
+    //   //         'Raw Material': p.raw_material
+    //   //           ? p.raw_material.substring(0, 15) + '...'
+    //   //           : 'N/A',
+    //   //         'Monthly Sales': p.avg_monthly_sales,
+    //   //         'Annual Sales': p.avg_annual_sales,
+    //   //         'Digital Pay': p.accept_digital_payment,
+    //   //         'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${p.media?.close_box?.length || 0
+    //   //           } / ${p.media?.others?.length || 0}`,
+    //   //       };
+    //   //     });
+    //   //     console.table(productPreview);
+
+    //   //     // Detailed log for the first product to verify raw fields
+    //   //     console.log(
+    //   //       'Full Object Preview (Product 1):',
+    //   //       existingForm.products[0],
+    //   //     );
+    //   //   }
+    //   // }
+    //   if (currentSectionIndex === 2) {
+    //     let error = null;
+
+    //     if (existingForm.has_shop_product === 'Yes') {
+    //       error = validateShopSection(existingForm);
+    //     } else if (existingForm.has_shop_product === 'No') {
+    //       error = validateProducts(existingForm.products);
+    //     } else {
+    //       error = 'Please select Yes or No';
+    //     }
+
+    //     if (error) {
+    //       Alert.alert('Validation Error', error);
+    //       return;
+    //     }
+    //   }
+
+    //   // SECTION 3: INVESTMENT & MANDATORY FUNDS
+    //   if (currentSectionIndex === 3) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 3: INVESTMENT & SHG FUNDS ',
+    //       'background: #2b7; color: #fff; font-weight: bold;',
+    //     );
+
+    //     const investmentData = {
+    //       'Initial Investment': existingForm.initial_investment || '0',
+    //       'Monthly Income Estimate':
+    //         existingForm.monthly_income_estimate || '0',
+    //       'Monthly Working Capital':
+    //         existingForm.working_capital_monthly || '0',
+    //       'Annual Turnover (Calc)': existingForm.annual_turnover || 0,
+    //       'Gross Profit (Calc)': existingForm.gross_profit || 0,
+    //       'Has SHG Mandatory Fund': existingForm.has_shg_cif || 'No',
+    //     };
+
+    //     console.log('A) Investment Summary:');
+    //     console.table(investmentData);
+
+    //     // 2. Log SHG Fund Cards specifically
+    //     if (existingForm.fund_cards && existingForm.fund_cards.length > 0) {
+    //       const shgFundsTable = existingForm.fund_cards.map((card, i) => {
+    //         const received = parseFloat(card.amount_received || 0);
+    //         const repaid = parseFloat(card.amount_repaid || 0);
+
+    //         // Calculate Status based on your Backend choices
+    //         let statusForDB = 'NOT PAID';
+    //         if (repaid > 0) {
+    //           statusForDB = repaid >= received ? 'PAID' : 'PARTIALLY PAID';
+    //         }
+
+    //         return {
+    //           'Fund Type':
+    //             card.loanType === 'Other'
+    //               ? card.otherLoanTypeText
+    //               : card.loanType,
+    //           'Amt Received': card.amount_received,
+    //           'Amt Repaid': card.amount_repaid,
+    //           Pending: (received - repaid).toFixed(2),
+    //           'Status (Final)': statusForDB,
+    //         };
+    //       });
+
+    //       console.log('B) SHG Mandatory Funds Detail:');
+    //       console.table(shgFundsTable);
+    //     } else {
+    //       console.log('B) SHG Mandatory Funds: No cards added.');
+    //     }
+
+    //     console.log('==================================================');
+    //   }
+    //   // SECTION 4: LOANS & SUBSIDIES
+    //   if (currentSectionIndex === 4) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 4: LOAN & SUBSIDY DATA LOG ',
+    //       'background: #222; color: #fff; font-weight: bold;',
+    //     );
+
+    //     if (existingForm.loans && existingForm.loans.length > 0) {
+    //       const loanPreview = existingForm.loans.map((l, i) => {
+    //         const total = parseFloat(l.loan_amount || 0);
+    //         const repaid = parseFloat(l.repaid_amount || 0);
+    //         const allDepts = Array.isArray(l.institution_tree)
+    //           ? l.institution_tree.map(item => item.parent).join(', ')
+    //           : 'None';
+
+    //         return {
+    //           'Loan #': i + 1,
+    //           Dept: allDepts,
+    //           Bank: l.bank_name,
+    //           Branch: l.branch_name,
+    //           Amt: l.loan_amount,
+    //           Repaid: l.repaid_amount,
+    //           Status: repaid >= total ? 'PAID' : 'PARTIALLY',
+    //           date: l.date_taken,
+    //           institution: l.institution_name,
+    //         };
+    //       });
+    //       console.table(loanPreview);
+    //     } else {
+    //       console.log('Loans: No records added.');
+    //     }
+    //     //  SUBSIDY LOG
+    //     if (existingForm.subsidies && existingForm.subsidies.length > 0) {
+    //       console.log('%c [SUBSIDIES]', 'color: #2b7; font-weight: bold;');
+    //       const subsidyPreview = existingForm.subsidies.map((s, i) => {
+    //         // Get Departments (Parents)
+    //         const depts = Array.isArray(s.subsidy_name_tree)
+    //           ? s.subsidy_name_tree.map(item => item.parent).join(', ')
+    //           : 'None';
+
+    //         // Get Schemes (Children) + Others specify
+    //         const schemes = Array.isArray(s.subsidy_name_tree)
+    //           ? s.subsidy_name_tree
+    //             .map(item => {
+    //               let childStr = (item.children || []).join(', ');
+    //               if (item.others_specify)
+    //                 childStr += ` (${item.others_specify})`;
+    //               return childStr;
+    //             })
+    //             .join(' | ')
+    //           : 'None';
+
+    //         return {
+    //           'Subsidy #': i + 1,
+    //           'Type (Dept)': depts,
+    //           'Name (Schemes)': schemes,
+    //           Detail: s.subsidy_detail,
+    //           DB_ID: s.id || 'New',
+    //         };
+    //       });
+    //       console.table(subsidyPreview);
+    //     } else {
+    //       console.log('Subsidies: No records added.');
+    //     }
+    //     console.log('==================================================');
+    //   }
+
+    //   // SECTION 5: TRAINING & SKILLS
+    //   if (currentSectionIndex === 5) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 5: TRAINING DATA LOG ',
+    //       'background: #000; color: #fff; font-weight: bold;',
+    //     );
+
+    //     const logRows = (label, rows) => {
+    //       if (!rows || rows.length === 0) {
+    //         console.log(`${label}: No data.`);
+    //         return;
+    //       }
+    //       const tableData = rows.map((r, i) => ({
+    //         Type: label,
+    //         Sector_Type: r.sector_tree?.[0]?.parent || 'N/A',
+    //         Sector: r.sector_tree?.[0]?.children?.join(', ') || 'N/A',
+    //         Dept: r.department,
+    //         Tr_Type: r.training_type,
+    //         Files: r.certificates_files?.length || 0,
+    //         duration: r.duration,
+    //         location: r.location,
+    //       }));
+    //       console.table(tableData);
+    //     };
+
+    //     logRows('Received (rec)', existingForm.training_received_rows);
+    //     logRows('Required (req)', existingForm.training_required_rows);
+    //     console.log('==================================================');
+    //   }
+
+    //   // SECTION 6: SUPPORT REQUIRED
+    //   if (currentSectionIndex === 6) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 6: SUPPORT REQUIRED SUMMARY ',
+    //       'background: #2b7; color: #fff; font-weight: bold;',
+    //     );
+
+    //     const supportObj = existingForm.support_required;
+    //     const mainStatus = existingForm.is_support_required || 'Not Selected';
+
+    //     if (supportObj && Object.keys(supportObj).length > 0) {
+    //       const flattenedTable = Object.keys(supportObj).map(key => {
+    //         const data = supportObj[key];
+
+    //         if (key === 'financial') {
+    //           return {
+    //             suport_category: 'Financial',
+    //             support_sub_category: data.type,
+    //             support_description:
+    //               data.type === 'Loan' ? data.amount : data.spec,
+    //             Status: mainStatus,
+    //           };
+    //         }
+    //         if (key === 'infrastructure') {
+    //           return {
+    //             suport_category: 'Infrastructure',
+    //             support_sub_category: data.type,
+    //             support_description: data.spec,
+    //             Status: mainStatus,
+    //           };
+    //         }
+
+    //         return {
+    //           suport_category: key.charAt(0).toUpperCase() + key.slice(1),
+    //           support_sub_category: 'Direct Entry',
+    //           support_description: data,
+    //           Status: mainStatus,
+    //         };
+    //       });
+
+    //       console.table(flattenedTable);
+    //     } else {
+    //       console.log(
+    //         `Support Status: ${mainStatus}. User selected no checked.`,
+    //       );
+    //     }
+    //     console.log('==================================================');
+    //   }
+
+    //   // SECTION 7: GENERAL MEDIA (Entrepreneur/Enterprise)
+    //   if (currentSectionIndex === 7) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 7: GENERAL MEDIA UPLOAD SUMMARY ',
+    //       'background: #7b1fa2; color: #fff; font-weight: bold;',
+    //     );
+
+    //     const mediaSummary = {
+    //       'Entrepreneur Photos': {
+    //         count: existingForm.media?.photo_entrepreneur?.length || 0,
+    //         status:
+    //           existingForm.media?.photo_entrepreneur?.length > 0
+    //             ? '✅ ATTACHED'
+    //             : '❌ MISSING',
+    //       },
+    //       'Enterprise Photos': {
+    //         count: existingForm.media?.photo_enterprise?.length || 0,
+    //         status:
+    //           existingForm.media?.photo_enterprise?.length > 0
+    //             ? '✅ ATTACHED'
+    //             : '❌ MISSING',
+    //       },
+    //       'Declaration Signature': {
+    //         count: existingForm.media?.declaration_signature?.length || 0,
+    //         status:
+    //           existingForm.media?.declaration_signature?.length > 0
+    //             ? '✅ ATTACHED'
+    //             : '❌ MISSING',
+    //       },
+    //     };
+
+    //     console.table(mediaSummary);
+
+    //     // Log a quick URI check for the first file to ensure they aren't empty objects
+    //     if (existingForm.media?.photo_entrepreneur?.[0]) {
+    //       console.log(
+    //         'Sample Asset URI:',
+    //         existingForm.media.photo_entrepreneur[0].uri,
+    //       );
+    //     }
+    //     console.log('==================================================');
+    //   }
+
+    //   // SECTION 8: DECLARATION STATUS
+    //   if (currentSectionIndex === 8) {
+    //     console.log('==================================================');
+    //     console.log(
+    //       '%c SECTION 8: FINAL DECLARATION STATUS ',
+    //       'background: #EE6969; color: #fff; font-weight: bold;',
+    //     );
+
+    //     const declarationStatus = {
+    //       'Confirmed By User': existingForm.declaration_confirmed || 'No',
+    //       'Submission Date': existingForm.declaration_date || 'Not Provided',
+    //       'Validation Passed':
+    //         existingForm.declaration_confirmed === 'Yes'
+    //           ? '✅ READY'
+    //           : '❌ ACTION REQUIRED',
+    //     };
+
+    //     console.table(declarationStatus);
+
+    //     // Final payload check before the user hits the actual Submit button
+    //     console.log(
+    //       '%c [FINAL FORM PREVIEW]',
+    //       'color: #2b7; font-weight: bold;',
+    //     );
+    //     console.log('Enterprise Name:', existingForm.enterprise_name);
+    //     console.log('Total Products:', existingForm.products?.length || 0);
+    //     console.log('Total Loans:', existingForm.loans?.length || 0);
+
+    //     console.log('==================================================');
+    //   }
+    //   setCurrentSectionIndex(prev =>
+    //     prev < TOTAL_SECTIONS - 1 ? prev + 1 : prev,
+    //   );
+    // };
+
     const handleNext = () => {
       console.log('==================================================');
       console.log(
@@ -1783,200 +2307,69 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         'background: #EE6969; color: #fff; font-weight: bold;',
       );
 
-      // SECTION 0: BASIC INFO & LICENSES
+      let canProceed = true;
+
+      // ================= SECTION 0 =================
       if (currentSectionIndex === 0) {
-
         if (!existingForm.enterprise_name?.trim()) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया उद्यम का नाम दर्ज करें।'
-              : 'Please enter the enterprise name.'
-          );
-          return;
-        }
-        if (!validateLicenses()) return;
-        if (!existingForm.enterprise_types_tree || existingForm.enterprise_types_tree.length === 0) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया उद्यम का प्रकार चुनें।'
-              : 'Please select enterprise type.'
-          );
-          return;
-        }
-
-        if (!existingForm.ownership_type) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया स्वामित्व प्रकार चुनें।'
-              : 'Please select ownership type.'
-          );
-          return;
-        }
-
-        if (
+          Alert.alert('Validation', 'Please enter the enterprise name.');
+          canProceed = false;
+        } else if (!validateLicenses()) {
+          canProceed = false;
+        } else if (!existingForm.enterprise_types_tree?.length) {
+          Alert.alert('Validation', 'Please select enterprise type.');
+          canProceed = false;
+        } else if (!existingForm.ownership_type) {
+          Alert.alert('Validation', 'Please select ownership type.');
+          canProceed = false;
+        } else if (
           existingForm.ownership_type === 'Others' &&
           !existingForm.ownership_type_other?.trim()
         ) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया स्वामित्व का विवरण दें।'
-              : 'Please specify ownership type.'
-          );
-          return;
-        }
-
-        if (!existingForm.year_of_establishment) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया स्थापना वर्ष चुनें।'
-              : 'Please select year of establishment.'
-          );
-          return;
-        }
-
-        if (existingForm.total_emp === '' || existingForm.total_emp === undefined) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया कुल कर्मचारियों की संख्या दर्ज करें।'
-              : 'Please enter total employees.'
-          );
-          return;
-        }
-
-        if (
+          Alert.alert('Validation', 'Please specify ownership type.');
+          canProceed = false;
+        } else if (!existingForm.year_of_establishment) {
+          Alert.alert('Validation', 'Please select year of establishment.');
+          canProceed = false;
+        } else if (
+          existingForm.total_emp === '' ||
+          existingForm.total_emp === undefined
+        ) {
+          Alert.alert('Validation', 'Please enter total employees.');
+          canProceed = false;
+        } else if (
           existingForm.number_of_shg_emp === '' ||
           existingForm.number_of_shg_emp === undefined
         ) {
+          Alert.alert('Validation', 'Please enter SHG employees count.');
+          canProceed = false;
+        } else if (!existingForm.owner_cadre?.length) {
           Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया SHG कर्मचारियों की संख्या दर्ज करें।'
-              : 'Please enter SHG employees count.'
+            'Validation',
+            'Please select at least one cadre activity.',
           );
-          return;
-        }
-
-        if (!existingForm.owner_cadre || existingForm.owner_cadre.length === 0) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया कम से कम एक कैडर गतिविधि चुनें।'
-              : 'Please select at least one cadre activity.'
-          );
-          return;
-        }
-
-        if (
-          existingForm.owner_cadre?.includes('Other') &&
+          canProceed = false;
+        } else if (
+          existingForm.owner_cadre.includes('Other') &&
           !existingForm.owner_cadre_other?.trim()
         ) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया अन्य कैडर गतिविधि दर्ज करें।'
-              : 'Please specify other cadre activity.'
-          );
-          return;
+          Alert.alert('Validation', 'Please specify other cadre activity.');
+          canProceed = false;
+        } else if (!existingForm.owner_designation?.length) {
+          Alert.alert('Validation', 'Please select your designation.');
+          canProceed = false;
         }
-        if (!existingForm.owner_designation || existingForm.owner_designation.length === 0) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया SHG में अपना पद चुनें।'
-              : 'Please select your SHG designation.'
-          );
-          return;
-        }
-
-
-
-        // LICENSE VALIDATION
-
-        console.log('--- SECTION 0 (BASIC INFO) ---');
-        console.log('Enterprise Name:', existingForm.enterprise_name);
-        console.log('Enterprise Type:', existingForm.enterprise_types_tree);
-        console.log('Owner Cadre:', existingForm.owner_cadre);
-        console.log('Owner Designation:', existingForm.owner_designation);
-        console.log(
-          'Selected Licenses:',
-          JSON.stringify(existingForm.licenses, null, 2),
-        );
       }
 
-      // SECTION 1: ENTERPRISE DETAILS (INFRA)
-      if (currentSectionIndex === 1) {
-        if (!validateEnterpriseDetails()) return;
-
-        console.log('--- SECTION 1 (INFRASTRUCTURE) ---', {
-          workplace: existingForm.workplace_type,
-          electricity: existingForm.electricity_available,
-          water: existingForm.water_available,
-          transportation: existingForm.transportation_availability,
-        });
+      // ================= SECTION 1 =================
+      if (currentSectionIndex === 1 && canProceed) {
+        if (!validateEnterpriseDetails()) {
+          canProceed = false;
+        }
       }
-      // SECTION 2: SHOP BASED OR PRODUCT BASED
-      // if (currentSectionIndex === 2) {
-      //   console.log('--- SECTION 2 (SHOP & PRODUCT DETAIL) ---');
-      //   console.log('Has Shop Product:', existingForm.has_shop_product);
 
-      //   if (existingForm.has_shop_product === 'Yes') {
-      //     console.log(
-      //       '%c [SHOP DATA SET]',
-      //       'color: orange; font-weight: bold;',
-      //     );
-      //     console.table({
-      //       shop_type: existingForm.shop_type,
-      //       sub_category: existingForm.shop_sub_category,
-      //       inventory_source: existingForm.inventory_source,
-      //       target_customers: existingForm.target_customers,
-      //       marketing_channels: existingForm.marketing_channels,
-      //       marketing_challenges: existingForm.marketing_challenges,
-      //       avg_monthly_sales: existingForm.avg_monthly_sales,
-      //       annual_sale: existingForm.annual_sale,
-      //     });
-
-      //     // NEW: Preview of Mapped Backend Keys (to check for NULLs)
-      //     console.log('%c [BACKEND KEY MAPPING PREVIEW]', 'color: #2b7;');
-      //     console.log({
-      //       enterprise_id: 'Will be Linked on Submit',
-      //       source_of_inventory: existingForm.inventory_source,
-      //       shop_category: existingForm.shop_sub_category,
-      //       avg_annual_sales: existingForm.annual_sale,
-      //     });
-      //   } else {
-      //     // Create a clean preview table for all products
-      //     const productPreview = existingForm.products.map((p, i) => {
-      //       return {
-      //         'Prod #': i + 1,
-      //         Name: p.main_product_name || 'N/A',
-      //         MRP: p.product_mrp || '0',
-      //         Capacity: p.production_capacity,
-      //         'Raw Material': p.raw_material
-      //           ? p.raw_material.substring(0, 15) + '...'
-      //           : 'N/A',
-      //         'Monthly Sales': p.avg_monthly_sales,
-      //         'Annual Sales': p.avg_annual_sales,
-      //         'Digital Pay': p.accept_digital_payment,
-      //         'Media (O / C / Other)': `${p.media?.open_box?.length || 0} / ${p.media?.close_box?.length || 0
-      //           } / ${p.media?.others?.length || 0}`,
-      //       };
-      //     });
-      //     console.table(productPreview);
-
-      //     // Detailed log for the first product to verify raw fields
-      //     console.log(
-      //       'Full Object Preview (Product 1):',
-      //       existingForm.products[0],
-      //     );
-      //   }
-      // }
-      if (currentSectionIndex === 2) {
+      // ================= SECTION 2 =================
+      if (currentSectionIndex === 2 && canProceed) {
         let error = null;
 
         if (existingForm.has_shop_product === 'Yes') {
@@ -1989,287 +2382,813 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
         if (error) {
           Alert.alert('Validation Error', error);
+          canProceed = false;
+        }
+      }
+
+      // ================= SECTION 3 =================
+      if (currentSectionIndex === 3 && canProceed) {
+        const initial = existingForm.initial_investment;
+        const monthlyIncome = existingForm.monthly_income_estimate;
+        const workingCapital = existingForm.working_capital_monthly;
+        const hasShg = existingForm.has_shg_cif;
+        const fundCards = existingForm.fund_cards || [];
+        const sourceTree = existingForm.source_of_investment_tree;
+
+        const isInvalid = val => {
+          return (
+            val === null ||
+            val === undefined ||
+            String(val).trim() === '' ||
+            isNaN(Number(val)) ||
+            Number(val) <= 0
+          );
+        };
+
+        //  BASIC VALIDATIONS
+        if (isInvalid(initial)) {
+          Alert.alert(
+            'Validation',
+            'Please enter valid Initial Investment (> 0)',
+          );
+          canProceed = false;
+        }
+
+        if (canProceed && isInvalid(monthlyIncome)) {
+          Alert.alert('Validation', 'Please enter valid Monthly Income (> 0)');
+          canProceed = false;
+        }
+
+        if (canProceed && isInvalid(workingCapital)) {
+          Alert.alert(
+            'Validation',
+            'Please enter valid Monthly Working Capital (> 0)',
+          );
+          canProceed = false;
+        }
+
+        //  SHG VALIDATION
+        if (canProceed && !hasShg) {
+          Alert.alert('Validation', 'Please select SHG fund option');
+          canProceed = false;
+        }
+
+        //  FUND CARDS VALIDATION
+        if (canProceed && hasShg === 'Yes') {
+          if (fundCards.length === 0) {
+            Alert.alert('Validation', 'Please add at least one fund');
+            canProceed = false;
+          } else {
+            for (let i = 0; i < fundCards.length; i++) {
+              const card = fundCards[i];
+
+              if (!card.loanType) {
+                Alert.alert('Validation', `Select fund type in card ${i + 1}`);
+                canProceed = false;
+                break;
+              }
+
+              if (
+                card.loanType === 'Other' &&
+                !card.otherLoanTypeText?.trim()
+              ) {
+                Alert.alert(
+                  'Validation',
+                  `Specify other fund type in card ${i + 1}`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (!card.has_received) {
+                Alert.alert(
+                  'Validation',
+                  `Select received option in card ${i + 1}`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (card.has_received === 'Yes') {
+                if (isInvalid(card.amount_received)) {
+                  Alert.alert(
+                    'Validation',
+                    `Enter valid received amount in card ${i + 1}`,
+                  );
+                  canProceed = false;
+                  break;
+                }
+
+                if (isInvalid(card.amount_repaid)) {
+                  Alert.alert(
+                    'Validation',
+                    `Enter valid repaid amount in card ${i + 1}`,
+                  );
+                  canProceed = false;
+                  break;
+                }
+
+                if (Number(card.amount_repaid) > Number(card.amount_received)) {
+                  Alert.alert(
+                    'Validation',
+                    `Repaid cannot exceed received (card ${i + 1})`,
+                  );
+                  canProceed = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        //  SOURCE OF INVESTMENT (NOW ALWAYS RUNS)
+        if (canProceed && (!sourceTree || sourceTree.length === 0)) {
+          Alert.alert('Validation', 'Please select source of investment');
+          canProceed = false;
+        }
+      }
+      // ================= SECTION 4 =================
+      // ================= SECTION 4 =================
+      if (currentSectionIndex === 4 && canProceed) {
+        const isInvalidNumber = val => {
+          return (
+            val === null ||
+            val === undefined ||
+            String(val).trim() === '' ||
+            isNaN(Number(val))
+          );
+        };
+
+        /* ================= LOAN VALIDATION ================= */
+        if (!existingForm.has_taken_loan) {
+          Alert.alert('Validation', 'Please select if you have taken a loan');
+          canProceed = false;
           return;
         }
-      }
 
-      // SECTION 3: INVESTMENT & MANDATORY FUNDS
-      if (currentSectionIndex === 3) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 3: INVESTMENT & SHG FUNDS ',
-          'background: #2b7; color: #fff; font-weight: bold;',
-        );
-
-        const investmentData = {
-          'Initial Investment': existingForm.initial_investment || '0',
-          'Monthly Income Estimate':
-            existingForm.monthly_income_estimate || '0',
-          'Monthly Working Capital':
-            existingForm.working_capital_monthly || '0',
-          'Annual Turnover (Calc)': existingForm.annual_turnover || 0,
-          'Gross Profit (Calc)': existingForm.gross_profit || 0,
-          'Has SHG Mandatory Fund': existingForm.has_shg_cif || 'No',
-        };
-
-        console.log('A) Investment Summary:');
-        console.table(investmentData);
-
-        // 2. Log SHG Fund Cards specifically
-        if (existingForm.fund_cards && existingForm.fund_cards.length > 0) {
-          const shgFundsTable = existingForm.fund_cards.map((card, i) => {
-            const received = parseFloat(card.amount_received || 0);
-            const repaid = parseFloat(card.amount_repaid || 0);
-
-            // Calculate Status based on your Backend choices
-            let statusForDB = 'NOT PAID';
-            if (repaid > 0) {
-              statusForDB = repaid >= received ? 'PAID' : 'PARTIALLY PAID';
-            }
-
-            return {
-              'Fund Type':
-                card.loanType === 'Other'
-                  ? card.otherLoanTypeText
-                  : card.loanType,
-              'Amt Received': card.amount_received,
-              'Amt Repaid': card.amount_repaid,
-              Pending: (received - repaid).toFixed(2),
-              'Status (Final)': statusForDB,
-            };
-          });
-
-          console.log('B) SHG Mandatory Funds Detail:');
-          console.table(shgFundsTable);
-        } else {
-          console.log('B) SHG Mandatory Funds: No cards added.');
-        }
-
-        console.log('==================================================');
-      }
-      // SECTION 4: LOANS & SUBSIDIES
-      if (currentSectionIndex === 4) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 4: LOAN & SUBSIDY DATA LOG ',
-          'background: #222; color: #fff; font-weight: bold;',
-        );
-
-        if (existingForm.loans && existingForm.loans.length > 0) {
-          const loanPreview = existingForm.loans.map((l, i) => {
-            const total = parseFloat(l.loan_amount || 0);
-            const repaid = parseFloat(l.repaid_amount || 0);
-            const allDepts = Array.isArray(l.institution_tree)
-              ? l.institution_tree.map(item => item.parent).join(', ')
-              : 'None';
-
-            return {
-              'Loan #': i + 1,
-              Dept: allDepts,
-              Bank: l.bank_name,
-              Branch: l.branch_name,
-              Amt: l.loan_amount,
-              Repaid: l.repaid_amount,
-              Status: repaid >= total ? 'PAID' : 'PARTIALLY',
-              date: l.date_taken,
-              institution: l.institution_name,
-            };
-          });
-          console.table(loanPreview);
-        } else {
-          console.log('Loans: No records added.');
-        }
-        //  SUBSIDY LOG
-        if (existingForm.subsidies && existingForm.subsidies.length > 0) {
-          console.log('%c [SUBSIDIES]', 'color: #2b7; font-weight: bold;');
-          const subsidyPreview = existingForm.subsidies.map((s, i) => {
-            // Get Departments (Parents)
-            const depts = Array.isArray(s.subsidy_name_tree)
-              ? s.subsidy_name_tree.map(item => item.parent).join(', ')
-              : 'None';
-
-            // Get Schemes (Children) + Others specify
-            const schemes = Array.isArray(s.subsidy_name_tree)
-              ? s.subsidy_name_tree
-                .map(item => {
-                  let childStr = (item.children || []).join(', ');
-                  if (item.others_specify)
-                    childStr += ` (${item.others_specify})`;
-                  return childStr;
-                })
-                .join(' | ')
-              : 'None';
-
-            return {
-              'Subsidy #': i + 1,
-              'Type (Dept)': depts,
-              'Name (Schemes)': schemes,
-              Detail: s.subsidy_detail,
-              DB_ID: s.id || 'New',
-            };
-          });
-          console.table(subsidyPreview);
-        } else {
-          console.log('Subsidies: No records added.');
-        }
-        console.log('==================================================');
-      }
-
-      // SECTION 5: TRAINING & SKILLS
-      if (currentSectionIndex === 5) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 5: TRAINING DATA LOG ',
-          'background: #000; color: #fff; font-weight: bold;',
-        );
-
-        const logRows = (label, rows) => {
-          if (!rows || rows.length === 0) {
-            console.log(`${label}: No data.`);
+        if (existingForm.has_taken_loan === 'Yes') {
+          if (!existingForm.loans || existingForm.loans.length === 0) {
+            Alert.alert('Validation', 'Please add at least one loan');
+            canProceed = false;
             return;
           }
-          const tableData = rows.map((r, i) => ({
-            Type: label,
-            Sector_Type: r.sector_tree?.[0]?.parent || 'N/A',
-            Sector: r.sector_tree?.[0]?.children?.join(', ') || 'N/A',
-            Dept: r.department,
-            Tr_Type: r.training_type,
-            Files: r.certificates_files?.length || 0,
-            duration: r.duration,
-            location: r.location,
-          }));
-          console.table(tableData);
-        };
 
-        logRows('Received (rec)', existingForm.training_received_rows);
-        logRows('Required (req)', existingForm.training_required_rows);
-        console.log('==================================================');
-      }
+          for (let i = 0; i < existingForm.loans.length; i++) {
+            const loan = existingForm.loans[i];
 
-      // SECTION 6: SUPPORT REQUIRED
-      if (currentSectionIndex === 6) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 6: SUPPORT REQUIRED SUMMARY ',
-          'background: #2b7; color: #fff; font-weight: bold;',
-        );
-
-        const supportObj = existingForm.support_required;
-        const mainStatus = existingForm.is_support_required || 'Not Selected';
-
-        if (supportObj && Object.keys(supportObj).length > 0) {
-          const flattenedTable = Object.keys(supportObj).map(key => {
-            const data = supportObj[key];
-
-            if (key === 'financial') {
-              return {
-                suport_category: 'Financial',
-                support_sub_category: data.type,
-                support_description:
-                  data.type === 'Loan' ? data.amount : data.spec,
-                Status: mainStatus,
-              };
-            }
-            if (key === 'infrastructure') {
-              return {
-                suport_category: 'Infrastructure',
-                support_sub_category: data.type,
-                support_description: data.spec,
-                Status: mainStatus,
-              };
+            /* ===== Institution ===== */
+            if (!loan.institution_tree || loan.institution_tree.length === 0) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Please select institution`,
+              );
+              canProceed = false;
+              return;
             }
 
-            return {
-              suport_category: key.charAt(0).toUpperCase() + key.slice(1),
-              support_sub_category: 'Direct Entry',
-              support_description: data,
-              Status: mainStatus,
-            };
-          });
+            /* ===== Bank ===== */
+            if (!loan.bank_name) {
+              Alert.alert('Validation', `Loan ${i + 1}: Please select bank`);
+              canProceed = false;
+              return;
+            }
 
-          console.table(flattenedTable);
-        } else {
-          console.log(
-            `Support Status: ${mainStatus}. User selected no checked.`,
-          );
+            if (
+              loan.bank_name === 'OTHER' &&
+              (!loan.other_bank_name || loan.other_bank_name.trim() === '')
+            ) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Please enter bank name`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            /* ===== Branch ===== */
+            if (!loan.branch_name || loan.branch_name.trim() === '') {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Please enter branch name`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            /* ===== Loan Amount ===== */
+            if (
+              isInvalidNumber(loan.loan_amount) ||
+              Number(loan.loan_amount) <= 0
+            ) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Enter valid loan amount (> 0)`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            const loanAmount = Number(loan.loan_amount);
+
+            /* ===== Repaid Amount (FIXED PROPERLY) ===== */
+            if (isInvalidNumber(loan.repaid_amount)) {
+              Alert.alert('Validation', `Loan ${i + 1}: Enter repaid amount`);
+              canProceed = false;
+              return;
+            }
+
+            const repaidAmount = Number(loan.repaid_amount);
+
+            if (repaidAmount < 0) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Repaid amount cannot be negative`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            if (repaidAmount > loanAmount) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Repaid amount cannot exceed loan amount`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            /* ===== Date Validation (STRICT) ===== */
+            if (!loan.date_taken) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Please select loan date`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            const date = new Date(loan.date_taken);
+            const today = new Date();
+
+            if (isNaN(date.getTime())) {
+              Alert.alert('Validation', `Loan ${i + 1}: Invalid date format`);
+              canProceed = false;
+              return;
+            }
+
+            if (date > today) {
+              Alert.alert(
+                'Validation',
+                `Loan ${i + 1}: Future date not allowed`,
+              );
+              canProceed = false;
+              return;
+            }
+          }
         }
-        console.log('==================================================');
-      }
 
-      // SECTION 7: GENERAL MEDIA (Entrepreneur/Enterprise)
-      if (currentSectionIndex === 7) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 7: GENERAL MEDIA UPLOAD SUMMARY ',
-          'background: #7b1fa2; color: #fff; font-weight: bold;',
-        );
-
-        const mediaSummary = {
-          'Entrepreneur Photos': {
-            count: existingForm.media?.photo_entrepreneur?.length || 0,
-            status:
-              existingForm.media?.photo_entrepreneur?.length > 0
-                ? '✅ ATTACHED'
-                : '❌ MISSING',
-          },
-          'Enterprise Photos': {
-            count: existingForm.media?.photo_enterprise?.length || 0,
-            status:
-              existingForm.media?.photo_enterprise?.length > 0
-                ? '✅ ATTACHED'
-                : '❌ MISSING',
-          },
-          'Declaration Signature': {
-            count: existingForm.media?.declaration_signature?.length || 0,
-            status:
-              existingForm.media?.declaration_signature?.length > 0
-                ? '✅ ATTACHED'
-                : '❌ MISSING',
-          },
-        };
-
-        console.table(mediaSummary);
-
-        // Log a quick URI check for the first file to ensure they aren't empty objects
-        if (existingForm.media?.photo_entrepreneur?.[0]) {
-          console.log(
-            'Sample Asset URI:',
-            existingForm.media.photo_entrepreneur[0].uri,
-          );
+        /* ================= SUBSIDY VALIDATION ================= */
+        if (!existingForm.has_receieved_subsidy) {
+          Alert.alert('Validation', 'Please select if you received subsidy');
+          canProceed = false;
+          return;
         }
-        console.log('==================================================');
+
+        if (existingForm.has_receieved_subsidy === 'Yes') {
+          if (!existingForm.subsidies || existingForm.subsidies.length === 0) {
+            Alert.alert('Validation', 'Please add at least one subsidy');
+            canProceed = false;
+            return;
+          }
+
+          for (let i = 0; i < existingForm.subsidies.length; i++) {
+            const sub = existingForm.subsidies[i];
+
+            /* ===== Scheme Selection ===== */
+            if (!sub.subsidy_name_tree || sub.subsidy_name_tree.length === 0) {
+              Alert.alert(
+                'Validation',
+                `Subsidy ${i + 1}: Please select department/scheme`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            /* ===== Detail ===== */
+            if (!sub.subsidy_detail || sub.subsidy_detail.trim() === '') {
+              Alert.alert(
+                'Validation',
+                `Subsidy ${i + 1}: Please enter subsidy details`,
+              );
+              canProceed = false;
+              return;
+            }
+
+            /* ===== OPTIONAL: Prevent useless input ===== */
+            if (sub.subsidy_detail.trim().length < 3) {
+              Alert.alert(
+                'Validation',
+                `Subsidy ${i + 1}: Please enter meaningful details`,
+              );
+              canProceed = false;
+              return;
+            }
+          }
+        }
+
+        console.log(' SECTION 4 VALIDATED SUCCESSFULLY');
       }
 
-      // SECTION 8: DECLARATION STATUS
-      if (currentSectionIndex === 8) {
-        console.log('==================================================');
-        console.log(
-          '%c SECTION 8: FINAL DECLARATION STATUS ',
-          'background: #EE6969; color: #fff; font-weight: bold;',
-        );
+      // ================= SECTION 5 =================
+      // ================= SECTION 5 =================
+      if (currentSectionIndex === 5 && canProceed) {
+        const isEmpty = val =>
+          val === null ||
+          val === undefined ||
+          (typeof val === 'string' && val.trim() === '') ||
+          (Array.isArray(val) && val.length === 0);
 
-        const declarationStatus = {
-          'Confirmed By User': existingForm.declaration_confirmed || 'No',
-          'Submission Date': existingForm.declaration_date || 'Not Provided',
-          'Validation Passed':
-            existingForm.declaration_confirmed === 'Yes'
-              ? '✅ READY'
-              : '❌ ACTION REQUIRED',
-        };
+        /* ===== TRAINING RECEIVED ===== */
+        if (!existingForm.is_training_received) {
+          Alert.alert('Validation', 'Please select if training is received.');
+          canProceed = false;
+        }
 
-        console.table(declarationStatus);
+        if (canProceed && existingForm.is_training_received === 'Yes') {
+          const rows = existingForm.training_received_rows || [];
 
-        // Final payload check before the user hits the actual Submit button
-        console.log(
-          '%c [FINAL FORM PREVIEW]',
-          'color: #2b7; font-weight: bold;',
-        );
-        console.log('Enterprise Name:', existingForm.enterprise_name);
-        console.log('Total Products:', existingForm.products?.length || 0);
-        console.log('Total Loans:', existingForm.loans?.length || 0);
+          if (rows.length === 0) {
+            Alert.alert(
+              'Validation',
+              'Please add at least one training received.',
+            );
+            canProceed = false;
+          } else {
+            for (let i = 0; i < rows.length; i++) {
+              const row = rows[i];
 
-        console.log('==================================================');
+              if (isEmpty(row.department)) {
+                Alert.alert(
+                  'Validation',
+                  `Training ${i + 1}: Please select department`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (
+                row.department === 'Others' &&
+                isEmpty(row.department_other)
+              ) {
+                Alert.alert(
+                  'Validation',
+                  `Training ${i + 1}: Please specify department`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.sector_tree)) {
+                Alert.alert(
+                  'Validation',
+                  `Training ${i + 1}: Please select sector`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (
+                row.sector_tree.includes('Others') &&
+                isEmpty(row.other_sector_detail)
+              ) {
+                Alert.alert(
+                  'Validation',
+                  `Training ${i + 1}: Please specify other sector`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              // OPTIONAL: certificates check (only if you want strict)
+              // if (!row.certificates_files?.length) {
+              //   Alert.alert(
+              //     'Validation',
+              //     `Training ${i + 1}: Please upload at least one certificate`,
+              //   );
+              //   canProceed = false;
+              //   break;
+              // }
+            }
+          }
+        }
+
+        /* ===== TRAINING REQUIRED ===== */
+        if (canProceed && !existingForm.is_training_required) {
+          Alert.alert('Validation', 'Please select if training is required.');
+          canProceed = false;
+        }
+
+        if (canProceed && existingForm.is_training_required === 'Yes') {
+          const rows = existingForm.training_required_rows || [];
+
+          if (rows.length === 0) {
+            Alert.alert(
+              'Validation',
+              'Please add at least one training requirement.',
+            );
+            canProceed = false;
+          } else {
+            for (let i = 0; i < rows.length; i++) {
+              const row = rows[i];
+
+              if (isEmpty(row.sector_tree)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select sector`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (
+                row.sector_tree.includes('Others') &&
+                isEmpty(row.other_sector_detail)
+              ) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please specify other sector`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.training_type)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select training type`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.duration)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select duration`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.department)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select department`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (
+                row.department === 'Others' &&
+                isEmpty(row.department_other)
+              ) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please specify department`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.location)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select location type`,
+                );
+                canProceed = false;
+                break;
+              }
+
+              if (isEmpty(row.expected_income)) {
+                Alert.alert(
+                  'Validation',
+                  `Requirement ${i + 1}: Please select expected income`,
+                );
+                canProceed = false;
+                break;
+              }
+            }
+          }
+        }
+
+        /* ===== TRAINING REQUIRED = NO ===== */
+        if (canProceed && existingForm.is_training_required === 'No') {
+          if (!existingForm.nearest_skill_centre) {
+            Alert.alert(
+              'Validation',
+              'Please select knowledge about skill centre.',
+            );
+            canProceed = false;
+          }
+
+          if (
+            canProceed &&
+            existingForm.nearest_skill_centre === 'Yes' &&
+            isEmpty(existingForm.skill_centre_loc)
+          ) {
+            Alert.alert('Validation', 'Please enter skill centre location.');
+            canProceed = false;
+          }
+
+          if (canProceed && !existingForm.nearest_industry) {
+            Alert.alert(
+              'Validation',
+              'Please select knowledge about industry.',
+            );
+            canProceed = false;
+          }
+
+          if (
+            canProceed &&
+            existingForm.nearest_industry === 'Yes' &&
+            isEmpty(existingForm.industry_loc)
+          ) {
+            Alert.alert('Validation', 'Please enter industry location.');
+            canProceed = false;
+          }
+        }
+
+        /* ===== COMMON FIELDS ===== */
+        if (canProceed && isEmpty(existingForm.expansion_plan)) {
+          Alert.alert('Validation', 'Please enter future expansion plan.');
+          canProceed = false;
+        }
+
+        if (canProceed && !existingForm.info_abt_gov_scheme) {
+          Alert.alert(
+            'Validation',
+            'Please select info about government schemes.',
+          );
+          canProceed = false;
+        }
       }
+
+      // ================= SECTION 6 =================
+      // ================= SECTION 6 =================
+      if (currentSectionIndex === 6 && canProceed) {
+        const isEmpty = val =>
+          val === null ||
+          val === undefined ||
+          (typeof val === 'string' && val.trim() === '') ||
+          (Array.isArray(val) && val.length === 0);
+
+        /* ===== MAIN YES/NO ===== */
+        if (!existingForm.is_support_required) {
+          Alert.alert('Validation', 'Please select if support is required.');
+          canProceed = false;
+        }
+
+        /* ===== IF YES ===== */
+        if (canProceed && existingForm.is_support_required === 'Yes') {
+          const support = existingForm.support_required || {};
+
+          if (Object.keys(support).length === 0) {
+            Alert.alert(
+              'Validation',
+              'Please select at least one support type.',
+            );
+            canProceed = false;
+          } else {
+            /* ===== FINANCIAL ===== */
+            if (support.financial) {
+              const f = support.financial;
+
+              if (isEmpty(f.type)) {
+                Alert.alert(
+                  'Validation',
+                  'Financial: Please select support type.',
+                );
+                canProceed = false;
+              }
+
+              if (canProceed && f.type === 'Loan' && isEmpty(f.amount)) {
+                Alert.alert(
+                  'Validation',
+                  'Financial: Please select loan amount.',
+                );
+                canProceed = false;
+              }
+
+              if (
+                canProceed &&
+                ['Others', 'Grant and Subsidy', 'Interest Subvention'].includes(
+                  f.type,
+                ) &&
+                isEmpty(f.spec)
+              ) {
+                Alert.alert('Validation', 'Financial: Please specify details.');
+                canProceed = false;
+              }
+            }
+
+            /* ===== INFRASTRUCTURE ===== */
+            if (canProceed && support.infrastructure) {
+              const infra = support.infrastructure;
+
+              if (isEmpty(infra.type)) {
+                Alert.alert(
+                  'Validation',
+                  'Infrastructure: Please select type.',
+                );
+                canProceed = false;
+              }
+
+              if (
+                canProceed &&
+                infra.type === 'Others' &&
+                isEmpty(infra.spec)
+              ) {
+                Alert.alert(
+                  'Validation',
+                  'Infrastructure: Please specify details.',
+                );
+                canProceed = false;
+              }
+            }
+
+            /* ===== MACHINERY ===== */
+            if (canProceed && support.machinery !== undefined) {
+              if (isEmpty(support.machinery)) {
+                Alert.alert(
+                  'Validation',
+                  'Machinery: Please specify required machinery.',
+                );
+                canProceed = false;
+              }
+            }
+
+            /* ===== OTHER ===== */
+            if (canProceed && support.other !== undefined) {
+              if (isEmpty(support.other)) {
+                Alert.alert(
+                  'Validation',
+                  'Other: Please specify support details.',
+                );
+                canProceed = false;
+              }
+            }
+          }
+        }
+
+        /* ===== IF NO ===== */
+        if (canProceed && existingForm.is_support_required === 'No') {
+          // nothing required — valid state
+        }
+      }
+
+      // ================= SECTION 7 =================
+      // ================= SECTION 7 =================
+      if (currentSectionIndex === 7 && canProceed) {
+        const isEmptyArray = arr => !Array.isArray(arr) || arr.length === 0;
+
+        const media = existingForm.media || {};
+
+        /* ===== MEDIA OBJECT EXIST ===== */
+        if (!existingForm.media) {
+          Alert.alert('Validation', 'Please upload required media files.');
+          canProceed = false;
+        }
+
+        /* ===== ENTREPRENEUR PHOTO ===== */
+        if (canProceed && isEmptyArray(media.photo_entrepreneur)) {
+          Alert.alert('Validation', 'Please upload entrepreneur photo.');
+          canProceed = false;
+        }
+
+        /* ===== ENTERPRISE PHOTO ===== */
+        if (canProceed && isEmptyArray(media.photo_enterprise)) {
+          Alert.alert('Validation', 'Please upload enterprise photo.');
+          canProceed = false;
+        }
+
+        /* ===== OPTIONAL: DOCUMENT VALIDATION (UNCOMMENT IF NEEDED) ===== */
+
+        if (canProceed && isEmptyArray(media.others)) {
+          Alert.alert('Validation', 'Please upload at least one document.');
+          canProceed = false;
+        }
+
+        /* ===== EXTRA STRICT (OPTIONAL) ===== */
+        // Prevent too many uploads (safety)
+
+        const MAX_FILES = 10;
+
+        if (canProceed && media.photo_entrepreneur?.length > MAX_FILES) {
+          Alert.alert('Validation', 'Too many entrepreneur photos uploaded.');
+          canProceed = false;
+        }
+
+        if (canProceed && media.photo_enterprise?.length > MAX_FILES) {
+          Alert.alert('Validation', 'Too many enterprise photos uploaded.');
+          canProceed = false;
+        }
+      }
+
+      // ================= SECTION 8 =================
+      if (currentSectionIndex === 8 && canProceed) {
+        const isEmpty = val =>
+          val === null ||
+          val === undefined ||
+          (typeof val === 'string' && val.trim() === '');
+
+        const media = existingForm.media || {};
+
+        /* ===== DECLARATION CONFIRM ===== */
+        if (!existingForm.declaration_confirmed) {
+          Alert.alert('Validation', 'Please confirm declaration.');
+          canProceed = false;
+        }
+
+        if (canProceed && existingForm.declaration_confirmed !== 'Yes') {
+          Alert.alert('Validation', 'Please accept declaration to proceed.');
+          canProceed = false;
+        }
+
+        /* ===== DATE VALIDATION ===== */
+        if (canProceed && isEmpty(existingForm.declaration_date)) {
+          Alert.alert('Validation', 'Please select declaration date.');
+          canProceed = false;
+        }
+
+        if (canProceed && existingForm.declaration_date) {
+          const date = new Date(existingForm.declaration_date);
+          const today = new Date();
+
+          if (isNaN(date.getTime())) {
+            Alert.alert('Validation', 'Invalid declaration date.');
+            canProceed = false;
+          }
+
+          if (canProceed && date > today) {
+            Alert.alert('Validation', 'Future date is not allowed.');
+            canProceed = false;
+          }
+
+          // Optional: very old date check
+          if (canProceed && date.getFullYear() < 1950) {
+            Alert.alert('Validation', 'Please select a valid date.');
+            canProceed = false;
+          }
+        }
+
+        /* ===== SIGNATURE VALIDATION ===== */
+        const signatureFiles =
+          media.declaration_signature ||
+          existingForm.declaration_signature_files ||
+          [];
+
+        if (
+          canProceed &&
+          (!Array.isArray(signatureFiles) || signatureFiles.length === 0)
+        ) {
+          Alert.alert('Validation', 'Please upload signature.');
+          canProceed = false;
+        }
+
+        /* ===== OPTIONAL: FILE TYPE SAFETY ===== */
+
+        if (canProceed) {
+          const valid = signatureFiles.every(file =>
+            (file.type || '').includes('image'),
+          );
+          if (!valid) {
+            Alert.alert('Validation', 'Only image signatures allowed.');
+            canProceed = false;
+          }
+        }
+
+        /* ===== VERIFIER NAME (OPTIONAL BUT CLEAN) ===== */
+        if (
+          canProceed &&
+          existingForm.verifier_name &&
+          existingForm.verifier_name.trim().length < 3
+        ) {
+          Alert.alert(
+            'Validation',
+            'Verifier name must be at least 3 characters.',
+          );
+          canProceed = false;
+        }
+      }
+      // ================= FINAL CONTROL =================
+      if (!canProceed) {
+        console.log('⛔ BLOCKED - validation failed');
+        return;
+      }
+
+      console.log('✅ PASSED - moving next');
+
       setCurrentSectionIndex(prev =>
         prev < TOTAL_SECTIONS - 1 ? prev + 1 : prev,
       );
@@ -2373,7 +3292,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             index={0}
             updateRow={(i, patch) => updateForm(patch)}
             language={language}
-            addProductRow={() => { }}
+            addProductRow={() => {}}
             ProductAndServicesComponent={
               ExistingEnterpriseProductServicesSection
             }
