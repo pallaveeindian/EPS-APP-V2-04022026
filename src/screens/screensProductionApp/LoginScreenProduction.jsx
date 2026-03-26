@@ -11,10 +11,10 @@ export default function LoginScreenProduction({ navigation }) {
   const { language } = useContext(LanguageContext);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (username, password, role) => {
+  const handleLogin = async (username, password, role, captcha) => {
     setLoading(true);
     try {
-      const res = await gsApi.login(username, password);
+      const res = await gsApi.login(username, password, captcha);
       if (!res || !res.access || !res.user) {
         return {
           success: false,

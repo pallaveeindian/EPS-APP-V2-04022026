@@ -10,6 +10,7 @@ const DEFAULT_HEADERS = {
   Accept: 'application/json',
   'X-API-ID': clientId,
   'X-API-KEY': clientKey,
+  'X-App-Client': 'CRP-EP_APP',
 };
 
 let AUTH_TOKEN = null;
@@ -92,6 +93,7 @@ async function refreshAccessTokenOnce() {
     body: JSON.stringify({
       refresh: REFRESH_TOKEN,
     }),
+    credentials: 'include',
   });
 
   try {
@@ -157,6 +159,7 @@ async function request(
       method,
       headers: finalHeaders,
       body: body != null ? JSON.stringify(body) : undefined,
+      credentials: 'include',
     });
 
     return handleResponse(res);
@@ -203,6 +206,7 @@ async function requestMultipart(
       method,
       headers: baseHeaders,
       body,
+      credentials: 'include',
     });
 
     return handleResponse(res);
@@ -236,18 +240,22 @@ function buildQuery(params = {}) {
 
 // ======================= AUTH =======================
 
-export async function login(username, password) {
+export async function login(username, password, captcha = null) {
   const res = await fetch(buildUrl('/api/v1/auth/login/'), {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      // no X-API-ID/KEY for login
+      ...DEFAULT_HEADERS, 
     },
-    body: JSON.stringify({ username, password }),
+    credentials: 'include', 
+    body: JSON.stringify({
+      username,
+      password,
+      captcha, 
+    }),
   });
+
   return handleResponse(res);
 }
-
 // ======================= LOOKUPS =======================
 
 /* ================= Districts ================= */
@@ -909,7 +917,6 @@ export async function updateCrp(id, payload) {
   });
 }
 
-
 // export async function deleteEpsakhiCascade(memberCode, beneficiaryId, userId) {
 //   try {
 //     const detail = await getEpsakhiDetailByMember(memberCode);
@@ -1098,11 +1105,11 @@ export async function deleteEpsakhiCascade(memberCode, beneficiaryId, userId) {
   try {
     const detail = await getEpsakhiDetailByMember(memberCode);
 
-    const del = async (url) => {
-      console.log("Deleting:", url);
+    const del = async url => {
+      console.log('Deleting:', url);
 
       return request(url, {
-        method: "DELETE",
+        method: 'DELETE',
         body: {
           deleted_by: userId,
         },
@@ -1187,25 +1194,27 @@ export async function deleteEpsakhiCascade(memberCode, beneficiaryId, userId) {
     await del(`/api/v1/epsakhi/recorded-beneficiaries/${beneficiaryId}/`);
 
     return true;
-
   } catch (err) {
-    console.error("Cascade delete failed", err);
+    console.error('Cascade delete failed', err);
     throw err;
   }
 }
 
-export async function deleteNewEnterpriseCascade(memberCode, beneficiaryId, userId) {
+export async function deleteNewEnterpriseCascade(
+  memberCode,
+  beneficiaryId,
+  userId,
+) {
   try {
-
     const detail = await getEpsakhiDetailByMember(memberCode);
 
     const shared = detail?.shared || {};
 
-    const del = async (url) => {
-      console.log("Deleting:", url);
+    const del = async url => {
+      console.log('Deleting:', url);
 
       return request(url, {
-        method: "DELETE",
+        method: 'DELETE',
         body: {
           deleted_by: userId,
         },
@@ -1215,51 +1224,39 @@ export async function deleteNewEnterpriseCascade(memberCode, beneficiaryId, user
     /* ================= TRAINING CERTIFICATES ================= */
 
     for (const t of shared.training || []) {
-
       for (const cert of t.certificates || []) {
         await del(`/api/v1/epsakhi/training-certificates/${cert.id}/`);
       }
-
     }
 
     /* ================= TRAINING REQUEST ================= */
 
     for (const t of shared.training || []) {
-
       await del(`/api/v1/epsakhi/enterprise-training-reqs/${t.id}/`);
-
     }
 
     /* ================= MANDATORY FUND ================= */
 
     for (const f of shared.mandatory_fund || []) {
-
       await del(`/api/v1/epsakhi/mandatory-fund/${f.id}/`);
-
     }
 
     /* ================= ENTERPRISE SUPPORT ================= */
 
     for (const s of shared.enterprise_support || []) {
-
       await del(`/api/v1/epsakhi/enterprise-support/${s.id}/`);
-
     }
 
     /* ================= ENTERPRISE TYPES ================= */
 
     for (const t of shared.enterprise_types || []) {
-
       await del(`/api/v1/epsakhi/enterprise-types/${t.id}/`);
-
     }
 
     /* ================= NEW ENTERPRISE ================= */
 
     if (detail?.enterprise?.id) {
-
       await del(`/api/v1/epsakhi/new-enterprise/${detail.enterprise.id}/`);
-
     }
 
     /* ================= BENEFICIARY ================= */
@@ -1267,15 +1264,25 @@ export async function deleteNewEnterpriseCascade(memberCode, beneficiaryId, user
     await del(`/api/v1/epsakhi/recorded-beneficiaries/${beneficiaryId}/`);
 
     return true;
-
   } catch (err) {
-
-    console.error("New enterprise cascade delete failed", err);
+    console.error('New enterprise cascade delete failed', err);
 
     throw err;
-
   }
 }
+
+export async function getCaptcha() {
+  const res = await fetch(buildUrl('/api/v1/auth/captcha/'), {
+    method: 'GET',
+    headers: {
+      'X-App-Client': 'CRP-EP_APP',
+    },
+    credentials: 'include',
+  });
+
+  return handleResponse(res);
+}
+
 const api = {
   // auth
   login,
@@ -1283,6 +1290,7 @@ const api = {
   getAuthToken,
   getRefreshToken,
   clearAuthTokens,
+  getCaptcha,
 
   // lookups
   getDistricts,
@@ -1419,7 +1427,7 @@ const api = {
   getNoEnterpriseWages,
 
   deleteEpsakhiCascade,
-  deleteNewEnterpriseCascade
+  deleteNewEnterpriseCascade,
 };
 
 export default api;

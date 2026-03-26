@@ -189,8 +189,9 @@
 
 // App.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import { AppState, View } from 'react-native';
-
+import { AppState, View, Alert, BackHandler } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
+import 'react-native-get-random-values';
 import { getUser } from './src/utils/auth';
 import { setAuthToken } from './src/api/gsApi';
 
@@ -227,26 +228,60 @@ export default function App() {
   const [isBackground, setIsBackground] = useState(false);
   const lastBackgroundTime = useRef(null);
 
+  useEffect(() => {
+    console.log('APP MOUNTED');
+  }, []);
+
   //  Restore session
   useEffect(() => {
     const restoreSession = async () => {
-      const saved = await getUser();
-      if (saved?.access) {
-        setAuthToken(saved.access, saved.refresh);
+      try {
+        const saved = await getUser();
+        if (saved?.access) {
+          setAuthToken(saved.access, saved.refresh);
+        }
+      } catch (e) {
+        console.log('restoreSession failed', e);
       }
     };
+
     restoreSession();
+  }, []);
+
+  // VUN - 16: ROOT / EMULATOR DETECTION (AUDIT FIX)
+  useEffect(() => {
+    const checkSecurity = async () => {
+      try {
+        const isRooted = DeviceInfo.isRooted();
+
+        if (isRooted) {
+          Alert.alert(
+            'Security Alert',
+            'This device is not secure (rooted). App will exit.',
+            [
+              {
+                text: 'Exit',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+            { cancelable: false },
+          );
+        }
+      } catch (e) {
+        console.log('Security check failed', e);
+      }
+    };
+
+    checkSecurity();
   }, []);
 
   //  AppState handling with timeout (NO frequent logout)
   useEffect(() => {
     const handleAppState = state => {
-      if (state === 'background' || state === 'inactive') {
-        console.log(' App in background');
+      console.log('AppState:', state);
 
+      if (state === 'background') {
         setIsBackground(true);
-
-        // store time
         lastBackgroundTime.current = Date.now();
       }
 
@@ -255,13 +290,10 @@ export default function App() {
 
         const now = Date.now();
 
-        //  logout ONLY if timeout exceeded
         if (
           lastBackgroundTime.current &&
           now - lastBackgroundTime.current > SESSION_TIMEOUT
         ) {
-          console.log(' Session expired → redirect to login');
-
           navigationRef.reset({
             index: 0,
             routes: [{ name: 'Login' }],

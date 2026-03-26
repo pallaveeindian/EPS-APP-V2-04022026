@@ -1,5 +1,5 @@
 // src/screens/epsakhi/LoginFormProduction.jsx
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { LanguageContext } from '../../components/LanguageContext';
+import api from '../../api/gsApi';
+import { Image } from 'react-native';
 
 function randomCaptcha() {
   const a = Math.floor(Math.random() * 9) + 1;
@@ -70,21 +72,37 @@ export default function LoginFormProduction({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState(roles[0] || 'CRP');
-  const [captcha, setCaptcha] = useState(randomCaptcha());
-  const [captchaInput, setCaptchaInput] = useState('');
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+
+  const [captchaImage, setCaptchaImage] = useState(null);
+  const [captchaInput, setCaptchaInput] = useState('');
+
   const validate = () => {
     const e = {};
     if (!username.trim()) e.username = t.usernameRequired;
     if (!password.trim()) e.password = t.passwordRequired;
-    if (enableCaptcha && captchaInput.trim() !== captcha.ans) {
+    if (enableCaptcha && !captchaInput.trim()) {
       e.captcha = t.captchaIncorrect;
     }
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+  useEffect(() => {
+    loadCaptcha();
+  }, []);
+
+  const loadCaptcha = async () => {
+    try {
+      const res = await api.getCaptcha();
+      setCaptchaImage(res.image);
+      setCaptchaInput('');
+    } catch (e) {
+      console.log('Captcha load failed', e);
+    }
   };
 
   const refreshCaptcha = () => {
@@ -104,16 +122,21 @@ export default function LoginFormProduction({
       let result = null;
 
       if (typeof onLogin === 'function') {
-        result = await onLogin(username.trim(), password, selectedRole);
+        result = await onLogin(
+          username.trim(),
+          password,
+          selectedRole,
+          captchaInput,
+        );
       }
 
       if (!result || !result.success) {
-        const msg =
-          result?.message ||
-          (result?.data &&
-            (result.data.detail || JSON.stringify(result.data))) ||
-          'Login failed. Please check credentials.';
+        const msg = result?.message || 'Login failed';
         setErrors({ general: msg });
+        if (msg.toLowerCase().includes('captcha')) {
+          loadCaptcha();
+        }
+
         return;
       }
 
@@ -221,23 +244,17 @@ export default function LoginFormProduction({
         <View style={{ marginTop: 12 }}>
           <Text style={styles.label}>{t.captcha}</Text>
           <View style={styles.captchaRow}>
-            <View
-              style={{
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderRadius: 6,
-                backgroundColor: '#F9ECEC',
-              }}
-            >
-              <Text
-                style={{ fontSize: 18, fontWeight: '600', color: '#EE6969' }}
-              >
-                {captcha.q}
-              </Text>
-            </View>
+            {captchaImage ? (
+              <Image
+                source={{ uri: captchaImage }}
+                style={{ width: 150, height: 50, borderRadius: 6 }}
+                resizeMode="contain"
+              />
+            ) : null}
+
             <TouchableOpacity
               style={styles.refreshButton}
-              onPress={refreshCaptcha}
+              onPress={loadCaptcha}
             >
               <Text style={styles.refreshText}>{t.refresh}</Text>
             </TouchableOpacity>
@@ -250,7 +267,6 @@ export default function LoginFormProduction({
               focusedField === 'captcha' && { borderColor: '#FF7E00' },
             ]}
             placeholder={t.enterCaptcha}
-            keyboardType="number-pad"
             value={captchaInput}
             onChangeText={setCaptchaInput}
             onFocus={() => setFocusedField('captcha')}
