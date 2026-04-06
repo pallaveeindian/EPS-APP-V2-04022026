@@ -16,6 +16,11 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+ // Root Detection 
+    if (isDeviceRooted()) {
+      finish()
+    }
+
     // Apply security flag
     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
   }
@@ -38,6 +43,15 @@ class MainActivity : ReactActivity() {
     return super.dispatchTouchEvent(ev)
   }
 
+   
+  override fun onFilterTouchEventForSecurity(event: MotionEvent): Boolean {
+    if ((event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0) {
+      return false
+    }
+    return super.onFilterTouchEventForSecurity(event)
+  }
+
+
   /**
    * Returns the name of the main component registered from JavaScript.
    */
@@ -49,3 +63,25 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 }
+
+/**  Root Detection Function */
+  private fun isDeviceRooted(): Boolean {
+    val paths = arrayOf(
+      "/system/app/Superuser.apk",
+      "/sbin/su",
+      "/system/bin/su",
+      "/system/xbin/su",
+      "/data/local/xbin/su",
+      "/data/local/bin/su",
+      "/system/sd/xbin/su",
+      "/system/bin/failsafe/su",
+      "/data/local/su"
+    )
+
+    for (path in paths) {
+      if (java.io.File(path).exists()) {
+        return true
+      }
+    }
+    return false
+  }
