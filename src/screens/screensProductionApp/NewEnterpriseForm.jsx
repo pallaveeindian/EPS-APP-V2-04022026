@@ -15,7 +15,7 @@ import {
   Modal,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import gsApi from '../../api/gsApi';
+import gsApi, { decryptPayload } from '../../api/gsApi';
 import {
   getShgListForPanchayat,
   getCrpPanchayats,
@@ -98,7 +98,7 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
     return response; // refresh failed
   }
 
-  const refreshData = await refreshResp.json();
+  const refreshData = decryptPayload(await refreshResp.json());
 
   if (!refreshData?.access) {
     return response;
@@ -1939,7 +1939,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     });
     const text = await res.text();
     try {
-      const data = text ? JSON.parse(text) : null;
+      const data = text ? decryptPayload(JSON.parse(text)) : null;
       if (!res.ok) throw { status: res.status, data };
       return data;
     } catch (e) {
@@ -2009,7 +2009,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       const text = await res.text();
       throw new Error(`Enterprise Type API failed (${res.status}): ${text}`);
     }
-    const data = await res.json();
+    const data = decryptPayload(await res.json());
     return data?.id;
   };
 
@@ -2174,7 +2174,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         const text = await res.text();
         throw new Error(` Mandatory Funds API failed (${res.status}): ${text}`);
       }
-      const data = await res.json();
+      const data = decryptPayload(await res.json());
       createdIds.push(data?.id);
     }
     return createdIds;
@@ -2210,7 +2210,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
           `Enterprise Support API failed (${res.status}): ${text}`,
         );
       }
-      const data = await res.json();
+      const data = decryptPayload(await res.json());
       createdIds.push(data?.id);
     };
 
@@ -2400,7 +2400,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         ` Training Certificate API failed (${res.status}): ${text}`,
       );
     }
-    const data = await res.json();
+    const data = decryptPayload(await res.json());
     return data?.id;
   };
 
@@ -2455,7 +2455,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       const text = await res.text();
       throw new Error(` Training Required API failed (${res.status}): ${text}`);
     }
-    const data = await res.json();
+    const data = decryptPayload(await res.json());
     return data?.id;
   };
 

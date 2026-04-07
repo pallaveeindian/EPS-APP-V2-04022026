@@ -1,10 +1,46 @@
 // src/api/gsApi.js
 //  import Config from "react-native-config";
-import { X_API_ID, X_API_KEY } from '@env';
+import { X_API_ID, X_API_KEY, API_ENCRYPTION_KEY as ENV_API_KEY } from '@env';
 import { getUser, saveUser } from '../utils/auth';
+import CryptoJS from 'crypto-js';
+
 const BASE_URL = 'http://72.61.255.170:8080';
 const clientId = X_API_ID;
 const clientKey = X_API_KEY;
+const SECRET_KEY = ENV_API_KEY;
+
+// VUN - 14 FIX
+function decryptPayload(responseData) {
+  // If it doesn't match our {iv, data} payload shape, return it as-is
+  if (
+    !responseData ||
+    typeof responseData !== 'object' ||
+    !responseData.iv ||
+    !responseData.data
+  ) {
+    return responseData;
+  }
+
+  try {
+    const key = CryptoJS.enc.Utf8.parse(SECRET_KEY);
+    const iv = CryptoJS.enc.Base64.parse(responseData.iv);
+    const ciphertext = CryptoJS.enc.Base64.parse(responseData.data);
+
+    const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext });
+    const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    });
+
+    const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('API Decryption failed:', error);
+    return responseData;
+  }
+}
+
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
   Accept: 'application/json',
@@ -52,6 +88,7 @@ async function handleResponse(response) {
 
   try {
     data = text ? JSON.parse(text) : null;
+    data = decryptPayload(data);
   } catch (e) {
     // Not JSON — wrap raw text properly
     data = { detail: text };
@@ -244,13 +281,13 @@ export async function login(username, password, captcha = null) {
   const res = await fetch(buildUrl('/api/v1/auth/login/'), {
     method: 'POST',
     headers: {
-      ...DEFAULT_HEADERS, 
+      ...DEFAULT_HEADERS,
     },
-    credentials: 'include', 
+    credentials: 'include',
     body: JSON.stringify({
       username,
       password,
-      captcha, 
+      captcha,
     }),
   });
 

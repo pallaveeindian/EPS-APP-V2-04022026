@@ -11,7 +11,7 @@ import {
   StatusBar,
   StyleSheet,
 } from 'react-native';
-import gsApi from '../../api/gsApi';
+import gsApi, { decryptPayload } from '../../api/gsApi';
 import { getUser } from '../../utils/auth';
 import {
   getShgListForPanchayat,

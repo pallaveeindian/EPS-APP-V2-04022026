@@ -2,7 +2,7 @@ package com.crp_ep_demo
 
 import android.os.Bundle
 import android.view.WindowManager
-import android.view.MotionEvent   //  import
+import android.view.MotionEvent
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -11,12 +11,12 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 class MainActivity : ReactActivity() {
 
   /** VUN-7
-   *  Block screenshots & recent apps preview
+   * Block screenshots & recent apps preview
    */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
- // Root Detection 
+    // Root Detection 
     if (isDeviceRooted()) {
       finish()
     }
@@ -26,7 +26,7 @@ class MainActivity : ReactActivity() {
   }
 
   /**
-   *  Re-apply when app comes to foreground (important)
+   * Re-apply when app comes to foreground (important)
    */
   override fun onResume() {
     super.onResume()
@@ -34,7 +34,7 @@ class MainActivity : ReactActivity() {
   }
 
   /** VUN-14
-   *  Tapjacking Protection (ONLY NEW ADDITION)
+   * Tapjacking Protection (Global Activity Level)
    */
   override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
     if ((ev.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0) {
@@ -43,14 +43,7 @@ class MainActivity : ReactActivity() {
     return super.dispatchTouchEvent(ev)
   }
 
-   
-  override fun onFilterTouchEventForSecurity(event: MotionEvent): Boolean {
-    if ((event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0) {
-      return false
-    }
-    return super.onFilterTouchEventForSecurity(event)
-  }
-
+  // 🛑 SURGICAL FIX: We deleted the invalid onFilterTouchEventForSecurity block from here!
 
   /**
    * Returns the name of the main component registered from JavaScript.
@@ -62,9 +55,9 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-}
 
-/**  Root Detection Function */
+  // 🛑 SURGICAL FIX: Moved this INSIDE the MainActivity class so it is properly scoped
+  /** Root Detection Function */
   private fun isDeviceRooted(): Boolean {
     val paths = arrayOf(
       "/system/app/Superuser.apk",
@@ -85,3 +78,4 @@ class MainActivity : ReactActivity() {
     }
     return false
   }
+}
