@@ -79,6 +79,19 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
     });
   };
 
+  // 🔥 SMART PARSER: Handles both Encrypted and Unencrypted responses safely
+  const parseAndDecryptResponse = async res => {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      const parsed = JSON.parse(text);
+      // If it has a payload property, decrypt it. Otherwise, return plain JSON.
+      return parsed.payload ? decryptPayload(parsed) : parsed;
+    } catch (e) {
+      return text; // Return raw text if server sends an HTML error page
+    }
+  };
+
   let response = await doFetch(access);
 
   // If not 401 → return
@@ -1937,15 +1950,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
       headers,
       body: formData,
     });
-    const text = await res.text();
-    try {
-      const data = text ? decryptPayload(JSON.parse(text)) : null;
-      if (!res.ok) throw { status: res.status, data };
-      return data;
-    } catch (e) {
-      if (!res.ok) throw { status: res.status, data: text || null };
-      return text;
+
+    // 🛑 SURGICAL FIX HERE
+    const data = await parseAndDecryptResponse(res);
+
+    if (!res.ok) {
+      throw { status: res.status, data };
     }
+    return data;
   };
 
   // ---------- Sub-form API helpers (direct fetch) ----------
@@ -2005,11 +2017,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
       },
     );
 
+    // Replace the bottom of createEnterpriseTypeRecord with:
+    const data = await parseAndDecryptResponse(res);
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Enterprise Type API failed (${res.status}): ${text}`);
+      throw new Error(
+        `Enterprise Type API failed (${res.status}): ${JSON.stringify(data)}`,
+      );
     }
-    const data = decryptPayload(await res.json());
     return data?.id;
   };
 
@@ -2170,11 +2184,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
         },
       );
 
+      // Replace the bottom of the loop with:
+      const data = await parseAndDecryptResponse(res);
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(` Mandatory Funds API failed (${res.status}): ${text}`);
+        throw new Error(
+          ` Mandatory Funds API failed (${res.status}): ${JSON.stringify(
+            data,
+          )}`,
+        );
       }
-      const data = decryptPayload(await res.json());
       createdIds.push(data?.id);
     }
     return createdIds;
@@ -2204,13 +2222,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
         },
       );
 
+      // Replace the bottom of postSupport with:
+      const data = await parseAndDecryptResponse(res);
       if (!res.ok) {
-        const text = await res.text();
         throw new Error(
-          `Enterprise Support API failed (${res.status}): ${text}`,
+          `Enterprise Support API failed (${res.status}): ${JSON.stringify(
+            data,
+          )}`,
         );
       }
-      const data = decryptPayload(await res.json());
       createdIds.push(data?.id);
     };
 
@@ -2336,15 +2356,16 @@ export default function NewEnterpriseForm({ route, navigation }) {
         },
       );
 
+      // Replace the bottom of the loop (before step 2) with:
+      const data = await parseAndDecryptResponse(res);
       if (!res.ok) {
-        const text = await res.text();
         throw new Error(
-          ` Training Receieved API failed (${res.status}): ${text}`,
+          ` Training Receieved API failed (${res.status}): ${JSON.stringify(
+            data,
+          )}`,
         );
       }
-
-      const trainingRes = await res.json();
-      const trainingId = trainingRes?.id;
+      const trainingId = data?.id;
       trainingIds.push(trainingId);
 
       // 🔹 Step 2: Upload certificates for THIS training row
@@ -2394,13 +2415,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
       },
     );
 
+    // Replace the bottom of uploadTrainingCertificate with:
+    const data = await parseAndDecryptResponse(res);
     if (!res.ok) {
-      const text = await res.text();
       throw new Error(
-        ` Training Certificate API failed (${res.status}): ${text}`,
+        ` Training Certificate API failed (${res.status}): ${JSON.stringify(
+          data,
+        )}`,
       );
     }
-    const data = decryptPayload(await res.json());
     return data?.id;
   };
 
@@ -2451,11 +2474,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
       },
     );
 
+    // Replace the bottom of createTrainingRequired with:
+    const data = await parseAndDecryptResponse(res);
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(` Training Required API failed (${res.status}): ${text}`);
+      throw new Error(
+        ` Training Required API failed (${res.status}): ${JSON.stringify(
+          data,
+        )}`,
+      );
     }
-    const data = decryptPayload(await res.json());
     return data?.id;
   };
 
