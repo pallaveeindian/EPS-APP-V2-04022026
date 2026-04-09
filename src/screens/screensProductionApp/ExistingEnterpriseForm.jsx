@@ -1215,6 +1215,9 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     // Inside your existing handleSubmit logic, if (success) { await clearDraft(); }
   };
   const handleSubmit = async () => {
+    if (submitting) return; // 🔒 double click prevent
+
+    setSubmitting(true); // 🔥 ye add karo
     try {
       // 1) ensure recorded beneficiary exists (inspired by NewEnterpriseForm)
       let recordedBenefId =
@@ -3236,7 +3239,12 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             onPress={handleSubmit}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <ActivityIndicator color="#fff" />
+                <Text style={[styles.submitBtnText, { marginLeft: 8 }]}>
+                  {language === 'hi' ? 'जमा हो रहा है...' : 'Submitting...'}
+                </Text>
+              </View>
             ) : (
               <Text style={styles.submitBtnText}>
                 {language === 'hi' ? 'फॉर्म जमा करें' : 'Submit Form'}

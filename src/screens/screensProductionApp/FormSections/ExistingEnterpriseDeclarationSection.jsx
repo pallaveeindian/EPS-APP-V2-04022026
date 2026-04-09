@@ -89,6 +89,28 @@ export default function ExistingEnterpriseDeclarationSection({
     setDateModalVisible(false);
   };
 
+  // const pickSignature = async () => {
+  //   try {
+  //     const res = await launchImageLibrary({
+  //       mediaType: 'photo',
+  //       selectionLimit: 1,
+  //     });
+
+  //     if (res.didCancel || !res.assets) return;
+  //     const assets = res.assets || [];
+
+  //     const currentMedia = existingForm.media || {};
+  //     update({
+  //       media: {
+  //         ...currentMedia,
+  //         declaration_signature: assets,
+  //       },
+  //     });
+  //   } catch (e) {
+  //     console.warn('Signature pick failed', e);
+  //   }
+  // };
+
   const pickSignature = async () => {
     try {
       const res = await launchImageLibrary({
@@ -97,13 +119,15 @@ export default function ExistingEnterpriseDeclarationSection({
       });
 
       if (res.didCancel || !res.assets) return;
+
       const assets = res.assets || [];
 
-      const currentMedia = existingForm.media || {};
       update({
+        declaration_signature_files: assets,
+        declaration_signature: assets, //  validation
         media: {
-          ...currentMedia,
-          declaration_signature: assets,
+          ...(existingForm.media || {}),
+          declaration_signature: assets, //  backend
         },
       });
     } catch (e) {
@@ -322,13 +346,30 @@ export default function ExistingEnterpriseDeclarationSection({
           </Text>
         </TouchableOpacity>
 
-        {signatureCount > 0 && (
+        {/* {signatureCount > 0 && (
           <Text style={styles.mediaInfo}>
             {language === 'hi'
               ? `चयनित हस्ताक्षर फ़ाइल: ${signatureCount}`
               : `Selected Signature File(s): ${signatureCount}`}
           </Text>
-        )}
+        )} */}
+        {signatureCount > 0 ? (
+          <View>
+            <Text
+              style={[styles.mediaInfo, { color: 'green', fontWeight: '600' }]}
+            >
+              {language === 'hi'
+                ? '✔ हस्ताक्षर अपलोड हो गया'
+                : '✔ Signature Uploaded'}
+            </Text>
+
+            <TouchableOpacity onPress={pickSignature}>
+              <Text style={{ color: '#EE6969', marginTop: 4 }}>
+                {language === 'hi' ? 'हस्ताक्षर बदलें' : 'Change Signature'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
 
       {/* Optional verifier name */}

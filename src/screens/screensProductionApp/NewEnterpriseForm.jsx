@@ -79,18 +79,18 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
     });
   };
 
-  // 🔥 SMART PARSER: Handles both Encrypted and Unencrypted responses safely
-  const parseAndDecryptResponse = async res => {
-    const text = await res.text();
-    if (!text) return null;
-    try {
-      const parsed = JSON.parse(text);
-      // If it has a payload property, decrypt it. Otherwise, return plain JSON.
-      return parsed.payload ? decryptPayload(parsed) : parsed;
-    } catch (e) {
-      return text; // Return raw text if server sends an HTML error page
-    }
-  };
+  // // 🔥 SMART PARSER: Handles both Encrypted and Unencrypted responses safely
+  // const parseAndDecryptResponse = async res => {
+  //   const text = await res.text();
+  //   if (!text) return null;
+  //   try {
+  //     const parsed = JSON.parse(text);
+  //     // If it has a payload property, decrypt it. Otherwise, return plain JSON.
+  //     return parsed.payload ? decryptPayload(parsed) : parsed;
+  //   } catch (e) {
+  //     return text; // Return raw text if server sends an HTML error page
+  //   }
+  // };
 
   let response = await doFetch(access);
 
@@ -1255,6 +1255,66 @@ const INITIAL_FORM_STATE = {
 };
 
 // ---------- Main component ----------
+// const parseAndDecryptResponse = async res => {
+//   const text = await res.text();
+//   if (!text) return null;
+//   try {
+//     const parsed = JSON.parse(text);
+//     // If it has a payload property, decrypt it. Otherwise, return plain JSON.
+//     return parsed.payload ? decryptPayload(parsed) : parsed;
+//   } catch (e) {
+//     return text; // Return raw text if server sends an HTML error page
+//   }
+// };
+
+// const parseAndDecryptResponse = async res => {
+//   const text = await res.text();
+//   if (!text) return null;
+
+//   try {
+//     console.log('📦 RAW RESPONSE TEXT:', text);
+
+//     const parsed = JSON.parse(text);
+
+//     console.log('📦 PARSED RESPONSE:', parsed);
+
+//     if (parsed.payload || parsed.data) {
+//       const decrypted = decryptPayload(parsed);
+//       return decrypted;
+//     }
+
+//     return parsed;
+//   } catch (e) {
+//     console.error('❌ PARSE ERROR:', e);
+//     return text;
+//   }
+// };
+
+const parseAndDecryptResponse = async res => {
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    console.log('📦 RAW RESPONSE TEXT:', text);
+
+    const parsed = JSON.parse(text);
+    console.log('📦 PARSED RESPONSE:', parsed);
+
+    // 🔥 FIX HERE
+    if (parsed.payload) {
+      return decryptPayload(parsed.payload);
+    }
+
+    if (parsed.data && parsed.iv) {
+      return decryptPayload(parsed);
+    }
+
+    return parsed;
+  } catch (e) {
+    console.error('❌ PARSE ERROR:', e);
+    return text;
+  }
+};
 
 export default function NewEnterpriseForm({ route, navigation }) {
   const { language } = useContext(LanguageContext);
@@ -1953,7 +2013,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     // 🛑 SURGICAL FIX HERE
     const data = await parseAndDecryptResponse(res);
-
+    console.log('🔥 NEW ENTERPRISE RESPONSE:', data);
     if (!res.ok) {
       throw { status: res.status, data };
     }
@@ -3941,7 +4001,22 @@ export default function NewEnterpriseForm({ route, navigation }) {
   // };
 
   // ---------- Render ----------
+  const extractEnterpriseMeta = res => {
+    if (!res) return { id: null, thurid: null, raw: null };
 
+    let data = res;
+
+    // handle nested cases
+    if (res.data) data = res.data;
+    if (res.payload) data = res.payload;
+    if (Array.isArray(res)) data = res[0];
+
+    return {
+      id: data?.id || null,
+      thurid: data?.TH_urid || data?.TH_URID || null,
+      raw: data, // full object if needed
+    };
+  };
   const handleSubmit = async () => {
     if (!beneficiary && !recordedBenef) {
       Alert.alert(
@@ -4071,19 +4146,30 @@ export default function NewEnterpriseForm({ route, navigation }) {
         enterpriseRes = await gsApi.createNewEnterprise(payloadObj);
       }
 
-      const enterpriseId =
-        enterpriseRes?.TH_urid ||
-        enterpriseRes?.TH_URID ||
-        enterpriseRes?.id ||
-        null;
+      // const enterpriseId =
+      //   enterpriseRes?.TH_urid ||
+      //   enterpriseRes?.TH_URID ||
+      //   enterpriseRes?.id ||
+      //   null;
+
+      const meta = extractEnterpriseMeta(enterpriseRes);
+
+      console.log('🔥 FINAL META:', meta);
+
+      const enterpriseId = meta.id;
+      const enterpriseUrid = meta.TH_urid;
 
       if (!enterpriseId) {
         throw new Error('New enterprise saved but ID missing.');
       }
+      // if (!enterpriseId) {
+      //   throw new Error('New enterprise saved but ID missing.');
+      // }
 
       try {
         await gsApi.updateRecordedBeneficiary(recordedBenefId, {
           enterprise_id: enterpriseId,
+          enterprise_urid: enterpriseUrid,
         });
       } catch (e) {
         console.error('Update beneficiary failed', e);
@@ -4125,8 +4211,11 @@ export default function NewEnterpriseForm({ route, navigation }) {
           `${BASE_URL}/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
         );
 
+        // await activateRow(
+        //   `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
+        // );
         await activateRow(
-          `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
+          `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseId}/`,
         );
 
         if (created.enterpriseTypeId)

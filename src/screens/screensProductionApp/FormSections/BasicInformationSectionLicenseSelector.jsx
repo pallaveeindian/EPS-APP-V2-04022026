@@ -410,12 +410,12 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-            ...c,
-            registrationNumbers: {
-              ...c.registrationNumbers,
-              [licenseValue]: text,
-            },
-          }
+              ...c,
+              registrationNumbers: {
+                ...c.registrationNumbers,
+                [licenseValue]: text,
+              },
+            }
           : c,
       ),
     );
@@ -426,12 +426,12 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-            ...c,
-            openSections: {
-              ...c.openSections,
-              [category]: !c.openSections[category],
-            },
-          }
+              ...c,
+              openSections: {
+                ...c.openSections,
+                [category]: !c.openSections[category],
+              },
+            }
           : c,
       ),
     );
@@ -454,15 +454,52 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
     );
   };
 
+  // const pickPDF = async (cardId, licenseValue) => {
+  //   try {
+  //     const res = await pick({ type: 'application/pdf', allowMultiple: false });
+  //     if (!res?.length) return;
+
+  //     setCards(prev =>
+  //       prev.map(c =>
+  //         c.id === cardId
+  //           ? { ...c, files: { ...c.files, [licenseValue]: res[0] } }
+  //           : c,
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     console.log('Picker Error: ', e);
+  //   }
+  // };
+
   const pickPDF = async (cardId, licenseValue) => {
     try {
       const res = await pick({ type: 'application/pdf', allowMultiple: false });
       if (!res?.length) return;
 
+      let file = res[0];
+
+      // 🔥 FIX: sanitize filename
+      let cleanName = file.name || 'document.pdf';
+
+      // remove multiple extensions
+      cleanName = cleanName.replace(/(\.pdf)+$/i, '.pdf');
+
+      const cleanedFile = {
+        uri: file.uri,
+        type: 'application/pdf',
+        name: cleanName,
+      };
+
       setCards(prev =>
         prev.map(c =>
           c.id === cardId
-            ? { ...c, files: { ...c.files, [licenseValue]: res[0] } }
+            ? {
+                ...c,
+                files: {
+                  ...c.files,
+                  [licenseValue]: cleanedFile,
+                },
+              }
             : c,
         ),
       );
@@ -476,9 +513,9 @@ const LicenseSelector = ({ language = 'en', licenses = [], setLicenses }) => {
       prev.map(c =>
         c.id === cardId
           ? {
-            ...c,
-            otherText: { ...c.otherText, [category]: text },
-          }
+              ...c,
+              otherText: { ...c.otherText, [category]: text },
+            }
           : c,
       ),
     );

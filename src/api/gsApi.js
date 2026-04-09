@@ -10,8 +10,38 @@ const clientKey = X_API_KEY;
 const SECRET_KEY = ENV_API_KEY;
 
 // VUN - 14 FIX
-function decryptPayload(responseData) {
-  // If it doesn't match our {iv, data} payload shape, return it as-is
+// function decryptPayload(responseData) {
+//   // If it doesn't match our {iv, data} payload shape, return it as-is
+//   if (
+//     !responseData ||
+//     typeof responseData !== 'object' ||
+//     !responseData.iv ||
+//     !responseData.data
+//   ) {
+//     return responseData;
+//   }
+
+//   try {
+//     const key = CryptoJS.enc.Utf8.parse(SECRET_KEY);
+//     const iv = CryptoJS.enc.Base64.parse(responseData.iv);
+//     const ciphertext = CryptoJS.enc.Base64.parse(responseData.data);
+
+//     const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext });
+//     const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+//       iv: iv,
+//       mode: CryptoJS.mode.CBC,
+//       padding: CryptoJS.pad.Pkcs7,
+//     });
+
+//     const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
+//     return JSON.parse(decryptedString);
+//   } catch (error) {
+//     console.error('API Decryption failed:', error);
+//     return responseData;
+//   }
+// }
+
+export function decryptPayload(responseData) {
   if (
     !responseData ||
     typeof responseData !== 'object' ||
@@ -20,23 +50,26 @@ function decryptPayload(responseData) {
   ) {
     return responseData;
   }
-
   try {
     const key = CryptoJS.enc.Utf8.parse(SECRET_KEY);
     const iv = CryptoJS.enc.Base64.parse(responseData.iv);
     const ciphertext = CryptoJS.enc.Base64.parse(responseData.data);
 
     const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext });
+
     const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
       iv: iv,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
     });
-
     const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
-    return JSON.parse(decryptedString);
+    //  If empty → decryption failed
+    if (!decryptedString) {
+      return null;
+    }
+    const parsed = JSON.parse(decryptedString);
+    return parsed;
   } catch (error) {
-    console.error('API Decryption failed:', error);
     return responseData;
   }
 }
