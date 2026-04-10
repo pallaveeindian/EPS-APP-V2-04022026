@@ -309,23 +309,78 @@ function buildQuery(params = {}) {
 }
 
 // ======================= AUTH =======================
+// ======================= 🔐 ENCRYPT PAYLOAD =======================
+// ADDED: encrypt function (same config as decrypt)
+
+function encryptPayload(payload) {
+  try {
+    const key = CryptoJS.enc.Utf8.parse(SECRET_KEY);
+
+    // random IV (16 bytes)
+    const iv = CryptoJS.lib.WordArray.random(16);
+
+    const encrypted = CryptoJS.AES.encrypt(
+      JSON.stringify(payload),
+      key,
+      {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
+      }
+    );
+
+    return {
+      iv: CryptoJS.enc.Base64.stringify(iv),
+      data: CryptoJS.enc.Base64.stringify(encrypted.ciphertext),
+    };
+  } catch (e) {
+    console.log("Encryption failed", e);
+    return payload; // fallback (important)
+  }
+}
 
 export async function login(username, password, captcha = null) {
+
+  //  ADDED: prepare payload
+  const rawPayload = {
+    username,
+    password,
+    captcha,
+  };
+
+  // ADDED: encrypt payload
+  const encryptedBody = encryptPayload(rawPayload);
+
   const res = await fetch(buildUrl('/api/v1/auth/login/'), {
     method: 'POST',
     headers: {
       ...DEFAULT_HEADERS,
     },
     credentials: 'include',
-    body: JSON.stringify({
-      username,
-      password,
-      captcha,
-    }),
+
+    // CHANGED: send encrypted instead of raw
+    body: JSON.stringify(encryptedBody),   //  CHANGED
   });
 
   return handleResponse(res);
 }
+
+// export async function login(username, password, captcha = null) {
+//   const res = await fetch(buildUrl('/api/v1/auth/login/'), {
+//     method: 'POST',
+//     headers: {
+//       ...DEFAULT_HEADERS,
+//     },
+//     credentials: 'include',
+//     body: JSON.stringify({
+//       username,
+//       password,
+//       captcha,
+//     }),
+//   });
+
+//   return handleResponse(res);
+// }
 // ======================= LOOKUPS =======================
 
 /* ================= Districts ================= */
