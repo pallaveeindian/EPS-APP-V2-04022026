@@ -4,11 +4,13 @@ import { X_API_ID, X_API_KEY, API_ENCRYPTION_KEY as ENV_API_KEY } from '@env';
 import { getUser, saveUser } from '../utils/auth';
 import CryptoJS from 'crypto-js';
 
-const BASE_URL = 'http://72.61.255.170:8080';
+const BASE_URL = 'http://upsrlmtms.upsdc.gov.in/';
 const clientId = X_API_ID;
 const clientKey = X_API_KEY;
 const SECRET_KEY = ENV_API_KEY;
 
+
+// http://72.61.255.170:8080
 // VUN - 14 FIX
 // function decryptPayload(responseData) {
 //   // If it doesn't match our {iv, data} payload shape, return it as-is

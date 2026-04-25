@@ -24,64 +24,60 @@ class MainActivity : ReactActivity() {
       return
     }
 
-    // Block screenshots & recent apps preview
-    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    // ⚠️ DEBUG me black screen avoid karne ke liye
+    if (!BuildConfig.DEBUG) {
+      window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
 
-    // SYSTEM LEVEL PROTECTION
     window.decorView.filterTouchesWhenObscured = true
-
-    // APPLY STRICT TAPJACKING PROTECTION
     enableStrictViewProtection(window.decorView)
-    
-    //  ULTRA STRICT OVERLAY DETECTION - INSTANT KILL ON ANY OVERLAY
-    setupUltraStrictOverlayDetection()
   }
 
   override fun onResume() {
     super.onResume()
 
-    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    if (!BuildConfig.DEBUG) {
+      window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
 
     window.decorView.filterTouchesWhenObscured = true
     enableStrictViewProtection(window.decorView)
-    
-    // RE-APPLY ULTRA STRICT PROTECTION
-    setupUltraStrictOverlayDetection()
   }
 
   /**
-   *  ULTRA STRICT OVERLAY DETECTION - KILLS ON ANY OVERLAY APPEARANCE
+   *  (UNCHANGED STRUCTURE) — but SAFE
    */
   private fun setupUltraStrictOverlayDetection() {
-    window.decorView.viewTreeObserver.addOnWindowFocusChangeListener(object : ViewTreeObserver.OnWindowFocusChangeListener {
-      override fun onWindowFocusChanged(hasFocus: Boolean) {
-        if (!hasFocus) {
-          Log.e("SECURITY", "🚨 OVERLAY DETECTED - Window lost focus → INSTANT KILL")
-          terminateApp()
+    window.decorView.viewTreeObserver.addOnWindowFocusChangeListener(
+      object : ViewTreeObserver.OnWindowFocusChangeListener {
+        override fun onWindowFocusChanged(hasFocus: Boolean) {
+          if (!hasFocus) {
+            // ❌ DO NOT KILL (keyboard bhi yahi trigger karta hai)
+            Log.w("SECURITY", "Focus lost - ignored")
+          }
         }
       }
-    })
+    )
 
-    // Monitor global window focus changes
-    window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-      if (newFocus == null || !window.decorView.isFocused) {
-        Log.e("SECURITY", " OVERLAY DETECTED - Global focus lost → INSTANT KILL")
-        terminateApp()
-      }
+    window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, _ ->
+      // ❌ ignore
     }
   }
 
   /**
-   *  ACTIVITY LEVEL PROTECTION (KILL MODE) - ENHANCED FOR RAPID OVERLAYS
+   * ✅ ONLY REAL OVERLAY TOUCH = KILL
    */
   override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
 
-    val isObscured = (ev.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0
-    val isPartiallyObscured = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-        (ev.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0
+    val isObscured =
+      (ev.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0
+
+    val isPartiallyObscured =
+      Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+      (ev.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED) != 0
 
     if (isObscured || isPartiallyObscured) {
-      Log.e("SECURITY", " Tapjacking DETECTED (Activity) → INSTANT EXIT")
+      Log.e("SECURITY", "🚨 REAL OVERLAY DETECTED → EXIT")
       terminateApp()
       return false
     }
@@ -90,25 +86,29 @@ class MainActivity : ReactActivity() {
   }
 
   /**
-   *  STRICT GLOBAL PROTECTION (POPUPS / MODALS) - ENHANCED RECURSIVE SCAN
+   * ✅ View level protection (same logic)
    */
   private fun enableStrictViewProtection(view: View) {
     view.filterTouchesWhenObscured = true
 
     view.setOnTouchListener { _, event ->
-      val isObscured = (event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0
-      val isPartiallyObscured = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-          (event.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED) != 0
+
+      val isObscured =
+        (event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED) != 0
+
+      val isPartiallyObscured =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+        (event.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED) != 0
 
       if (isObscured || isPartiallyObscured) {
-        Log.e("SECURITY", " Tapjacking DETECTED (View) → INSTANT EXIT")
+        Log.e("SECURITY", "🚨 OVERLAY DETECTED (View) → EXIT")
         terminateApp()
         return@setOnTouchListener true
       }
+
       false
     }
 
-    //  Apply recursively to ALL child views (INSTANT RECURSION)
     if (view is ViewGroup) {
       for (i in 0 until view.childCount) {
         enableStrictViewProtection(view.getChildAt(i))
@@ -117,56 +117,38 @@ class MainActivity : ReactActivity() {
   }
 
   /**
-   *  HANDLE RAPID OVERLAY ATTACKS - ENHANCED WITH MULTIPLE CHECKS
+   * ❗ FIXED: focus loss ignore
    */
   override fun onWindowFocusChanged(hasFocus: Boolean) {
     super.onWindowFocusChanged(hasFocus)
 
     if (!hasFocus) {
-      Log.e("SECURITY", " RAPID OVERLAY DETECTED - Focus lost → INSTANT KILL")
-      terminateApp()
+      Log.w("SECURITY", "Focus lost (keyboard/dialog) - ignored")
       return
     }
 
-    // REINFORCE PROTECTION WHEN FOCUS RESTORED
     window.decorView.filterTouchesWhenObscured = true
     enableStrictViewProtection(window.decorView)
-    setupUltraStrictOverlayDetection()
   }
 
-  /**
-   *  TERMINATE APP (HARD KILL) - ENHANCED FORCE KILL
-   */
   private fun terminateApp() {
-    Log.e("SECURITY", " CRITICAL SECURITY VIOLATION → FORCE TERMINATING")
-    
+    Log.e("SECURITY", "CRITICAL SECURITY VIOLATION → TERMINATING")
+
     try {
-      // Multiple kill methods for maximum reliability
-      finishAffinity() // Close all activities
+      finishAffinity()
       moveTaskToBack(true)
-      
-      // Force kill process
       android.os.Process.killProcess(android.os.Process.myPid())
-      
-      // Ultimate fallback
       System.exit(1)
     } catch (e: Exception) {
-      Log.e("SECURITY", "Termination error: ${e.message}")
       System.exit(1)
     }
   }
 
-  /**
-   * React Native entry - UNCHANGED
-   */
   override fun getMainComponentName(): String = "CRP_EP_DEMO"
 
   override fun createReactActivityDelegate(): ReactActivityDelegate =
     DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
-  /**
-   *  ROOT DETECTION - UNCHANGED
-   */
   private fun isDeviceRooted(): Boolean {
     val paths = arrayOf(
       "/system/app/Superuser.apk",
@@ -180,11 +162,6 @@ class MainActivity : ReactActivity() {
       "/data/local/su"
     )
 
-    for (path in paths) {
-      if (java.io.File(path).exists()) {
-        return true
-      }
-    }
-    return false
+    return paths.any { java.io.File(it).exists() }
   }
 }
