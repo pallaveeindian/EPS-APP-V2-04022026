@@ -306,8 +306,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
           const recList = Array.isArray(res?.results)
             ? res.results
             : Array.isArray(res)
-            ? res
-            : [];
+              ? res
+              : [];
           setRecorded(recList);
           try {
             setCrpRecordedBeneficiaries?.(recList);
@@ -333,10 +333,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
       const rows = Array.isArray(res?.results)
         ? res.results
         : Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
+          ? res.data
+          : Array.isArray(res)
+            ? res
+            : [];
       return rows;
     } catch (err) {
       if (err?.status === 404) {
@@ -385,10 +385,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
       const rows = Array.isArray(res?.data)
         ? res.data
         : Array.isArray(res?.results)
-        ? res.results
-        : Array.isArray(res)
-        ? res
-        : [];
+          ? res.results
+          : Array.isArray(res)
+            ? res
+            : [];
 
       try {
         setShgListForPanchayat(cacheKey, rows);
@@ -420,10 +420,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
         const rows = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res?.results)
-          ? res.results
-          : Array.isArray(res)
-          ? res
-          : [];
+            ? res.results
+            : Array.isArray(res)
+              ? res
+              : [];
         if (!rows.length) break;
         all.push(...rows);
         page += 1;
@@ -578,18 +578,57 @@ export default function CRPRecordFlowProduction({ navigation }) {
                       crpUserId,
                     }),
                 },
+                // {
+                //   text: t.no,
+                //   onPress: () => {
+                //     Alert.alert(
+                //       'Success',
+                //       'Your data has been recorded successfully',
+                //       [{ text: 'OK', style: 'default' }],
+                //       { cancelable: true },
+                //     );
+                //   },
+                //   style: 'default',
+                // },
                 {
                   text: t.no,
-                  onPress: () => {
-                    Alert.alert(
-                      'Success',
-                      'Your data has been recorded successfully',
-                      [{ text: 'OK', style: 'default' }],
-                      { cancelable: true },
-                    );
+                  onPress: async () => {
+                    try {
+                      setLoading(true);
+
+                      const payload = buildRecordedPayloadFromMember(row, selectedShg);
+
+                      //  IMPORTANT CHANGE
+                      payload.enterprise_id = "NO";
+                      payload.enterprise_type = "noep";
+
+                      const createApi = findCreateApi();
+                      await createApi(payload);
+
+                      //  refresh recorded list locally
+                      const updated = [...recorded, payload];
+                      setRecorded(updated);
+                      setCrpRecordedBeneficiaries?.(updated);
+
+                      Alert.alert(
+                        'Success',
+                        'Your data has been recorded successfully',
+                        [{ text: 'OK', style: 'default' }],
+                        { cancelable: true },
+                      );
+
+                      //  refresh UI
+                      handleSelectShg(selectedShg);
+
+                    } catch (err) {
+                      console.log('Error saving NO enterprise:', err);
+                      Alert.alert('Error', 'Failed to save data');
+                    } finally {
+                      setLoading(false);
+                    }
                   },
                   style: 'default',
-                },
+                }
               ],
               { cancelable: true },
             );
@@ -598,7 +637,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
         },
         {
           text: t.cancel,
-          onPress: () => {},
+          onPress: () => { },
           style: 'cancel',
         },
       ],
@@ -628,8 +667,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
             const recList = Array.isArray(res?.results)
               ? res.results
               : Array.isArray(res)
-              ? res
-              : [];
+                ? res
+                : [];
 
             setRecorded(recList);
             setCrpRecordedBeneficiaries?.(recList);
@@ -657,8 +696,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
             const recList = Array.isArray(res?.results)
               ? res.results
               : Array.isArray(res)
-              ? res
-              : [];
+                ? res
+                : [];
 
             setRecorded(recList);
             setCrpRecordedBeneficiaries?.(recList);
@@ -728,10 +767,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
     step === 'gp'
       ? t.selectGramPanchayat
       : step === 'village'
-      ? t.selectVillage
-      : step === 'shg'
-      ? t.selectShg
-      : t.selectBeneficiary;
+        ? t.selectVillage
+        : step === 'shg'
+          ? t.selectShg
+          : t.selectBeneficiary;
 
   const handleStepBack = () => {
     if (step === 'gp') {
