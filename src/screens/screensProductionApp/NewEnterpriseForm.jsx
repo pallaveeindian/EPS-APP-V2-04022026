@@ -134,7 +134,7 @@ function extractLocationFromShg(shg) {
   const block_id = shg.blockId ?? shg.block_id ?? null;
   const panchayat_id = shg.panchayatId ?? shg.panchayat_id ?? null;
   const village_id = shg.villageId ?? shg.village_id ?? null;
-  const lokos_shg_code = shg.code ?? shg.shg_code ?? shg.lokos_shg_code ?? null;
+  const lokos_shg_code = shg.code || null;
   return { district_id, block_id, panchayat_id, village_id, lokos_shg_code };
 }
 
@@ -169,7 +169,7 @@ const requestCameraPermissionIfNeeded = async () => {
 // NOTE: api.
 const MULTIPART_X_API_ID = X_API_ID;
 const MULTIPART_X_API_KEY = X_API_KEY;
-const BASE_URL = 'http://upsrlmtms.upsdc.gov.in/ ';
+const BASE_URL = 'http://upsrlmtms.upsdc.gov.in';
 
 // ---------- Enterprise Category (Parent / Child) ----------
 
@@ -1209,8 +1209,8 @@ const ParentChildMultiSelect = ({
                             style={[
                               styles.checkboxSmall,
                               po.children &&
-                              po.children[childKey] &&
-                              styles.checkboxChecked,
+                                po.children[childKey] &&
+                                styles.checkboxChecked,
                             ]}
                           />
                           <Text style={styles.checkboxLabel}>
@@ -1327,12 +1327,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
     route?.params?.username ||
     null;
 
-  const lokosShgCode =
-    route?.params?.lokos_shg_code ||
-    route?.params?.lokosShgCode ||
-    tempShg?.code ||
-    tempShg?.shg_code ||
-    null;
+  const lokosShgCode = tempShg?.code || route?.params?.lokos_shg_code || null;
 
   const [trainingReqType, setTrainingReqType] = useState([]);
   const [trainingReqDeptOther, setTrainingReqDeptOther] = useState('');
@@ -1794,10 +1789,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         const pid = gp?.panchayat_id || gp?.panchayatId;
         if (!pid) continue;
         const cached = getShgListForPanchayat(pid) || [];
-        const found = cached.find(s => {
-          const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
-          return String(code) === String(shgCode);
-        });
+        const found = cached.find(s => String(s.code) === String(shgCode));
         if (found) return extractLocationFromShg(found);
       }
       return null;
@@ -1824,13 +1816,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+      beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-        beneficiary.member_phones.length > 0
+      beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -1855,11 +1847,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       beneficiary.relation_name ??
       '';
 
-    let lokos_shg =
-      lokosShgCode ||
-      beneficiary.shg_code ||
-      beneficiary.lokos_shg_code ||
-      null;
+    let lokos_shg = lokosShgCode || tempShg?.code || null;
 
     // tempShg fallback
     if (
@@ -1914,14 +1902,11 @@ export default function NewEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-              ? shgRes.results
-              : Array.isArray(shgRes)
-                ? shgRes
-                : [];
-          const found = shgRows.find(s => {
-            const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
-            return String(code) === String(lokos_shg);
-          });
+            ? shgRes.results
+            : Array.isArray(shgRes)
+            ? shgRes
+            : [];
+          const found = shgRows.find(s => String(s.code) === String(lokos_shg));
           if (found) {
             const loc = extractLocationFromShg(found);
             district_id = district_id || loc.district_id || null;
@@ -1961,8 +1946,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-            ? 'No'
-            : beneficiary.pld_status || null,
+          ? 'No'
+          : beneficiary.pld_status || null,
     };
 
     if (createdBy !== null) {
@@ -2563,7 +2548,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
           initMonth = String(parseInt(parts[1], 10));
           initDay = String(parseInt(parts[2], 10));
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
     if (!initYear) {
@@ -2870,8 +2855,9 @@ export default function NewEnterpriseForm({ route, navigation }) {
           Alert.alert(
             'Validation',
             language === 'hi'
-              ? `फंड ${i + 1
-              }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
+              ? `फंड ${
+                  i + 1
+                }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
               : `Fund ${i + 1}: Repaid amount cannot exceed received amount.`,
           );
           return false;
@@ -3627,395 +3613,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return true;
   };
-  // const handleSubmit = async () => {
-  //   if (!beneficiary && !recordedBenef) {
-  //     Alert.alert(
-  //       'Error',
-  //       'Beneficiary data missing. Please go back and start recording again.',
-  //     );
-  //     return;
-  //   }
-  //   if (!validateMandatoryFunds()) {
-  //     setLoading(false);
-  //     return;
-  //   }
-  //   // if (!Object.values(enterpriseTypeSelection || {}).some(p => p.selected)) {
-  //   //   Alert.alert('Validation', 'Please select at least one enterprise type.');
-  //   //   return;
-  //   // }
-  //   if (!validateEnterpriseType()) {
-  //     return;
-  //   }
-  //   if (!validateTrainingReceived()) {
-  //     return;
-  //   }
-  //   if (!validateTrainingRequired()) return;
-  //   if (!validateNoTrainingFlow()) return;
-  //   if (!validateSupportRequired()) return;
-  //   if (!validateCadreActivity()) return;
-  //   if (!validateCadreDesignation()) return;
-  //   if (!validateDeclarationSection()) return;
-  //   if (!form.prefered_location_choice) {
-  //     Alert.alert(
-  //       'Validation',
-  //       language === 'hi'
-  //         ? 'कृपया उद्यम शुरू करने के लिए एक स्थान चुनें।'
-  //         : 'Please select a preferred location for starting the enterprise.',
-  //     );
-  //     return;
-  //   }
-  //   if (!form.is_training_received) {
-  //     Alert.alert(
-  //       'Validation',
-  //       'Please answer "Have you received any training?"',
-  //     );
-  //     return;
-  //   }
-  //   if (!form.is_training_required) {
-  //     Alert.alert('Validation', 'Please answer "Do you require any training?"');
-  //     return;
-  //   }
 
-  //   if (
-  //     form.is_training_required === 'Yes' &&
-  //     !Object.values(trainingReqSectors || {}).some(p => p.selected)
-  //   ) {
-  //     Alert.alert('Validation', 'Please select at least one training sector.');
-  //     return;
-  //   }
-
-  //   if (form.is_training_received === 'Yes') {
-  //     if (!trainingReceivedRows.length) {
-  //       Alert.alert('Validation', 'Please add at least one training detail.');
-  //       return;
-  //     }
-
-  //     for (let i = 0; i < trainingReceivedRows.length; i++) {
-  //       const row = trainingReceivedRows[i];
-
-  //       if (!row.department) {
-  //         Alert.alert(
-  //           'Validation',
-  //           `Training row ${i + 1}: Please select department.`,
-  //         );
-  //         return;
-  //       }
-
-  //       if (!Object.values(row.sectors || {}).some(p => p.selected)) {
-  //         Alert.alert(
-  //           'Validation',
-  //           `Training row ${i + 1}: Please select at least one sector.`,
-  //         );
-  //         return;
-  //       }
-  //     }
-  //   }
-
-  //   if (
-  //     form.need_support === 'Yes' &&
-  //     (!form.support_types || Object.values(form.support_types).every(v => !v))
-  //   ) {
-  //     Alert.alert('Validation', 'Please select at least one support type.');
-  //     return;
-  //   }
-  //   if (form.need_support === 'Yes') {
-  //     if (form.support_types?.machinery && !form.machinery_detail?.trim()) {
-  //       Alert.alert('Validation', 'Please specify machinery details.');
-  //       return;
-  //     }
-
-  //     if (
-  //       form.support_types?.infrastructure &&
-  //       !form.infrastructure_support_type
-  //     ) {
-  //       Alert.alert('Validation', 'Please select infrastructure type.');
-  //       return;
-  //     }
-
-  //     if (form.support_types?.financial && !form.financial_support_type) {
-  //       Alert.alert('Validation', 'Please select financial support type.');
-  //       return;
-  //     }
-  //   }
-
-  //   if (!form.declaration_confirmed) {
-  //     Alert.alert('Validation', 'Please confirm the declaration.');
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoading(true);
-
-  //     // 🔥 Validate funds BEFORE creating anything
-  //     // if (!validateMandatoryFunds()) {
-  //     //   setLoading(false);
-  //     //   return;
-  //     // }
-
-  //     // Step 1: ensure Recorded Beneficiary
-  //     const recordedBenefId = await ensureRecordedBeneficiary();
-
-  //     const createdBy = getCreatedByNumeric();
-  //     // Step 2: build NewEnterprise payload
-  //     const prefered_location = buildPreferedLocationValue();
-  //     const has_shg_cif = form.has_shg_cif === 'Yes';
-  //     const is_training_received = form.is_training_received === 'Yes';
-  //     const is_training_required = form.is_training_required === 'Yes';
-  //     const mentorship_support =
-  //       form.mentorship_support === 'Yes'
-  //         ? 'Yes'
-  //         : form.mentorship_support || '';
-  //     const financial_support = formatFinancialSupport();
-  //     const digital_emarket_support = form.digital_emarket_support === 'Yes';
-
-  //     let nearest_skill_centre = null;
-  //     let skill_centre_loc = null;
-  //     let nearest_industry = null;
-  //     let industry_loc = null;
-
-  //     if (form.is_training_required === 'No') {
-  //       if (form.nearest_skill_centre_known === 'Yes') {
-  //         nearest_skill_centre = form.nearest_skill_centre_name || 'Yes';
-  //         skill_centre_loc = form.skill_centre_loc || null;
-  //       } else if (form.nearest_skill_centre_known === 'No') {
-  //         nearest_skill_centre = 'No';
-  //       }
-
-  //       if (form.nearest_industry_known === 'Yes') {
-  //         nearest_industry = form.nearest_industry_name || 'Yes';
-  //         industry_loc = form.industry_loc || null;
-  //       } else if (form.nearest_industry_known === 'No') {
-  //         nearest_industry = 'No';
-  //       }
-  //     }
-
-  //     const formatDesignationString = arr => {
-  //       if (!Array.isArray(arr) || arr.length === 0) return null;
-
-  //       let values = [...arr];
-
-  //       if (values.includes('Other')) {
-  //         if (form.applicant_cadre_other?.trim()) {
-  //           values = values.map(v =>
-  //             v === 'Other' ? form.applicant_cadre_other.trim() : v,
-  //           );
-  //         } else {
-  //           values = values.filter(v => v !== 'Other');
-  //         }
-  //       }
-
-  //       return values.join(', ');
-  //     };
-
-  //     const payloadObj = {
-  //       recorded_benef_id: recordedBenefId ?? null,
-  //       created_by: createdBy, //created_by record
-  //       applicant_special_category:
-  //         form.applicant_special_category === 'Other'
-  //           ? form.applicant_special_category_other || 'Other'
-  //           : form.applicant_special_category || null,
-  //       applicant_cadre: formatDesignationString(form.applicant_cadre_activity),
-  //       applicant_designation: formatDesignationString(
-  //         form.applicant_cadre_designation,
-  //       ),
-  //       prefered_location: prefered_location || null,
-  //       has_shg_receieved_man_fund: has_shg_cif,
-  //       is_training_received,
-  //       is_training_required,
-  //       nearest_skill_centre,
-  //       skill_centre_loc,
-  //       nearest_industry,
-  //       industry_loc,
-  //       is_support_required: form.need_support || null,
-  //       is_active: false,
-  //       declaration_confirmed: !!form.declaration_confirmed,
-  //       declaration_date: form.declaration_date || null,
-  //     };
-
-  //     // Step 3: create NewEnterprise
-  //     let enterpriseRes;
-  //     try {
-  //       enterpriseRes = await performMultipartCreateNewEnterprise(
-  //         payloadObj,
-  //         signatureAsset,
-  //       );
-  //     } catch (e) {
-  //       console.warn('Multipart new-enterprise failed, trying JSON create', e);
-  //       enterpriseRes = await gsApi.createNewEnterprise(payloadObj);
-  //     }
-
-  //     const enterpriseId =
-  //       enterpriseRes?.TH_urid ||
-  //       enterpriseRes?.TH_URID ||
-  //       enterpriseRes?.id ||
-  //       null;
-
-  //     if (!enterpriseId) {
-  //       throw new Error('New enterprise saved but ID missing in response.');
-  //     }
-
-  //     // Step 4: link recorded_beneficiaries.enterprise_id
-  //     try {
-  //       await gsApi.updateRecordedBeneficiary(recordedBenefId, {
-  //         enterprise_id: enterpriseId,
-  //       });
-  //     } catch (e) {
-  //       console.error('Failed to update recorded beneficiary enterprise_id', e);
-  //     }
-
-  //     // Step 5: sub-forms
-  //     // Keep track of all created rows
-  //     const created = {
-  //       enterpriseTypeId: null,
-  //       fundIds: [],
-  //       trainingRecIds: [],
-  //       trainingCertIds: [],
-  //       trainingReqId: null,
-  //       supportIds: [],
-  //     };
-
-  //     try {
-  //       // Enterprise Type
-  //       created.enterpriseTypeId = await createEnterpriseTypeRecord(
-  //         enterpriseId,
-  //       );
-
-  //       // Funds
-  //       created.fundIds =
-  //         (await createEnterpriseMandatoryFunds(enterpriseId)) || [];
-
-  //       // Training Received
-  //       if (form.is_training_received === 'Yes') {
-  //         const result = (await createTrainingReceivedRows(enterpriseId)) || {};
-  //         created.trainingRecIds = result.trainingIds || [];
-  //         created.trainingCertIds = result.certificateIds || [];
-  //       }
-
-  //       // Training Required
-  //       created.trainingReqId =
-  //         (await createTrainingRequired(enterpriseId)) || [];
-
-  //       // Support
-  //       created.supportIds =
-  //         (await createEnterpriseSupport(enterpriseId)) || [];
-  //     } catch (subErr) {
-  //       throw subErr; // immediately stop
-  //     }
-  //     created.fundIds = created.fundIds || [];
-  //     created.trainingRecIds = created.trainingRecIds || [];
-  //     created.trainingCertIds = created.trainingCertIds || [];
-  //     created.supportIds = created.supportIds || [];
-  //     try {
-  //       // Activate Recorded Beneficiary
-  //       await activateRow(
-  //         `${BASE_URL}/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
-  //       );
-
-  //       // Activate New Enterprise
-  //       console.log('ACTIVATING ENTERPRISE ID:', enterpriseRes.id);
-  //       await activateRow(
-  //         `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
-  //       );
-
-  //       // Activate Enterprise Type
-  //       if (created.enterpriseTypeId)
-  //         await activateRow(
-  //           `${BASE_URL}/api/v1/epsakhi/enterprise-types/${created.enterpriseTypeId}/`,
-  //         );
-
-  //       // Activate Funds
-  //       for (const id of created.fundIds) {
-  //         console.log('ACTIVATING FUND IDS:', created.fundIds);
-  //         await activateRow(`${BASE_URL}/api/v1/epsakhi/mandatory-fund/${id}/`);
-  //       }
-
-  //       // Activate Training Received
-  //       for (const id of created.trainingRecIds) {
-  //         console.log('ACTIVATING TRAINING REC IDS:', created.trainingRecIds);
-  //         await activateRow(
-  //           `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${id}/`,
-  //         );
-  //       }
-
-  //       // Activate Training Certificates
-  //       for (const id of created.trainingCertIds) {
-  //         console.log('ACTIVATING TRAINING CERT IDS:', created.trainingCertIds);
-  //         await activateRow(
-  //           `${BASE_URL}/api/v1/epsakhi/training-certificates/${id}/`,
-  //         );
-  //       }
-
-  //       // Activate Training Required
-  //       if (created.trainingReqId)
-  //         await activateRow(
-  //           `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${created.trainingReqId}/`,
-  //         );
-
-  //       // Activate Support
-  //       for (const id of created.supportIds) {
-  //         console.log('ACTIVATING SUPPORT IDS:', created.supportIds);
-  //         await activateRow(
-  //           `${BASE_URL}/api/v1/epsakhi/enterprise-support/${id}/`,
-  //         );
-  //       }
-  //     } catch (activationErr) {
-  //       throw new Error(
-  //         'All rows created but activation failed: ' + activationErr.message,
-  //       );
-  //     }
-
-  //     Alert.alert('Success', 'New enterprise saved successfully.', [
-  //       // {
-  //       //   text: 'OK',
-  //       //   onPress: () => navigation.goBack(),
-  //       // },
-  //       {
-  //         text: 'OK',
-  //         onPress: async () => {
-  //           // [+++ HIGHLIGHT 6: CLEAR DRAFT ON SUCCESS +++]
-  //           if (DRAFT_KEY) {
-  //             try {
-  //               await AsyncStorage.removeItem(DRAFT_KEY);
-  //             } catch (e) {
-  //               console.log('Error clearing draft', e);
-  //             }
-  //           }
-  //           navigation.goBack();
-  //         },
-  //       },
-  //     ]);
-  //   } catch (err) {
-  //     console.error('NewEnterprise submit error', err);
-  //     const serverMsg =
-  //       err?.data?.detail ||
-  //       (err?.data && typeof err.data === 'object'
-  //         ? JSON.stringify(err.data)
-  //         : null) ||
-  //       err?.message ||
-  //       'Failed to save new enterprise. Please try again.';
-  //     Alert.alert('Error', serverMsg);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // ---------- Render ----------
-  const extractEnterpriseMeta = res => {
-    if (!res) return { id: null, thurid: null, raw: null };
-
-    let data = res;
-
-    // handle nested cases
-    if (res.data) data = res.data;
-    if (res.payload) data = res.payload;
-    if (Array.isArray(res)) data = res[0];
-
-    return {
-      id: data?.id || null,
-      thurid: data?.TH_urid || data?.TH_URID || null,
-      raw: data, // full object if needed
-    };
-  };
   const handleSubmit = async () => {
     if (!beneficiary && !recordedBenef) {
       Alert.alert(
@@ -4024,24 +3622,27 @@ export default function NewEnterpriseForm({ route, navigation }) {
       );
       return;
     }
-
-    // ✅ CENTRAL VALIDATION FLOW (ONLY ONCE)
-
-    if (!validateEnterpriseType()) return;
-    if (!validateMandatoryFunds()) return;
-    if (!validateTrainingReceived()) return;
+    if (!validateMandatoryFunds()) {
+      setLoading(false);
+      return;
+    }
+    // if (!Object.values(enterpriseTypeSelection || {}).some(p => p.selected)) {
+    //   Alert.alert('Validation', 'Please select at least one enterprise type.');
+    //   return;
+    // }
+    if (!validateEnterpriseType()) {
+      return;
+    }
+    if (!validateTrainingReceived()) {
+      return;
+    }
     if (!validateTrainingRequired()) return;
     if (!validateNoTrainingFlow()) return;
     if (!validateSupportRequired()) return;
     if (!validateCadreActivity()) return;
     if (!validateCadreDesignation()) return;
-    if (!validateSpecialCategory()) return;
     if (!validateDeclarationSection()) return;
-
-    // ✅ ONLY UNIQUE VALIDATION KEPT
-    const prefered_location = buildPreferedLocationValue();
-
-    if (!prefered_location || !prefered_location.toString().trim()) {
+    if (!form.prefered_location_choice) {
       Alert.alert(
         'Validation',
         language === 'hi'
@@ -4050,15 +3651,99 @@ export default function NewEnterpriseForm({ route, navigation }) {
       );
       return;
     }
+    if (!form.is_training_received) {
+      Alert.alert(
+        'Validation',
+        'Please answer "Have you received any training?"',
+      );
+      return;
+    }
+    if (!form.is_training_required) {
+      Alert.alert('Validation', 'Please answer "Do you require any training?"');
+      return;
+    }
+
+    if (
+      form.is_training_required === 'Yes' &&
+      !Object.values(trainingReqSectors || {}).some(p => p.selected)
+    ) {
+      Alert.alert('Validation', 'Please select at least one training sector.');
+      return;
+    }
+
+    if (form.is_training_received === 'Yes') {
+      if (!trainingReceivedRows.length) {
+        Alert.alert('Validation', 'Please add at least one training detail.');
+        return;
+      }
+
+      for (let i = 0; i < trainingReceivedRows.length; i++) {
+        const row = trainingReceivedRows[i];
+
+        if (!row.department) {
+          Alert.alert(
+            'Validation',
+            `Training row ${i + 1}: Please select department.`,
+          );
+          return;
+        }
+
+        if (!Object.values(row.sectors || {}).some(p => p.selected)) {
+          Alert.alert(
+            'Validation',
+            `Training row ${i + 1}: Please select at least one sector.`,
+          );
+          return;
+        }
+      }
+    }
+
+    if (
+      form.need_support === 'Yes' &&
+      (!form.support_types || Object.values(form.support_types).every(v => !v))
+    ) {
+      Alert.alert('Validation', 'Please select at least one support type.');
+      return;
+    }
+    if (form.need_support === 'Yes') {
+      if (form.support_types?.machinery && !form.machinery_detail?.trim()) {
+        Alert.alert('Validation', 'Please specify machinery details.');
+        return;
+      }
+
+      if (
+        form.support_types?.infrastructure &&
+        !form.infrastructure_support_type
+      ) {
+        Alert.alert('Validation', 'Please select infrastructure type.');
+        return;
+      }
+
+      if (form.support_types?.financial && !form.financial_support_type) {
+        Alert.alert('Validation', 'Please select financial support type.');
+        return;
+      }
+    }
+
+    if (!form.declaration_confirmed) {
+      Alert.alert('Validation', 'Please confirm the declaration.');
+      return;
+    }
 
     try {
       setLoading(true);
+
+      // 🔥 Validate funds BEFORE creating anything
+      // if (!validateMandatoryFunds()) {
+      //   setLoading(false);
+      //   return;
+      // }
 
       // Step 1: ensure Recorded Beneficiary
       const recordedBenefId = await ensureRecordedBeneficiary();
 
       const createdBy = getCreatedByNumeric();
-
+      // Step 2: build NewEnterprise payload
       const prefered_location = buildPreferedLocationValue();
       const has_shg_cif = form.has_shg_cif === 'Yes';
       const is_training_received = form.is_training_received === 'Yes';
@@ -4111,7 +3796,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       const payloadObj = {
         recorded_benef_id: recordedBenefId ?? null,
-        created_by: createdBy,
+        created_by: createdBy, //created_by record
         applicant_special_category:
           form.applicant_special_category === 'Other'
             ? form.applicant_special_category_other || 'Other'
@@ -4134,6 +3819,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         declaration_date: form.declaration_date || null,
       };
 
+      // Step 3: create NewEnterprise
       let enterpriseRes;
       try {
         enterpriseRes = await performMultipartCreateNewEnterprise(
@@ -4141,39 +3827,31 @@ export default function NewEnterpriseForm({ route, navigation }) {
           signatureAsset,
         );
       } catch (e) {
-        console.warn('Fallback to JSON create', e);
+        console.warn('Multipart new-enterprise failed, trying JSON create', e);
         enterpriseRes = await gsApi.createNewEnterprise(payloadObj);
       }
 
-      // const enterpriseId =
-      //   enterpriseRes?.TH_urid ||
-      //   enterpriseRes?.TH_URID ||
-      //   enterpriseRes?.id ||
-      //   null;
-
-      const meta = extractEnterpriseMeta(enterpriseRes);
-
-      console.log('🔥 FINAL META:', meta);
-
-      const enterpriseId = meta.id;
-      const enterpriseUrid = meta.TH_urid;
+      const enterpriseId =
+        enterpriseRes?.TH_urid ||
+        enterpriseRes?.TH_URID ||
+        enterpriseRes?.id ||
+        null;
 
       if (!enterpriseId) {
-        throw new Error('New enterprise saved but ID missing.');
+        throw new Error('New enterprise saved but ID missing in response.');
       }
-      // if (!enterpriseId) {
-      //   throw new Error('New enterprise saved but ID missing.');
-      // }
 
+      // Step 4: link recorded_beneficiaries.enterprise_id
       try {
         await gsApi.updateRecordedBeneficiary(recordedBenefId, {
           enterprise_id: enterpriseId,
-          enterprise_urid: enterpriseUrid,
         });
       } catch (e) {
-        console.error('Update beneficiary failed', e);
+        console.error('Failed to update recorded beneficiary enterprise_id', e);
       }
 
+      // Step 5: sub-forms
+      // Keep track of all created rows
       const created = {
         enterpriseTypeId: null,
         fundIds: [],
@@ -4184,66 +3862,85 @@ export default function NewEnterpriseForm({ route, navigation }) {
       };
 
       try {
+        // Enterprise Type
         created.enterpriseTypeId = await createEnterpriseTypeRecord(
           enterpriseId,
         );
+
+        // Funds
         created.fundIds =
           (await createEnterpriseMandatoryFunds(enterpriseId)) || [];
 
+        // Training Received
         if (form.is_training_received === 'Yes') {
           const result = (await createTrainingReceivedRows(enterpriseId)) || {};
           created.trainingRecIds = result.trainingIds || [];
           created.trainingCertIds = result.certificateIds || [];
         }
 
+        // Training Required
         created.trainingReqId =
           (await createTrainingRequired(enterpriseId)) || [];
 
+        // Support
         created.supportIds =
           (await createEnterpriseSupport(enterpriseId)) || [];
       } catch (subErr) {
-        throw subErr;
+        throw subErr; // immediately stop
       }
-
+      created.fundIds = created.fundIds || [];
+      created.trainingRecIds = created.trainingRecIds || [];
+      created.trainingCertIds = created.trainingCertIds || [];
+      created.supportIds = created.supportIds || [];
       try {
+        // Activate Recorded Beneficiary
         await activateRow(
           `${BASE_URL}/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
         );
 
-        // await activateRow(
-        //   `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
-        // );
+        // Activate New Enterprise
+        console.log('ACTIVATING ENTERPRISE ID:', enterpriseRes.id);
         await activateRow(
-          `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseId}/`,
+          `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
         );
 
+        // Activate Enterprise Type
         if (created.enterpriseTypeId)
           await activateRow(
             `${BASE_URL}/api/v1/epsakhi/enterprise-types/${created.enterpriseTypeId}/`,
           );
 
+        // Activate Funds
         for (const id of created.fundIds) {
+          console.log('ACTIVATING FUND IDS:', created.fundIds);
           await activateRow(`${BASE_URL}/api/v1/epsakhi/mandatory-fund/${id}/`);
         }
 
+        // Activate Training Received
         for (const id of created.trainingRecIds) {
+          console.log('ACTIVATING TRAINING REC IDS:', created.trainingRecIds);
           await activateRow(
             `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${id}/`,
           );
         }
 
+        // Activate Training Certificates
         for (const id of created.trainingCertIds) {
+          console.log('ACTIVATING TRAINING CERT IDS:', created.trainingCertIds);
           await activateRow(
             `${BASE_URL}/api/v1/epsakhi/training-certificates/${id}/`,
           );
         }
 
+        // Activate Training Required
         if (created.trainingReqId)
           await activateRow(
             `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${created.trainingReqId}/`,
           );
 
+        // Activate Support
         for (const id of created.supportIds) {
+          console.log('ACTIVATING SUPPORT IDS:', created.supportIds);
           await activateRow(
             `${BASE_URL}/api/v1/epsakhi/enterprise-support/${id}/`,
           );
@@ -4255,9 +3952,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
       }
 
       Alert.alert('Success', 'New enterprise saved successfully.', [
+        // {
+        //   text: 'OK',
+        //   onPress: () => navigation.goBack(),
+        // },
         {
           text: 'OK',
           onPress: async () => {
+            // [+++ HIGHLIGHT 6: CLEAR DRAFT ON SUCCESS +++]
             if (DRAFT_KEY) {
               try {
                 await AsyncStorage.removeItem(DRAFT_KEY);
@@ -4270,21 +3972,305 @@ export default function NewEnterpriseForm({ route, navigation }) {
         },
       ]);
     } catch (err) {
-      console.error('Submit error', err);
-
+      console.error('NewEnterprise submit error', err);
       const serverMsg =
         err?.data?.detail ||
         (err?.data && typeof err.data === 'object'
           ? JSON.stringify(err.data)
           : null) ||
         err?.message ||
-        'Failed to save new enterprise.';
-
+        'Failed to save new enterprise. Please try again.';
       Alert.alert('Error', serverMsg);
     } finally {
       setLoading(false);
     }
   };
+
+  // ---------- Render ----------
+  // const extractEnterpriseMeta = res => {
+  //   if (!res) return { id: null, thurid: null, raw: null };
+
+  //   let data = res;
+
+  //   // handle nested cases
+  //   if (res.data) data = res.data;
+  //   if (res.payload) data = res.payload;
+  //   if (Array.isArray(res)) data = res[0];
+
+  //   return {
+  //     id: data?.id || null,
+  //     thurid: data?.TH_urid || data?.TH_URID || null,
+  //     raw: data, // full object if needed
+  //   };
+  // };
+  // const handleSubmit = async () => {
+  //   if (!beneficiary && !recordedBenef) {
+  //     Alert.alert(
+  //       'Error',
+  //       'Beneficiary data missing. Please go back and start recording again.',
+  //     );
+  //     return;
+  //   }
+
+  //   // ✅ CENTRAL VALIDATION FLOW (ONLY ONCE)
+
+  //   if (!validateEnterpriseType()) return;
+  //   if (!validateMandatoryFunds()) return;
+  //   if (!validateTrainingReceived()) return;
+  //   if (!validateTrainingRequired()) return;
+  //   if (!validateNoTrainingFlow()) return;
+  //   if (!validateSupportRequired()) return;
+  //   if (!validateCadreActivity()) return;
+  //   if (!validateCadreDesignation()) return;
+  //   if (!validateSpecialCategory()) return;
+  //   if (!validateDeclarationSection()) return;
+
+  //   // ✅ ONLY UNIQUE VALIDATION KEPT
+  //   const prefered_location = buildPreferedLocationValue();
+
+  //   if (!prefered_location || !prefered_location.toString().trim()) {
+  //     Alert.alert(
+  //       'Validation',
+  //       language === 'hi'
+  //         ? 'कृपया उद्यम शुरू करने के लिए एक स्थान चुनें।'
+  //         : 'Please select a preferred location for starting the enterprise.',
+  //     );
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     // Step 1: ensure Recorded Beneficiary
+  //     const recordedBenefId = await ensureRecordedBeneficiary();
+
+  //     const createdBy = getCreatedByNumeric();
+
+  //     const prefered_location = buildPreferedLocationValue();
+  //     const has_shg_cif = form.has_shg_cif === 'Yes';
+  //     const is_training_received = form.is_training_received === 'Yes';
+  //     const is_training_required = form.is_training_required === 'Yes';
+  //     const mentorship_support =
+  //       form.mentorship_support === 'Yes'
+  //         ? 'Yes'
+  //         : form.mentorship_support || '';
+  //     const financial_support = formatFinancialSupport();
+  //     const digital_emarket_support = form.digital_emarket_support === 'Yes';
+
+  //     let nearest_skill_centre = null;
+  //     let skill_centre_loc = null;
+  //     let nearest_industry = null;
+  //     let industry_loc = null;
+
+  //     if (form.is_training_required === 'No') {
+  //       if (form.nearest_skill_centre_known === 'Yes') {
+  //         nearest_skill_centre = form.nearest_skill_centre_name || 'Yes';
+  //         skill_centre_loc = form.skill_centre_loc || null;
+  //       } else if (form.nearest_skill_centre_known === 'No') {
+  //         nearest_skill_centre = 'No';
+  //       }
+
+  //       if (form.nearest_industry_known === 'Yes') {
+  //         nearest_industry = form.nearest_industry_name || 'Yes';
+  //         industry_loc = form.industry_loc || null;
+  //       } else if (form.nearest_industry_known === 'No') {
+  //         nearest_industry = 'No';
+  //       }
+  //     }
+
+  //     const formatDesignationString = arr => {
+  //       if (!Array.isArray(arr) || arr.length === 0) return null;
+
+  //       let values = [...arr];
+
+  //       if (values.includes('Other')) {
+  //         if (form.applicant_cadre_other?.trim()) {
+  //           values = values.map(v =>
+  //             v === 'Other' ? form.applicant_cadre_other.trim() : v,
+  //           );
+  //         } else {
+  //           values = values.filter(v => v !== 'Other');
+  //         }
+  //       }
+
+  //       return values.join(', ');
+  //     };
+
+  //     const payloadObj = {
+  //       recorded_benef_id: recordedBenefId ?? null,
+  //       created_by: createdBy,
+  //       applicant_special_category:
+  //         form.applicant_special_category === 'Other'
+  //           ? form.applicant_special_category_other || 'Other'
+  //           : form.applicant_special_category || null,
+  //       applicant_cadre: formatDesignationString(form.applicant_cadre_activity),
+  //       applicant_designation: formatDesignationString(
+  //         form.applicant_cadre_designation,
+  //       ),
+  //       prefered_location: prefered_location || null,
+  //       has_shg_receieved_man_fund: has_shg_cif,
+  //       is_training_received,
+  //       is_training_required,
+  //       nearest_skill_centre,
+  //       skill_centre_loc,
+  //       nearest_industry,
+  //       industry_loc,
+  //       is_support_required: form.need_support || null,
+  //       is_active: false,
+  //       declaration_confirmed: !!form.declaration_confirmed,
+  //       declaration_date: form.declaration_date || null,
+  //     };
+
+  //     let enterpriseRes;
+  //     try {
+  //       enterpriseRes = await performMultipartCreateNewEnterprise(
+  //         payloadObj,
+  //         signatureAsset,
+  //       );
+  //     } catch (e) {
+  //       console.warn('Fallback to JSON create', e);
+  //       enterpriseRes = await gsApi.createNewEnterprise(payloadObj);
+  //     }
+
+  //     // const enterpriseId =
+  //     //   enterpriseRes?.TH_urid ||
+  //     //   enterpriseRes?.TH_URID ||
+  //     //   enterpriseRes?.id ||
+  //     //   null;
+
+  //     const meta = extractEnterpriseMeta(enterpriseRes);
+
+  //     console.log('🔥 FINAL META:', meta);
+
+  //     const enterpriseId = meta.id;
+  //     const enterpriseUrid = meta.thurid;
+
+  //     if (!enterpriseId) {
+  //       throw new Error('New enterprise saved but ID missing.');
+  //     }
+  //     // if (!enterpriseId) {
+  //     //   throw new Error('New enterprise saved but ID missing.');
+  //     // }
+
+  //     try {
+  //       await gsApi.updateRecordedBeneficiary(recordedBenefId, {
+  //         enterprise_id: enterpriseUrid,
+  //       });
+  //     } catch (e) {
+  //       console.error('Update beneficiary failed', e);
+  //     }
+
+  //     const created = {
+  //       enterpriseTypeId: null,
+  //       fundIds: [],
+  //       trainingRecIds: [],
+  //       trainingCertIds: [],
+  //       trainingReqId: null,
+  //       supportIds: [],
+  //     };
+
+  //     try {
+  //       created.enterpriseTypeId = await createEnterpriseTypeRecord(
+  //         enterpriseId,
+  //       );
+  //       created.fundIds =
+  //         (await createEnterpriseMandatoryFunds(enterpriseId)) || [];
+
+  //       if (form.is_training_received === 'Yes') {
+  //         const result = (await createTrainingReceivedRows(enterpriseId)) || {};
+  //         created.trainingRecIds = result.trainingIds || [];
+  //         created.trainingCertIds = result.certificateIds || [];
+  //       }
+
+  //       created.trainingReqId =
+  //         (await createTrainingRequired(enterpriseId)) || [];
+
+  //       created.supportIds =
+  //         (await createEnterpriseSupport(enterpriseId)) || [];
+  //     } catch (subErr) {
+  //       throw subErr;
+  //     }
+
+  //     try {
+  //       await activateRow(
+  //         `${BASE_URL}/api/v1/epsakhi/recorded-beneficiaries/${recordedBenefId}/`,
+  //       );
+
+  //       // await activateRow(
+  //       //   `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseRes.id}/`,
+  //       // );
+  //       await activateRow(
+  //         `${BASE_URL}/api/v1/epsakhi/new-enterprise/${enterpriseId}/`,
+  //       );
+
+  //       if (created.enterpriseTypeId)
+  //         await activateRow(
+  //           `${BASE_URL}/api/v1/epsakhi/enterprise-types/${created.enterpriseTypeId}/`,
+  //         );
+
+  //       for (const id of created.fundIds) {
+  //         await activateRow(`${BASE_URL}/api/v1/epsakhi/mandatory-fund/${id}/`);
+  //       }
+
+  //       for (const id of created.trainingRecIds) {
+  //         await activateRow(
+  //           `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${id}/`,
+  //         );
+  //       }
+
+  //       for (const id of created.trainingCertIds) {
+  //         await activateRow(
+  //           `${BASE_URL}/api/v1/epsakhi/training-certificates/${id}/`,
+  //         );
+  //       }
+
+  //       if (created.trainingReqId)
+  //         await activateRow(
+  //           `${BASE_URL}/api/v1/epsakhi/enterprise-training-reqs/${created.trainingReqId}/`,
+  //         );
+
+  //       for (const id of created.supportIds) {
+  //         await activateRow(
+  //           `${BASE_URL}/api/v1/epsakhi/enterprise-support/${id}/`,
+  //         );
+  //       }
+  //     } catch (activationErr) {
+  //       throw new Error(
+  //         'All rows created but activation failed: ' + activationErr.message,
+  //       );
+  //     }
+
+  //     Alert.alert('Success', 'New enterprise saved successfully.', [
+  //       {
+  //         text: 'OK',
+  //         onPress: async () => {
+  //           if (DRAFT_KEY) {
+  //             try {
+  //               await AsyncStorage.removeItem(DRAFT_KEY);
+  //             } catch (e) {
+  //               console.log('Error clearing draft', e);
+  //             }
+  //           }
+  //           navigation.goBack();
+  //         },
+  //       },
+  //     ]);
+  //   } catch (err) {
+  //     console.error('Submit error', err);
+
+  //     const serverMsg =
+  //       err?.data?.detail ||
+  //       (err?.data && typeof err.data === 'object'
+  //         ? JSON.stringify(err.data)
+  //         : null) ||
+  //       err?.message ||
+  //       'Failed to save new enterprise.';
+
+  //     Alert.alert('Error', serverMsg);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   return (
     <ScrollView
       style={styles.container}
@@ -4377,7 +4363,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
             style={[
               styles.checkbox,
               form.prefered_location_choice === opt.key &&
-              styles.checkboxChecked,
+                styles.checkboxChecked,
             ]}
           />
           <Text style={styles.checkboxLabel}>
@@ -4866,12 +4852,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'Under 7 days'
                       ? '7 दिन से कम'
                       : opt === '7 days'
-                        ? '7 दिन'
-                        : opt === '15 days'
-                          ? '15 दिन'
-                          : opt === '30 days'
-                            ? '30 दिन'
-                            : '30 दिन से अधिक'
+                      ? '7 दिन'
+                      : opt === '15 days'
+                      ? '15 दिन'
+                      : opt === '30 days'
+                      ? '30 दिन'
+                      : '30 दिन से अधिक'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -5172,7 +5158,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       style={[
                         styles.checkbox,
                         form.infrastructure_support_type === opt &&
-                        styles.checkboxChecked,
+                          styles.checkboxChecked,
                       ]}
                     />
                     <Text style={styles.checkboxLabel}>
@@ -5181,10 +5167,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         ? opt === 'Equipments'
                           ? 'उपकरण'
                           : opt === 'Machinery'
-                            ? 'मशीनरी'
-                            : opt === 'Place of Business'
-                              ? 'व्यवसाय स्थल'
-                              : 'अन्य'
+                          ? 'मशीनरी'
+                          : opt === 'Place of Business'
+                          ? 'व्यवसाय स्थल'
+                          : 'अन्य'
                         : opt}
                     </Text>
                   </TouchableOpacity>
@@ -5254,8 +5240,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Physical'
                         ? 'भौतिक'
                         : opt === 'Online'
-                          ? 'ऑनलाइन'
-                          : 'अन्य'
+                        ? 'ऑनलाइन'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -5274,7 +5260,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           style={[
                             styles.checkbox,
                             form.branding_subtype === sub &&
-                            styles.checkboxChecked,
+                              styles.checkboxChecked,
                           ]}
                         />
                         <Text style={styles.checkboxLabel}>
@@ -5283,14 +5269,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
                             ? sub === 'Flipkart'
                               ? 'फ्लिपकार्ट'
                               : sub === 'Amazon'
-                                ? 'अमेज़न'
-                                : sub === 'Meesho'
-                                  ? 'मीशो'
-                                  : sub === 'ONDC'
-                                    ? 'ओएनडीसी'
-                                    : sub === 'Others'
-                                      ? 'अन्य'
-                                      : sub
+                              ? 'अमेज़न'
+                              : sub === 'Meesho'
+                              ? 'मीशो'
+                              : sub === 'ONDC'
+                              ? 'ओएनडीसी'
+                              : sub === 'Others'
+                              ? 'अन्य'
+                              : sub
                             : sub}
                         </Text>
                       </TouchableOpacity>
@@ -5371,7 +5357,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     style={[
                       styles.checkbox,
                       form.financial_support_type === opt &&
-                      styles.checkboxChecked,
+                        styles.checkboxChecked,
                     ]}
                   />
                   <Text style={styles.checkboxLabel}>
@@ -5380,10 +5366,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Grant and Subsidy'
                         ? 'अनुदान एवं सब्सिडी'
                         : opt === 'Loan'
-                          ? 'ऋण'
-                          : opt === 'Interest Subvention'
-                            ? 'ब्याज अनुदान'
-                            : 'अन्य'
+                        ? 'ऋण'
+                        : opt === 'Interest Subvention'
+                        ? 'ब्याज अनुदान'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -5412,7 +5398,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         style={[
                           styles.checkbox,
                           form.loan_amount_range === range &&
-                          styles.checkboxChecked,
+                            styles.checkboxChecked,
                         ]}
                       />
                       <Text style={styles.checkboxLabel}>
@@ -5421,12 +5407,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           ? range === 'Below to 50,000'
                             ? '₹50,000 तक'
                             : range === '50,000 - 1,00,000'
-                              ? '₹50,000 – ₹1,00,000'
-                              : range === '1,00,000 - 2,00,000'
-                                ? '₹1,00,000 – ₹2,00,000'
-                                : range === '2,00,000 - 5,00,000'
-                                  ? '₹2,00,000 – ₹5,00,000'
-                                  : '₹5,00,000 से अधिक'
+                            ? '₹50,000 – ₹1,00,000'
+                            : range === '1,00,000 - 2,00,000'
+                            ? '₹1,00,000 – ₹2,00,000'
+                            : range === '2,00,000 - 5,00,000'
+                            ? '₹2,00,000 – ₹5,00,000'
+                            : '₹5,00,000 से अधिक'
                           : range}
                       </Text>
                     </TouchableOpacity>
@@ -5438,17 +5424,17 @@ export default function NewEnterpriseForm({ route, navigation }) {
               {['Grant and Subsidy', 'Interest Subvention', 'Others'].includes(
                 form.financial_support_type,
               ) && (
-                  <TextInput
-                    style={styles.input}
-                    placeholder={
-                      language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
-                    }
-                    value={form.financial_support_other_text}
-                    onChangeText={v =>
-                      setField('financial_support_other_text', v)
-                    }
-                  />
-                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder={
+                    language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
+                  }
+                  value={form.financial_support_other_text}
+                  onChangeText={v =>
+                    setField('financial_support_other_text', v)
+                  }
+                />
+              )}
             </>
           )}
 
@@ -5542,28 +5528,28 @@ export default function NewEnterpriseForm({ route, navigation }) {
                   ? opt === 'Lakhpati CRP'
                     ? 'लखपति सीआरपी'
                     : opt === 'Krishi Ajeevika Sakhi'
-                      ? 'कृषि आजीविका सखी'
-                      : opt === 'Krishi Udyog Sakhi'
-                        ? 'कृषि उद्योग सखी'
-                        : opt === 'Mahila Kisan'
-                          ? 'महिला किसान'
-                          : opt === 'CRP- EP'
-                            ? 'सीआरपी-ईपी'
-                            : opt === 'BC sakhi'
-                              ? 'बीसी सखी'
-                              : opt === 'Vidyut Sakhi'
-                                ? 'विद्युत सखी'
-                                : opt === 'Bank Sakhi'
-                                  ? 'बैंक सखी'
-                                  : opt === 'Fnhw Swasth sakhi'
-                                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
-                                    : opt === 'THR/Dry ration worker'
-                                      ? 'टीएचआर / सूखा राशन कार्यकर्ता'
-                                      : opt === 'Samuh Sakhi'
-                                        ? 'समूह सखी'
-                                        : opt === 'MGNREGA MATE'
-                                          ? 'मनरेगा मेट'
-                                          : 'अन्य'
+                    ? 'कृषि आजीविका सखी'
+                    : opt === 'Krishi Udyog Sakhi'
+                    ? 'कृषि उद्योग सखी'
+                    : opt === 'Mahila Kisan'
+                    ? 'महिला किसान'
+                    : opt === 'CRP- EP'
+                    ? 'सीआरपी-ईपी'
+                    : opt === 'BC sakhi'
+                    ? 'बीसी सखी'
+                    : opt === 'Vidyut Sakhi'
+                    ? 'विद्युत सखी'
+                    : opt === 'Bank Sakhi'
+                    ? 'बैंक सखी'
+                    : opt === 'Fnhw Swasth sakhi'
+                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
+                    : opt === 'THR/Dry ration worker'
+                    ? 'टीएचआर / सूखा राशन कार्यकर्ता'
+                    : opt === 'Samuh Sakhi'
+                    ? 'समूह सखी'
+                    : opt === 'MGNREGA MATE'
+                    ? 'मनरेगा मेट'
+                    : 'अन्य'
                   : opt}
               </Text>
             </TouchableOpacity>
@@ -5621,12 +5607,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'President'
                       ? 'अध्यक्ष'
                       : opt === 'Secretary'
-                        ? 'सचिव'
-                        : opt === 'Treasurer'
-                          ? 'कोषाध्यक्ष'
-                          : opt === 'Book-Keeper'
-                            ? 'बुक कीपर'
-                            : 'सदस्य'
+                      ? 'सचिव'
+                      : opt === 'Treasurer'
+                      ? 'कोषाध्यक्ष'
+                      : opt === 'Book-Keeper'
+                      ? 'बुक कीपर'
+                      : 'सदस्य'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -5652,7 +5638,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
               style={[
                 styles.checkbox,
                 form.applicant_special_category === opt &&
-                styles.checkboxChecked,
+                  styles.checkboxChecked,
               ]}
             />
             <Text style={styles.checkboxLabel}>
@@ -5661,10 +5647,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                 ? opt === 'Divyang'
                   ? 'दिव्यांग'
                   : opt === 'Widow'
-                    ? 'विधवा'
-                    : opt === 'Unmarried'
-                      ? 'अविवाहित'
-                      : 'अन्य'
+                  ? 'विधवा'
+                  : opt === 'Unmarried'
+                  ? 'अविवाहित'
+                  : 'अन्य'
                 : opt}
             </Text>
           </TouchableOpacity>

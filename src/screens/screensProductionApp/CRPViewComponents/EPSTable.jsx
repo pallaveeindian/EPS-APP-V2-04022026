@@ -212,7 +212,7 @@ export default function EPSTable({ filters }) {
 
   const renderCard = ({ item, index }) => {
     console.log('FULL ITEM DATA:', item);
-    console.log('Member Code:', item.looks_member_code);
+    console.log('Member Code:', item.lokos_member_code);
     const serialNumber = (page - 1) * PAGE_SIZE + index + 1;
 
     return (

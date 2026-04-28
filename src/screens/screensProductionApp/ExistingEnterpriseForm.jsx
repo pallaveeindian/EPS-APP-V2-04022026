@@ -54,7 +54,7 @@ function extractLocationFromShg(shg) {
   const block_id = shg.blockId ?? shg.block_id ?? null;
   const panchayat_id = shg.panchayatId ?? shg.panchayat_id ?? null;
   const village_id = shg.villageId ?? shg.village_id ?? null;
-  const lokos_shg_code = shg.code ?? shg.shg_code ?? shg.lokos_shg_code ?? null;
+  const lokos_shg_code = shg.code || null;
   return { district_id, block_id, panchayat_id, village_id, lokos_shg_code };
 }
 
@@ -74,12 +74,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     route?.params?.username ||
     null;
 
-  const lokosShgCode =
-    route?.params?.lokos_shg_code ||
-    route?.params?.lokosShgCode ||
-    tempShg?.code ||
-    tempShg?.shg_code ||
-    null;
+  const lokosShgCode = tempShg?.code || route?.params?.lokos_shg_code || null;
 
   // --- master form state (single source of truth) ---
   const [existingForm, setExistingForm] = useState({
@@ -337,10 +332,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         const pid = gp?.panchayat_id || gp?.panchayatId;
         if (!pid) continue;
         const cached = getShgListForPanchayat(pid) || [];
-        const found = cached.find(s => {
-          const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
-          return String(code) === String(shgCode);
-        });
+        const found = cached.find(s => String(s.code) === String(shgCode));
         if (found) return extractLocationFromShg(found);
       }
       return null;
@@ -397,11 +389,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       beneficiary.relation_name ??
       '';
 
-    let lokos_shg =
-      lokosShgCode ||
-      beneficiary.shg_code ||
-      beneficiary.lokos_shg_code ||
-      null;
+    let lokos_shg = lokosShgCode || tempShg?.code || null;
 
     // fallback from tempShg
     if (
@@ -460,10 +448,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             : Array.isArray(shgRes)
             ? shgRes
             : [];
-          const found = shgRows.find(s => {
-            const code = s.code ?? s.shg_code ?? s.lokos_shg_code ?? s.code;
-            return String(code) === String(lokos_shg);
-          });
+          const found = shgRows.find(s => String(s.code) === String(lokos_shg));
           if (found) {
             const loc = extractLocationFromShg(found);
             district_id = district_id || loc.district_id || null;

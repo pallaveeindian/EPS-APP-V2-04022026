@@ -11,6 +11,24 @@ import {
 import { useRoute } from '@react-navigation/native';
 import gsApi from '../../../api/gsApi';
 import { Linking, TouchableOpacity } from 'react-native';
+
+function normalizeMediaUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('/media/')) return url;
+  if (url.startsWith('http')) {
+    try {
+      const parsedUrl = new URL(url);
+      return parsedUrl.pathname;
+    } catch (error) {
+      console.warn('Invalid media URL:', url);
+      return url;
+    }
+  }
+  // Ensure it has a leading slash if it's just a raw string like "media/uploads/..."
+  if (!url.startsWith('/')) return '/' + url;
+  return url;
+}
+
 export default function EPSDetail() {
   const route = useRoute();
   const { epsId } = route.params || {};
@@ -58,7 +76,7 @@ export default function EPSDetail() {
       : detail?.shared?.training;
   const isExisting = detail?.enterprise_type === 'existing';
   const isNew = detail?.enterprise_type === 'new';
-  const BASE_URL = 'http://upsrlmtms.upsdc.gov.in/ ';
+  const BASE_URL = 'http://upsrlmtms.upsdc.gov.in';
 
   return (
     <ScrollView style={styles.container}>
@@ -317,21 +335,25 @@ export default function EPSDetail() {
                   <View key={i} style={{ marginBottom: 15 }}>
                     {m.open_box_photo && (
                       <Image
-                        source={{ uri: BASE_URL + m.open_box_photo }}
+                        source={{
+                          uri: BASE_URL + normalizeMediaUrl(m.open_box_photo),
+                        }}
                         style={styles.image}
                       />
                     )}
 
                     {m.close_box_photo && (
                       <Image
-                        source={{ uri: BASE_URL + m.close_box_photo }}
+                        source={{
+                          uri: BASE_URL + normalizeMediaUrl(m.close_box_photo),
+                        }}
                         style={styles.image}
                       />
                     )}
 
                     {m.others && (
                       <Image
-                        source={{ uri: BASE_URL + m.others }}
+                        source={{ uri: BASE_URL + normalizeMediaUrl(m.others) }}
                         style={styles.image}
                       />
                     )}
@@ -399,19 +421,23 @@ export default function EPSDetail() {
               <View key={i}>
                 {m.front_photo && (
                   <Image
-                    source={{ uri: BASE_URL + m.front_photo }}
+                    source={{
+                      uri: BASE_URL + normalizeMediaUrl(m.front_photo),
+                    }}
                     style={styles.image}
                   />
                 )}
                 {m.inside_photo && (
                   <Image
-                    source={{ uri: BASE_URL + m.inside_photo }}
+                    source={{
+                      uri: BASE_URL + normalizeMediaUrl(m.inside_photo),
+                    }}
                     style={styles.image}
                   />
                 )}
                 {m.others && (
                   <Image
-                    source={{ uri: BASE_URL + m.others }}
+                    source={{ uri: BASE_URL + normalizeMediaUrl(m.others) }}
                     style={styles.image}
                   />
                 )}
@@ -479,7 +505,9 @@ export default function EPSDetail() {
                 <DetailRow
                   label="License File"
                   value={
-                    lic.license_file ? `${BASE_URL}${lic.license_file}` : null
+                    lic.license_file
+                      ? `${BASE_URL}${normalizeMediaUrl(lic.license_file)}`
+                      : null
                   }
                   isLink={true}
                 />
@@ -523,7 +551,7 @@ export default function EPSDetail() {
                       label="Certificate"
                       value={
                         cert.certificates
-                          ? `${BASE_URL}${cert.certificates}`
+                          ? `${BASE_URL}${normalizeMediaUrl(cert.certificates)}`
                           : null
                       }
                       isLink={true}
@@ -606,7 +634,9 @@ export default function EPSDetail() {
                   <>
                     <Text style={styles.label}>Enterprise Photo</Text>
                     <Image
-                      source={{ uri: BASE_URL + m.photo_enterprise }}
+                      source={{
+                        uri: BASE_URL + normalizeMediaUrl(m.photo_enterprise),
+                      }}
                       style={styles.image}
                     />
                   </>
@@ -616,7 +646,7 @@ export default function EPSDetail() {
                   <>
                     <Text style={styles.label}>Other Media</Text>
                     <Image
-                      source={{ uri: BASE_URL + m.others }}
+                      source={{ uri: BASE_URL + normalizeMediaUrl(m.others) }}
                       style={styles.image}
                     />
                   </>
@@ -646,7 +676,12 @@ export default function EPSDetail() {
                   <DetailRow
                     key={cIndex}
                     label="Certificate"
-                    value={cert.certificates}
+                    value={
+                      cert.certificates
+                        ? `${BASE_URL}${normalizeMediaUrl(cert.certificates)}`
+                        : null
+                    }
+                    isLink={true}
                   />
                 ))}
               </View>

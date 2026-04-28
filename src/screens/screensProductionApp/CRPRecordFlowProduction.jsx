@@ -241,8 +241,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
 
       mobile: primaryPhone?.phone_no ?? null,
 
-      lokos_shg_code:
-        shg?.code ?? member?.shg_code ?? selectedShg?.code ?? null,
+      lokos_shg_code: shg?.code ?? selectedShg?.code ?? null,
     };
 
     if (created_by_to_send !== null) {

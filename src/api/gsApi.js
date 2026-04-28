@@ -4,11 +4,10 @@ import { X_API_ID, X_API_KEY, API_ENCRYPTION_KEY as ENV_API_KEY } from '@env';
 import { getUser, saveUser } from '../utils/auth';
 import CryptoJS from 'crypto-js';
 
-const BASE_URL = 'http://upsrlmtms.upsdc.gov.in/';
+const BASE_URL = 'http://upsrlmtms.upsdc.gov.in';
 const clientId = X_API_ID;
 const clientKey = X_API_KEY;
 const SECRET_KEY = ENV_API_KEY;
-
 
 // http://72.61.255.170:8080
 // VUN - 14 FIX
@@ -116,23 +115,62 @@ function buildUrl(path) {
   return BASE_URL + path;
 }
 
+// async function handleResponse(response) {
+//   const text = await response.text();
+
+//   let data;
+
+//   try {
+//     data = text ? JSON.parse(text) : null;
+//     data = decryptPayload(data);
+//   } catch (e) {
+//     // Not JSON — wrap raw text properly
+//     data = { detail: text };
+//   }
+
+//   if (!response.ok) {
+//     throw {
+//       status: response.status,
+//       data,
+//     };
+//   }
+
+//   return data;
+// }
+
 async function handleResponse(response) {
+  // 1. Grab the exact raw text from the server, no matter what it is
   const text = await response.text();
 
-  let data;
+  // 2. PRINT IT LOUD AND CLEAR
+  console.log('====== RAW API RESPONSE ======');
+  console.log('STATUS:', response.status);
+  console.log('URL:', response.url);
+  // Print the first 500 characters to avoid flooding the terminal if it's a massive HTML page
+  console.log('BODY:', text.substring(0, 500));
+  console.log('==============================');
+
+  let data = null;
 
   try {
-    data = text ? JSON.parse(text) : null;
-    data = decryptPayload(data);
+    if (text) {
+      const parsed = JSON.parse(text);
+      // Only decrypt if it looks like your encrypted payload
+      if (parsed && typeof parsed === 'object' && parsed.iv && parsed.data) {
+        data = decryptPayload(parsed);
+      } else {
+        data = parsed;
+      }
+    }
   } catch (e) {
-    // Not JSON — wrap raw text properly
-    data = { detail: text };
+    // If JSON.parse fails, the server sent us HTML or garbage.
+    data = { detail: 'Server returned non-JSON response', rawText: text };
   }
 
   if (!response.ok) {
     throw {
       status: response.status,
-      data,
+      data: data,
     };
   }
 
@@ -321,28 +359,23 @@ function encryptPayload(payload) {
     // random IV (16 bytes)
     const iv = CryptoJS.lib.WordArray.random(16);
 
-    const encrypted = CryptoJS.AES.encrypt(
-      JSON.stringify(payload),
-      key,
-      {
-        iv: iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7,
-      }
-    );
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(payload), key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    });
 
     return {
       iv: CryptoJS.enc.Base64.stringify(iv),
       data: CryptoJS.enc.Base64.stringify(encrypted.ciphertext),
     };
   } catch (e) {
-    console.log("Encryption failed", e);
+    console.log('Encryption failed', e);
     return payload; // fallback (important)
   }
 }
 
 export async function login(username, password, captcha = null) {
-
   //  ADDED: prepare payload
   const rawPayload = {
     username,
@@ -361,7 +394,7 @@ export async function login(username, password, captcha = null) {
     credentials: 'include',
 
     // CHANGED: send encrypted instead of raw
-    body: JSON.stringify(encryptedBody),   //  CHANGED
+    body: JSON.stringify(encryptedBody), //  CHANGED
   });
 
   return handleResponse(res);
