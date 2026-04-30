@@ -358,9 +358,10 @@ export default function ExistingEnterpriseDeclarationSection({
             <Text
               style={[styles.mediaInfo, { color: 'green', fontWeight: '600' }]}
             >
+              {/* PC-0426-2-A: Label for Applicant signature */}
               {language === 'hi'
-                ? '✔ हस्ताक्षर अपलोड हो गया'
-                : '✔ Signature Uploaded'}
+                ? 'आवेदक की सेल्फी'
+                : 'Applicant Selfie'}
             </Text>
 
             <TouchableOpacity onPress={pickSignature}>
@@ -403,7 +404,7 @@ export default function ExistingEnterpriseDeclarationSection({
             style={[
               styles.submitBtn,
               (!existingForm.declaration_confirmed || submitting) &&
-                styles.submitBtnDisabled,
+              styles.submitBtnDisabled,
             ]}
             disabled={!existingForm.declaration_confirmed || submitting}
             onPress={onSubmit}
@@ -414,8 +415,8 @@ export default function ExistingEnterpriseDeclarationSection({
                   ? 'जमा किया जा रहा है...'
                   : 'Submitting...'
                 : language === 'hi'
-                ? 'मौजूदा उद्यम फॉर्म जमा करें'
-                : 'Submit Existing Enterprise Form'}
+                  ? 'मौजूदा उद्यम फॉर्म जमा करें'
+                  : 'Submit Existing Enterprise Form'}
             </Text>
           </TouchableOpacity>
         </View>

@@ -5913,7 +5913,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
       </Modal>
 
       <Text style={[styles.label, { marginTop: 12 }]}>
-        {language === 'hi' ? 'आवेदक का हस्ताक्षर' : 'Applicant Signature'}
+        {/* PC-0426-2-A: Label for applicant selfie */}
+        {language === 'hi'
+          ? 'आवेदक की सेल्फी'
+          : 'Applicant Selfie'}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <TouchableOpacity
