@@ -358,13 +358,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-      beneficiary.member_addresses.length > 0
+        beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-      beneficiary.member_phones.length > 0
+        beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -444,10 +444,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-            ? shgRes.results
-            : Array.isArray(shgRes)
-            ? shgRes
-            : [];
+              ? shgRes.results
+              : Array.isArray(shgRes)
+                ? shgRes
+                : [];
           const found = shgRows.find(s => String(s.code) === String(lokos_shg));
           if (found) {
             const loc = extractLocationFromShg(found);
@@ -488,8 +488,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-          ? 'No'
-          : beneficiary.pld_status || null,
+            ? 'No'
+            : beneficiary.pld_status || null,
       enterprise_type: 'exep',
     };
 
@@ -1437,58 +1437,58 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     handleSubmit,
   }) => {
     const { language } = useContext(LanguageContext);
-    const validateLicenses = () => {
-      const licenses = existingForm.licenses || [];
+    // const validateLicenses = () => {
+    //   const licenses = existingForm.licenses || [];
 
-      if (licenses.length === 0) {
-        Alert.alert(
-          language === 'hi' ? 'सत्यापन' : 'Validation',
-          language === 'hi'
-            ? 'कृपया कम से कम एक लाइसेंस जोड़ें'
-            : 'Please add at least one license',
-        );
-        return false;
-      }
+    //   if (licenses.length === 0) {
+    //     Alert.alert(
+    //       language === 'hi' ? 'सत्यापन' : 'Validation',
+    //       language === 'hi'
+    //         ? 'कृपया कम से कम एक लाइसेंस जोड़ें'
+    //         : 'Please add at least one license',
+    //     );
+    //     return false;
+    //   }
 
-      for (let i = 0; i < licenses.length; i++) {
-        const lic = licenses[i];
+    //   for (let i = 0; i < licenses.length; i++) {
+    //     const lic = licenses[i];
 
-        // ✅ License name
-        if (!lic.license_name || !lic.license_name.trim()) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया लाइसेंस नाम दर्ज करें'
-              : 'Please enter license name',
-          );
-          return false;
-        }
+    //     // ✅ License name
+    //     if (!lic.license_name || !lic.license_name.trim()) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया लाइसेंस नाम दर्ज करें'
+    //           : 'Please enter license name',
+    //       );
+    //       return false;
+    //     }
 
-        // ✅ Registration number
-        if (!lic.license_no || !lic.license_no.trim()) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया पंजीकरण संख्या दर्ज करें'
-              : 'Please enter registration number',
-          );
-          return false;
-        }
+    //     // ✅ Registration number
+    //     if (!lic.license_no || !lic.license_no.trim()) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया पंजीकरण संख्या दर्ज करें'
+    //           : 'Please enter registration number',
+    //       );
+    //       return false;
+    //     }
 
-        // ✅ File
-        if (!lic.file) {
-          Alert.alert(
-            language === 'hi' ? 'सत्यापन' : 'Validation',
-            language === 'hi'
-              ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें'
-              : 'Please upload license document',
-          );
-          return false;
-        }
-      }
+    //     // ✅ File
+    //     if (!lic.file) {
+    //       Alert.alert(
+    //         language === 'hi' ? 'सत्यापन' : 'Validation',
+    //         language === 'hi'
+    //           ? 'कृपया लाइसेंस दस्तावेज़ अपलोड करें'
+    //           : 'Please upload license document',
+    //       );
+    //       return false;
+    //     }
+    //   }
 
-      return true;
-    };
+    //   return true;
+    // };
     const validateEnterpriseDetails = () => {
       // 1. Workplace Type
       if (!existingForm.workplace_type) {
@@ -2301,8 +2301,6 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       if (currentSectionIndex === 0) {
         if (!existingForm.enterprise_name?.trim()) {
           Alert.alert('Validation', 'Please enter the enterprise name.');
-          canProceed = false;
-        } else if (!validateLicenses()) {
           canProceed = false;
         } else if (!existingForm.enterprise_types_tree?.length) {
           Alert.alert('Validation', 'Please select enterprise type.');
@@ -3285,7 +3283,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             index={0}
             updateRow={(i, patch) => updateForm(patch)}
             language={language}
-            addProductRow={() => {}}
+            addProductRow={() => { }}
             ProductAndServicesComponent={
               ExistingEnterpriseProductServicesSection
             }

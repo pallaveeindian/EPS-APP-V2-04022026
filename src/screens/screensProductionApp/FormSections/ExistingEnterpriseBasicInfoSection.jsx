@@ -645,6 +645,12 @@ export default function ExistingEnterpriseBasicInfoSection({
           <Picker
             selectedValue={existingForm.ownership_type || ''}
             onValueChange={v => update({ ownership_type: v })}
+            style={{
+              width: '100%',
+              height: 50,            //  IMPORTANT (Android fix)
+              color: '#000',         //  ensure text visible
+            }}
+            dropdownIconColor="#000" //  icon visible
           >
             <Picker.Item
               label={language === 'hi' ? 'चयन करें...' : 'Select...'}
@@ -711,6 +717,12 @@ export default function ExistingEnterpriseBasicInfoSection({
                     update({ year_of_establishment: val });
                     setYearPickerVisible(false);
                   }}
+                  style={{
+                    width: '100%',
+                    height: 50,            //  IMPORTANT (Android fix)
+                    color: '#000',         //  ensure text visible
+                  }}
+                  dropdownIconColor="#000" //  icon visible
                 >
                   <Picker.Item
                     label={language === 'hi' ? 'चयन करें...' : 'Select...'}

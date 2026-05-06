@@ -747,8 +747,8 @@ export default function ExistingEnterpriseTrainingSkillsSection({
                   {row.title
                     ? row.title
                     : language === 'hi'
-                    ? `नया प्रशिक्षण विवरण ${index + 1}`
-                    : `New Training Detail ${index + 1}`}
+                      ? `नया प्रशिक्षण विवरण ${index + 1}`
+                      : `New Training Detail ${index + 1}`}
                 </Text>
                 <Text style={styles.cardToggle}>
                   {row.expanded ? '▲' : '▼'}
@@ -1179,6 +1179,12 @@ export default function ExistingEnterpriseTrainingSkillsSection({
                             location: v,
                           })
                         }
+                        style={{
+                          width: '100%',
+                          height: 50,            //  IMPORTANT (Android fix)
+                          color: '#000',         //  ensure text visible
+                        }}
+                        dropdownIconColor="#000" //  icon visible
                       >
                         <Picker.Item
                           label={language === 'hi' ? 'चुनें...' : 'Select...'}

@@ -4965,6 +4965,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
             <Picker
               selectedValue={trainingReqLocationType}
               onValueChange={value => setTrainingReqLocationType(value)}
+              style={{
+                width: '100%',
+                height: 50,            //  IMPORTANT (Android fix)
+                color: '#000',         //  ensure text visible
+              }}
+              dropdownIconColor="#000" //  icon visible
             >
               <Picker.Item
                 label={language === 'hi' ? 'स्थान चुनें' : 'Select Location'}

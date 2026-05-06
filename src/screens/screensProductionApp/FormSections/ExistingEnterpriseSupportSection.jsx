@@ -64,7 +64,7 @@ const INFRA_OPTIONS = [
 
 const ExistingEnterpriseSupportSection = ({
   existingForm = {},
-  setExistingForm = () => {},
+  setExistingForm = () => { },
   onNext,
   onBack,
 }) => {
@@ -163,6 +163,12 @@ const ExistingEnterpriseSupportSection = ({
                 setExistingForm({ is_support_required: 'Yes' });
               }
             }}
+            style={{
+              width: '100%',
+              height: 50,            //  IMPORTANT (Android fix)
+              color: '#000',         //  ensure text visible
+            }}
+            dropdownIconColor="#000" //  icon visible
           >
             {YES_NO_OPTIONS.map(o => (
               <Picker.Item
@@ -189,10 +195,10 @@ const ExistingEnterpriseSupportSection = ({
                   ? k === 'financial'
                     ? 'वित्तीय सहयोग'
                     : k === 'infrastructure'
-                    ? 'इन्फ्रास्ट्रक्चर सहयोग'
-                    : k === 'machinery'
-                    ? 'मशीनरी सहयोग'
-                    : 'अन्य सहयोग'
+                      ? 'इन्फ्रास्ट्रक्चर सहयोग'
+                      : k === 'machinery'
+                        ? 'मशीनरी सहयोग'
+                        : 'अन्य सहयोग'
                   : `${k.charAt(0).toUpperCase() + k.slice(1)} Support`}
               </Text>
             </TouchableOpacity>
@@ -229,6 +235,12 @@ const ExistingEnterpriseSupportSection = ({
                     onValueChange={v =>
                       handleValueChange('financial', { amount: v })
                     }
+                    style={{
+                      width: '100%',
+                      height: 50,            //  IMPORTANT (Android fix)
+                      color: '#000',         //  ensure text visible
+                    }}
+                    dropdownIconColor="#000" //  icon visible
                   >
                     <Picker.Item
                       label={
@@ -250,17 +262,17 @@ const ExistingEnterpriseSupportSection = ({
               {['Others', 'Grant and Subsidy', 'Interest Subvention'].includes(
                 supportData.financial.type,
               ) && (
-                <TextInput
-                  style={[styles.input, { marginTop: 8 }]}
-                  placeholder={
-                    language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
-                  }
-                  value={supportData.financial.spec}
-                  onChangeText={v =>
-                    handleValueChange('financial', { spec: v })
-                  }
-                />
-              )}
+                  <TextInput
+                    style={[styles.input, { marginTop: 8 }]}
+                    placeholder={
+                      language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
+                    }
+                    value={supportData.financial.spec}
+                    onChangeText={v =>
+                      handleValueChange('financial', { spec: v })
+                    }
+                  />
+                )}
             </View>
           )}
 
@@ -277,6 +289,12 @@ const ExistingEnterpriseSupportSection = ({
                   onValueChange={v =>
                     handleValueChange('infrastructure', { type: v })
                   }
+                  style={{
+                    width: '100%',
+                    height: 50,            //  IMPORTANT (Android fix)
+                    color: '#000',         //  ensure text visible
+                  }}
+                  dropdownIconColor="#000" //  icon visible
                 >
                   {INFRA_OPTIONS.map(o => (
                     <Picker.Item

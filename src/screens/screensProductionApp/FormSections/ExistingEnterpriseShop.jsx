@@ -1509,6 +1509,12 @@ export default function ShopBasedProductSection({ row, index, updateRow }) {
               <Picker
                 selectedValue={row.shop_type}
                 onValueChange={v => updateRow(index, { shop_type: v })}
+                style={{
+                  width: '100%',
+                  height: 50,            //  IMPORTANT (Android fix)
+                  color: '#000',         //  ensure text visible
+                }}
+                dropdownIconColor="#000" //  icon visible
               >
                 <Picker.Item label="Select" value="" />
                 {SHOP_CATEGORIES.map(cat => (
