@@ -4,11 +4,12 @@ import { X_API_ID, X_API_KEY, API_ENCRYPTION_KEY as ENV_API_KEY } from '@env';
 import { getUser, saveUser } from '../utils/auth';
 import CryptoJS from 'crypto-js';
 
-const BASE_URL = 'http://upsrlmtms.upsdc.gov.in';
+const BASE_URL = 'http://72.61.255.170:8080';
 const clientId = X_API_ID;
 const clientKey = X_API_KEY;
 const SECRET_KEY = ENV_API_KEY;
 
+// http://upsrlmtms.upsdc.gov.in
 // http://72.61.255.170:8080
 // VUN - 14 FIX
 // function decryptPayload(responseData) {
@@ -582,6 +583,16 @@ export async function deleteCrpPanchayat(id) {
 export async function getRecordedBeneficiaries(params = {}) {
   const query = buildQuery(params);
   return request(`/api/v1/epsakhi/recorded-beneficiaries/${query}`);
+}
+
+// ======================= EXEP ATOMIC FORM =======================
+
+// ✅ NEW: Single API for full form submission (atomic)
+export async function createExepForm(formData) {
+  return requestMultipart('/api/v1/epsakhi/exep-form/create/', {
+    method: 'POST',
+    body: formData,
+  });
 }
 
 export async function getpld(params = {}) {
@@ -1490,6 +1501,9 @@ const api = {
 
   // existing enterprise
   createExistingEnterprise,
+
+  // oneshot Api
+  createExepForm,
   updateExistingEnterprise,
   getExistingEnterprise,
   getExistingEnterprises,
