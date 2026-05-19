@@ -112,114 +112,114 @@ const getOptionLabel = (option, language) => {
     option === 'Grains / Cereals'
       ? 'अनाज / धान्य'
       : option === 'Pulses'
-        ? 'दालें'
-        : option === 'Vegetables / Fruits'
-          ? 'सब्ज़ियाँ / फल'
-          : option === 'Spices & Condiments'
-            ? 'मसाले'
-            : option === 'Milk & Milk Products'
-              ? 'दूध एवं दुग्ध उत्पाद'
-              : option === 'Packaging Material'
-                ? 'पैकेजिंग सामग्री'
-                : option === 'Chemicals / Cleaning Agents'
-                  ? 'रसायन / सफ़ाई एजेंट'
-                  : option === 'Fabric / Textile'
-                    ? 'कपड़ा / वस्त्र'
-                    : option === 'Wood / Bamboo / Cane'
-                      ? 'लकड़ी / बाँस / बेंत'
-                      : // ===== MACHINERY =====
-                      option === 'Mixer / Grinder'
-                        ? 'मिक्सर / ग्राइंडर'
-                        : option === 'Sealing Machine'
-                          ? 'सीलिंग मशीन'
-                          : option === 'Oven / Baking Unit'
-                            ? 'ओवन / बेकिंग यूनिट'
-                            : option === 'Packing Machine'
-                              ? 'पैकिंग मशीन'
-                              : option === 'Stitching / Sewing Machine'
-                                ? 'सिलाई मशीन'
-                                : option === 'Grinding / Milling Machine'
-                                  ? 'पीसने / मिलिंग मशीन'
-                                  : option === 'Cutting / Chopping Machine'
-                                    ? 'कटिंग / चॉपिंग मशीन'
-                                    : option === 'Printing / Labelling Machine'
-                                      ? 'प्रिंटिंग / लेबलिंग मशीन'
-                                      : // ===== TARGET CUSTOMERS =====
-                                      option === 'Local consumers'
-                                        ? 'स्थानीय उपभोक्ता'
-                                        : option === 'Shopkeepers and market sellers'
-                                          ? 'दुकानदार एवं बाज़ार विक्रेता'
-                                          : option === 'Urban consumers'
-                                            ? 'शहरी उपभोक्ता'
-                                            : option === 'Online customers'
-                                              ? 'ऑनलाइन ग्राहक'
-                                              : option === 'Institutional buyers'
-                                                ? 'संस्थागत खरीदार'
-                                                : // ===== SALES AREA =====
-                                                option === 'Village'
-                                                  ? 'ग्राम'
-                                                  : option === 'Block'
-                                                    ? 'ब्लॉक'
-                                                    : option === 'District'
-                                                      ? 'जिला'
-                                                      : option === 'State'
-                                                        ? 'राज्य'
-                                                        : option === 'Other State'
-                                                          ? 'अन्य राज्य'
-                                                          : option === 'Other Country'
-                                                            ? 'अन्य देश'
-                                                            : // ===== MARKETING STRATEGY =====
-                                                            option === 'Word of Mouth / Door-to-Door Selling'
-                                                              ? 'मुंहजबानी प्रचार / घर-घर बिक्री'
-                                                              : option === 'Selling in Local Markets (Haat/Bazaar)'
-                                                                ? 'स्थानीय हाट / बाज़ार में बिक्री'
-                                                                : option === 'Using SHG Networks for Promotion'
-                                                                  ? 'एसएचजी नेटवर्क द्वारा प्रचार'
-                                                                  : option === 'Display Boards or Posters Near Shop/Workplace'
-                                                                    ? 'दुकान / कार्यस्थल के पास बोर्ड या पोस्टर'
-                                                                    : // ===== MARKETING CHANNEL =====
-                                                                    option === 'Retail'
-                                                                      ? 'खुदरा'
-                                                                      : option === 'Online'
-                                                                        ? 'ऑनलाइन'
-                                                                        : option === 'Exhibition'
-                                                                          ? 'प्रदर्शनी'
-                                                                          : option === 'ESARAS'
-                                                                            ? 'ई-सारस'
-                                                                            : // ===== MARKETING CHALLENGES =====
-                                                                            option === 'Do you face difficulty finding buyers outside your village?'
-                                                                              ? 'क्या आपको अपने गांव के बाहर खरीदार ढूंढने में कठिनाई होती है?'
-                                                                              : option ===
-                                                                                'Is limited knowledge of digital tools a barrier for marketing?'
-                                                                                ? 'क्या डिजिटल टूल्स की सीमित जानकारी विपणन में बाधा है?'
-                                                                                : // ===== CHANNEL SUB OPTIONS =====
-                                                                                option === 'Local Retail Shops'
-                                                                                  ? 'स्थानीय खुदरा दुकानें'
-                                                                                  : option === 'Kirana Stores'
-                                                                                    ? 'किराना स्टोर'
-                                                                                    : option === 'Amazon'
-                                                                                      ? 'अमेज़न'
-                                                                                      : option === 'Flipkart'
-                                                                                        ? 'फ्लिपकार्ट'
-                                                                                        : option === 'WhatsApp Marketing'
-                                                                                          ? 'व्हाट्सएप मार्केटिंग'
-                                                                                          : option === 'District SARAS'
-                                                                                            ? 'जिला सरस'
-                                                                                            : option === 'State SARAS'
-                                                                                              ? 'राज्य सरस'
-                                                                                              : option === 'National SARAS'
-                                                                                                ? 'राष्ट्रीय सरस'
-                                                                                                : option === 'Existing Product Marketing'
-                                                                                                  ? 'मौजूदा उत्पाद विपणन'
-                                                                                                  : // ===== COMMON =====
-                                                                                                  option === 'Yes'
-                                                                                                    ? 'हाँ'
-                                                                                                    : option === 'No'
-                                                                                                      ? 'नहीं'
-                                                                                                      : option === 'Others'
-                                                                                                        ? 'अन्य'
-                                                                                                        : // fallback
-                                                                                                        option
+      ? 'दालें'
+      : option === 'Vegetables / Fruits'
+      ? 'सब्ज़ियाँ / फल'
+      : option === 'Spices & Condiments'
+      ? 'मसाले'
+      : option === 'Milk & Milk Products'
+      ? 'दूध एवं दुग्ध उत्पाद'
+      : option === 'Packaging Material'
+      ? 'पैकेजिंग सामग्री'
+      : option === 'Chemicals / Cleaning Agents'
+      ? 'रसायन / सफ़ाई एजेंट'
+      : option === 'Fabric / Textile'
+      ? 'कपड़ा / वस्त्र'
+      : option === 'Wood / Bamboo / Cane'
+      ? 'लकड़ी / बाँस / बेंत'
+      : // ===== MACHINERY =====
+      option === 'Mixer / Grinder'
+      ? 'मिक्सर / ग्राइंडर'
+      : option === 'Sealing Machine'
+      ? 'सीलिंग मशीन'
+      : option === 'Oven / Baking Unit'
+      ? 'ओवन / बेकिंग यूनिट'
+      : option === 'Packing Machine'
+      ? 'पैकिंग मशीन'
+      : option === 'Stitching / Sewing Machine'
+      ? 'सिलाई मशीन'
+      : option === 'Grinding / Milling Machine'
+      ? 'पीसने / मिलिंग मशीन'
+      : option === 'Cutting / Chopping Machine'
+      ? 'कटिंग / चॉपिंग मशीन'
+      : option === 'Printing / Labelling Machine'
+      ? 'प्रिंटिंग / लेबलिंग मशीन'
+      : // ===== TARGET CUSTOMERS =====
+      option === 'Local consumers'
+      ? 'स्थानीय उपभोक्ता'
+      : option === 'Shopkeepers and market sellers'
+      ? 'दुकानदार एवं बाज़ार विक्रेता'
+      : option === 'Urban consumers'
+      ? 'शहरी उपभोक्ता'
+      : option === 'Online customers'
+      ? 'ऑनलाइन ग्राहक'
+      : option === 'Institutional buyers'
+      ? 'संस्थागत खरीदार'
+      : // ===== SALES AREA =====
+      option === 'Village'
+      ? 'ग्राम'
+      : option === 'Block'
+      ? 'ब्लॉक'
+      : option === 'District'
+      ? 'जिला'
+      : option === 'State'
+      ? 'राज्य'
+      : option === 'Other State'
+      ? 'अन्य राज्य'
+      : option === 'Other Country'
+      ? 'अन्य देश'
+      : // ===== MARKETING STRATEGY =====
+      option === 'Word of Mouth / Door-to-Door Selling'
+      ? 'मुंहजबानी प्रचार / घर-घर बिक्री'
+      : option === 'Selling in Local Markets (Haat/Bazaar)'
+      ? 'स्थानीय हाट / बाज़ार में बिक्री'
+      : option === 'Using SHG Networks for Promotion'
+      ? 'एसएचजी नेटवर्क द्वारा प्रचार'
+      : option === 'Display Boards or Posters Near Shop/Workplace'
+      ? 'दुकान / कार्यस्थल के पास बोर्ड या पोस्टर'
+      : // ===== MARKETING CHANNEL =====
+      option === 'Retail'
+      ? 'खुदरा'
+      : option === 'Online'
+      ? 'ऑनलाइन'
+      : option === 'Exhibition'
+      ? 'प्रदर्शनी'
+      : option === 'ESARAS'
+      ? 'ई-सारस'
+      : // ===== MARKETING CHALLENGES =====
+      option === 'Do you face difficulty finding buyers outside your village?'
+      ? 'क्या आपको अपने गांव के बाहर खरीदार ढूंढने में कठिनाई होती है?'
+      : option ===
+        'Is limited knowledge of digital tools a barrier for marketing?'
+      ? 'क्या डिजिटल टूल्स की सीमित जानकारी विपणन में बाधा है?'
+      : // ===== CHANNEL SUB OPTIONS =====
+      option === 'Local Retail Shops'
+      ? 'स्थानीय खुदरा दुकानें'
+      : option === 'Kirana Stores'
+      ? 'किराना स्टोर'
+      : option === 'Amazon'
+      ? 'अमेज़न'
+      : option === 'Flipkart'
+      ? 'फ्लिपकार्ट'
+      : option === 'WhatsApp Marketing'
+      ? 'व्हाट्सएप मार्केटिंग'
+      : option === 'District SARAS'
+      ? 'जिला सरस'
+      : option === 'State SARAS'
+      ? 'राज्य सरस'
+      : option === 'National SARAS'
+      ? 'राष्ट्रीय सरस'
+      : option === 'Existing Product Marketing'
+      ? 'मौजूदा उत्पाद विपणन'
+      : // ===== COMMON =====
+      option === 'Yes'
+      ? 'हाँ'
+      : option === 'No'
+      ? 'नहीं'
+      : option === 'Others'
+      ? 'अन्य'
+      : // fallback
+        option
   );
 };
 
@@ -355,8 +355,8 @@ export default function ExistingEnterpriseProductServicesSection({
               ? opt === 'Yes'
                 ? 'हाँ'
                 : opt === 'No'
-                  ? 'नहीं'
-                  : opt
+                ? 'नहीं'
+                : opt
               : opt}
           </Text>
         </TouchableOpacity>
@@ -383,47 +383,84 @@ export default function ExistingEnterpriseProductServicesSection({
 
   const renderMarketingChannelsWithSubOptions = index => {
     const row = products[index];
+
     return (
       <View>
         {/* Main Marketing Channels */}
         {MARKETING_CHANNEL_OPTIONS.map(channel => (
           <View key={channel} style={styles.nestedSection}>
+            {/* MAIN CHANNEL CHECKBOX */}
             {renderMultiCheckboxRow(row.marketing_channels, channel, val =>
               updateRow(index, { marketing_channels: val }),
             )}
 
-            {/* Sub-options for this channel */}
-            {splitMulti(row.marketing_channels).includes(channel) && (
-              <View style={styles.subOptionsContainer}>
-                {CHANNEL_SUB_OPTIONS[channel]?.map(subOpt => (
-                  <View key={subOpt} style={styles.nestedCheckbox}>
-                    {renderMultiCheckboxRow(
+            {/* SUB-OPTIONS FOR THIS MAIN CHANNEL */}
+            {splitMulti(row.marketing_channels).includes(channel) &&
+              CHANNEL_SUB_OPTIONS[channel] && (
+                <View style={styles.subOptionsContainer}>
+                  {CHANNEL_SUB_OPTIONS[channel].map(subOpt => {
+                    // Prefix 'Others' with the channel name to prevent cross-selection
+                    // e.g., "Retail_Others", "Online_Others", "Others_Others"
+                    const optionValue =
+                      subOpt === 'Others' ? `${channel}_Others` : subOpt;
+
+                    // Use marketing_channels_other so sub-options don't mix with main options
+                    const isChecked = splitMulti(
                       row.marketing_channels_other,
-                      subOpt,
-                      val =>
-                        updateRow(index, { marketing_channels_other: val }),
-                    )}
-                  </View>
-                ))}
-                {splitMulti(row.marketing_channels_other).some(opt =>
-                  CHANNEL_SUB_OPTIONS[channel]?.includes(opt),
-                ) && (
+                    ).includes(optionValue);
+
+                    return (
+                      <View key={optionValue} style={styles.nestedCheckbox}>
+                        <TouchableOpacity
+                          style={styles.checkboxRow}
+                          onPress={() =>
+                            updateRow(index, {
+                              marketing_channels_other: toggleInCommaString(
+                                row.marketing_channels_other,
+                                optionValue,
+                              ),
+                            })
+                          }
+                        >
+                          <Text style={styles.checkboxIcon}>
+                            {isChecked ? '☑' : '☐'}
+                          </Text>
+                          <Text style={styles.checkboxLabel}>
+                            {getOptionLabel(subOpt, language)}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+
+                  {/* DISTINCT TEXT INPUT FOR THIS SPECIFIC CHANNEL'S "OTHERS" */}
+                  {splitMulti(row.marketing_channels_other).includes(
+                    `${channel}_Others`,
+                  ) && (
                     <TextInput
                       style={[styles.input, { marginTop: 6 }]}
-                      placeholder="Specify other details"
-                      value={row.marketing_channels_other_input || ''}
+                      placeholder={
+                        language === 'hi'
+                          ? 'अन्य विवरण निर्दिष्ट करें'
+                          : 'Specify other details'
+                      }
+                      // Dynamic key dynamically creates separate state for each channel (e.g. marketing_channels_Retail_input)
+                      value={row[`marketing_channels_${channel}_input`] || ''}
                       onChangeText={v =>
-                        updateRow(index, { marketing_channels_other_input: v })
+                        updateRow(index, {
+                          [`marketing_channels_${channel}_input`]: v,
+                        })
                       }
                     />
                   )}
-              </View>
-            )}
+                </View>
+              )}
           </View>
         ))}
       </View>
     );
   };
+
   return (
     <View style={styles.sectionContainer}>
       <Text style={styles.helpText}>
@@ -487,8 +524,8 @@ export default function ExistingEnterpriseProductServicesSection({
                     }
                     style={{
                       width: '100%',
-                      height: 50,            //  IMPORTANT (Android fix)
-                      color: '#000',         //  ensure text visible
+                      height: 50, //  IMPORTANT (Android fix)
+                      color: '#000', //  ensure text visible
                     }}
                     dropdownIconColor="#000" //  icon visible
                   >
@@ -596,8 +633,10 @@ export default function ExistingEnterpriseProductServicesSection({
                         ? 'अन्य कच्चा माल लिखें'
                         : 'Specify other raw materials'
                     }
-                    value={row.raw_material}
-                    onChangeText={v => updateRow(index, { raw_material: v })}
+                    value={row.raw_material_other}
+                    onChangeText={v =>
+                      updateRow(index, { raw_material_other: v })
+                    }
                   />
                 )}
               </View>
@@ -639,9 +678,9 @@ export default function ExistingEnterpriseProductServicesSection({
                         ? 'अन्य मशीनरी लिखें'
                         : 'Specify other machinery'
                     }
-                    value={row.machinery_equipment}
+                    value={row.machinery_equipment_other}
                     onChangeText={v =>
-                      updateRow(index, { machinery_equipment: v })
+                      updateRow(index, { machinery_equipment_other: v })
                     }
                   />
                 )}
@@ -664,9 +703,9 @@ export default function ExistingEnterpriseProductServicesSection({
                         ? 'अन्य ग्राहकों का विवरण दें'
                         : 'Specify other customers'
                     }
-                    value={row.target_customers}
+                    value={row.target_customers_other}
                     onChangeText={v =>
-                      updateRow(index, { target_customers: v })
+                      updateRow(index, { target_customers_other: v })
                     }
                   />
                 )}
@@ -860,12 +899,12 @@ export default function ExistingEnterpriseProductServicesSection({
                           ? 'खुला बॉक्स (1-3)'
                           : 'Open Box (1-3)'
                         : typeKey === 'close_box'
-                          ? language === 'hi'
-                            ? 'बंद बॉक्स (1-3)'
-                            : 'Closed Box (1-3)'
-                          : language === 'hi'
-                            ? 'अन्य (1-3)'
-                            : 'Others (1-3)'}
+                        ? language === 'hi'
+                          ? 'बंद बॉक्स (1-3)'
+                          : 'Closed Box (1-3)'
+                        : language === 'hi'
+                        ? 'अन्य (1-3)'
+                        : 'Others (1-3)'}
                     </Text>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       <TouchableOpacity

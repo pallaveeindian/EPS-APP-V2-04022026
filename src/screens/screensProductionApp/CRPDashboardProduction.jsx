@@ -1,4 +1,3 @@
-
 // src/screens/epsakhi/CRPDashboardProduction.jsx
 import React, { useEffect, useState, useContext } from 'react';
 import {
@@ -219,14 +218,15 @@ export default function CRPDashboardProduction({ navigation }) {
       //    Always fetch fresh so analytics + record flow stay up-to-date
       let recorded = [];
       const res = await gsApi.getRecordedBeneficiaries({
-        panchayat_multi: panchayatIds.join(','),
-        page_size: 5000,
+        created_by: userId,
+        limit: 5000,
+        offset: 0,
       });
       recorded = Array.isArray(res?.results)
         ? res.results
         : Array.isArray(res)
-          ? res
-          : [];
+        ? res
+        : [];
       setCrpRecordedBeneficiaries(recorded);
 
       // Build analytics per Panchayat
@@ -288,48 +288,54 @@ export default function CRPDashboardProduction({ navigation }) {
       const allKeys = await AsyncStorage.getAllKeys();
 
       // Filter for BOTH prefixes
-      const draftKeys = allKeys.filter(key =>
-        key.startsWith('DRAFT_ENTERPRISE_FORM_') || key.startsWith('DRAFT_EXEP_')
+      const draftKeys = allKeys.filter(
+        key =>
+          key.startsWith('DRAFT_ENTERPRISE_FORM_') ||
+          key.startsWith('DRAFT_EXEP_'),
       );
 
       const entries = await AsyncStorage.multiGet(draftKeys);
 
-      const loadedDrafts = entries.map(([key, value]) => {
-        if (!value) return null;
-        const data = JSON.parse(value);
+      const loadedDrafts = entries
+        .map(([key, value]) => {
+          if (!value) return null;
+          const data = JSON.parse(value);
 
-        const isExisting = key.startsWith('DRAFT_EXEP_');
+          const isExisting = key.startsWith('DRAFT_EXEP_');
 
-        // 1. Extract the ID (Member Code)
-        const id = isExisting
-          ? key.replace('DRAFT_EXEP_', '')
-          : key.replace('DRAFT_ENTERPRISE_FORM_', '');
+          // 1. Extract the ID (Member Code)
+          const id = isExisting
+            ? key.replace('DRAFT_EXEP_', '')
+            : key.replace('DRAFT_ENTERPRISE_FORM_', '');
 
-        // 2. Extract the Name (Existing uses 'formData', New uses 'form')
-        let displayName = "Unnamed";
-        if (isExisting) {
-          displayName = data.formData?.enterprise_name ||
-            data.beneficiary?.member_name ||
-            "Existing Enterprise Draft";
-        } else {
-          displayName = data.form?.applicant_name ||
-            data.beneficiary?.member_name ||
-            "New Enterprise Draft";
-        }
+          // 2. Extract the Name (Existing uses 'formData', New uses 'form')
+          let displayName = 'Unnamed';
+          if (isExisting) {
+            displayName =
+              data.formData?.enterprise_name ||
+              data.beneficiary?.member_name ||
+              'Existing Enterprise Draft';
+          } else {
+            displayName =
+              data.form?.applicant_name ||
+              data.beneficiary?.member_name ||
+              'New Enterprise Draft';
+          }
 
-        return {
-          key,
-          id,
-          name: displayName,
-          data,
-          type: isExisting ? 'EXISTING' : 'NEW'
-        };
-      }).filter(Boolean);
+          return {
+            key,
+            id,
+            name: displayName,
+            data,
+            type: isExisting ? 'EXISTING' : 'NEW',
+          };
+        })
+        .filter(Boolean);
 
       setDrafts(loadedDrafts);
       setDraftsVisible(true);
     } catch (e) {
-      console.error("Load Drafts Error:", e);
+      console.error('Load Drafts Error:', e);
       Alert.alert('Error', 'Could not load drafts');
     } finally {
       setLoadingDrafts(false);
@@ -337,14 +343,14 @@ export default function CRPDashboardProduction({ navigation }) {
   };
 
   // [+++ ADD THIS FUNCTION: Opens form and passes ID so it resumes]
-  const handleDraftClick = (draft) => {
+  const handleDraftClick = draft => {
     setDraftsVisible(false);
 
     // Reconstruct beneficiary object
     const mockBeneficiary = {
       member_code: draft.id,
       member_name: draft.name,
-      ...(draft.data.beneficiary || {})
+      ...(draft.data.beneficiary || {}),
     };
 
     if (draft.type === 'EXISTING') {
@@ -358,33 +364,32 @@ export default function CRPDashboardProduction({ navigation }) {
       navigation.navigate('NewEnterpriseForm', {
         beneficiary: mockBeneficiary,
         recordedBenef: draft.data.recordedBenef || null,
-        crpUserId: userId
+        crpUserId: userId,
       });
     }
   };
-  const deleteDraft = async (draftKey) => {
+  const deleteDraft = async draftKey => {
     try {
       Alert.alert(
-        "Delete Draft",
-        "Are you sure you want to delete this draft?",
+        'Delete Draft',
+        'Are you sure you want to delete this draft?',
         [
-          { text: "Cancel", style: "cancel" },
+          { text: 'Cancel', style: 'cancel' },
           {
-            text: "Delete",
-            style: "destructive",
+            text: 'Delete',
+            style: 'destructive',
             onPress: async () => {
               await AsyncStorage.removeItem(draftKey);
 
               // Remove from current list
               const updatedDrafts = drafts.filter(d => d.key !== draftKey);
               setDrafts(updatedDrafts);
-
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
     } catch (error) {
-      console.error("Delete draft error:", error);
+      console.error('Delete draft error:', error);
     }
   };
   const menuItems = [
@@ -481,10 +486,7 @@ export default function CRPDashboardProduction({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.secondaryButton}
-        onPress={loadDrafts}
-      >
+      <TouchableOpacity style={styles.secondaryButton} onPress={loadDrafts}>
         {loadingDrafts ? (
           <ActivityIndicator size="small" color="#EE6969" />
         ) : (
@@ -495,7 +497,6 @@ export default function CRPDashboardProduction({ navigation }) {
       {/* ... existing buttons ... */}
 
       {/* [+++ ADD VIEW DRAFTS BUTTON] */}
-
 
       {/* [+++ ADD DRAFTS MODAL] */}
       {/* [+++ UPDATED DRAFTS MODAL] */}
@@ -511,23 +512,32 @@ export default function CRPDashboardProduction({ navigation }) {
             <View style={styles.divider} />
 
             {drafts.length === 0 ? (
-              <Text style={{ textAlign: 'center', margin: 20, color: '#666' }}>{t.noDrafts}</Text>
+              <Text style={{ textAlign: 'center', margin: 20, color: '#666' }}>
+                {t.noDrafts}
+              </Text>
             ) : (
               <ScrollView style={{ maxHeight: 400 }}>
-                {drafts.map((d) => (
+                {drafts.map(d => (
                   <TouchableOpacity
                     key={d.key}
                     style={styles.draftItem}
                     onPress={() => handleDraftClick(d)}
                   >
                     <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                      >
                         <Text style={styles.draftName}>{d.name}</Text>
                         {/* Type Badge */}
-                        <View style={[
-                          styles.typeBadge,
-                          { backgroundColor: d.type === 'EXISTING' ? '#4CAF50' : '#2196F3' }
-                        ]}>
+                        <View
+                          style={[
+                            styles.typeBadge,
+                            {
+                              backgroundColor:
+                                d.type === 'EXISTING' ? '#4CAF50' : '#2196F3',
+                            },
+                          ]}
+                        >
                           <Text style={styles.typeBadgeText}>
                             {d.type === 'EXISTING' ? 'EXISTING' : 'NEW'}
                           </Text>
@@ -536,7 +546,9 @@ export default function CRPDashboardProduction({ navigation }) {
                       <Text style={styles.draftId}>Code: {d.id}</Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: '#EE6969', fontWeight: 'bold' }}>Resume ➤</Text>
+                      <Text style={{ color: '#EE6969', fontWeight: 'bold' }}>
+                        Resume ➤
+                      </Text>
                       <TouchableOpacity onPress={() => deleteDraft(d.key)}>
                         <Text style={{ color: '#EE6969', fontWeight: 'bold' }}>
                           Delete ➤
@@ -552,7 +564,9 @@ export default function CRPDashboardProduction({ navigation }) {
               style={styles.closeModalButton}
               onPress={() => setDraftsVisible(false)}
             >
-              <Text style={{ color: '#fff', fontWeight: '600' }}>{t.close} Close</Text>
+              <Text style={{ color: '#fff', fontWeight: '600' }}>
+                {t.close} Close
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -660,7 +674,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 6,
     alignItems: 'center',
-    marginBottom: 12
+    marginBottom: 12,
   },
   secondaryButtonText: {
     color: '#EE6969',

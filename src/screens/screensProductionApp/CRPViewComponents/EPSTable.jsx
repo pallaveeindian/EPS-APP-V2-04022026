@@ -116,7 +116,7 @@ export default function EPSTable({ filters }) {
         created_by: userId, // BASE FILTER
         ...filters,
         page: pageNumber,
-        page_size: PAGE_SIZE,
+        limit: PAGE_SIZE,
         search: filters?.search || '',
       });
 
