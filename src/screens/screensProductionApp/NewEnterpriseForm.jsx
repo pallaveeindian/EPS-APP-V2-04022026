@@ -6094,9 +6094,6 @@
 //   },
 // });
 
-
-
-
 // src/screens/epsakhi/NewEnterpriseForm.jsx
 import React, { useEffect, useState, useContext } from 'react';
 import {
@@ -7308,8 +7305,8 @@ const ParentChildMultiSelect = ({
                             style={[
                               styles.checkboxSmall,
                               po.children &&
-                              po.children[childKey] &&
-                              styles.checkboxChecked,
+                                po.children[childKey] &&
+                                styles.checkboxChecked,
                             ]}
                           />
                           <Text style={styles.checkboxLabel}>
@@ -8074,13 +8071,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+      beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-        beneficiary.member_phones.length > 0
+      beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -8158,10 +8155,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       try {
         const crpDetail = getCrpDetail ? getCrpDetail() : null;
 
-        const cbid =
-          crpDetail?.block_id ??
-          crpDetail?.blockId ??
-          null;
+        const cbid = crpDetail?.block_id ?? crpDetail?.blockId ?? null;
 
         if (cbid) {
           const shgRes = await gsApi.getUpsrlmShgList(cbid, {
@@ -8171,14 +8165,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-              ? shgRes.results
-              : Array.isArray(shgRes)
-                ? shgRes
-                : [];
+            ? shgRes.results
+            : Array.isArray(shgRes)
+            ? shgRes
+            : [];
 
-          const found = shgRows.find(
-            s => String(s.code) === String(lokos_shg),
-          );
+          const found = shgRows.find(s => String(s.code) === String(lokos_shg));
 
           if (found) {
             const loc = extractLocationFromShg(found);
@@ -8199,9 +8191,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     const recordedPayload = {
       lokos_member_code:
-        beneficiary.member_code ||
-        beneficiary.nic_member_code ||
-        null,
+        beneficiary.member_code || beneficiary.nic_member_code || null,
 
       applicant_name: beneficiary.member_name || '',
 
@@ -8213,10 +8203,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       father_husband_name,
 
-      category:
-        beneficiary.social_category ||
-        beneficiary.socialCategory ||
-        '',
+      category: beneficiary.social_category || beneficiary.socialCategory || '',
 
       education: beneficiary.education || '',
 
@@ -8242,8 +8229,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-            ? 'No'
-            : beneficiary.pld_status || null,
+          ? 'No'
+          : beneficiary.pld_status || null,
     };
 
     if (createdBy !== null) {
@@ -8256,9 +8243,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return recordedPayload;
   };
-
-
-
 
   // ---------- NewEnterprise creation (multipart for signature) ----------
 
@@ -8493,12 +8477,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //   return payload;
   // };
 
-
   const createEnterpriseTypeRecord = () => {
-    const { parentCSV, dictString } =
-      encodeParentChildSelection(
-        enterpriseTypeSelection,
-      );
+    const { parentCSV, dictString } = encodeParentChildSelection(
+      enterpriseTypeSelection,
+    );
 
     const payload = {
       form_type: 'new',
@@ -8523,7 +8505,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return payload;
   };
-
 
   // const createEnterpriseMandatoryFunds = async enterpriseId => {
   //   if (!enterpriseId) return;
@@ -8573,8 +8554,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //       payload.created_by = createdBy;
   //     }
 
-
-
   //     // Replace the bottom of the loop with:
   //     const data = await parseAndDecryptResponse(res);
   //     if (!res.ok) {
@@ -8596,10 +8575,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       return [];
     }
 
-    if (
-      !Array.isArray(form.fund_cards) ||
-      !form.fund_cards.length
-    ) {
+    if (!Array.isArray(form.fund_cards) || !form.fund_cards.length) {
       return [];
     }
 
@@ -8612,83 +8588,43 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       const fundType =
         fund.loanType === 'Other'
-          ? (
-            fund.otherLoanTypeText ||
-            'Other'
-          )
+          ? fund.otherLoanTypeText || 'Other'
           : fund.loanType;
 
       const amountReceived =
-        Number(
-          fund.amountreceived ||
-          fund.amount ||
-          0,
-        ) || 0;
+        Number(fund.amountreceived || fund.amount || 0) || 0;
 
-      const amountRepaid =
-        Number(
-          fund.amountrepaid ||
-          fund.repaid ||
-          0,
-        ) || 0;
+      const amountRepaid = Number(fund.amountrepaid || fund.repaid || 0) || 0;
 
-      const pendingAmount =
-        Math.max(
-          0,
-          amountReceived -
-          amountRepaid,
-        );
+      const pendingAmount = Math.max(0, amountReceived - amountRepaid);
 
-      let repaymentStatus =
-        'NOT PAID';
+      let repaymentStatus = 'NOT PAID';
 
-      const statusLabel =
-        getStatus(
-          amountReceived,
-          amountRepaid,
-        );
+      const statusLabel = getStatus(amountReceived, amountRepaid);
 
-      if (
-        statusLabel ===
-        'Fully Paid'
-      ) {
-        repaymentStatus =
-          'PAID';
-      } else if (
-        statusLabel ===
-        'Partially Paid'
-      ) {
-        repaymentStatus =
-          'PARTIALLY PAID';
+      if (statusLabel === 'Fully Paid') {
+        repaymentStatus = 'PAID';
+      } else if (statusLabel === 'Partially Paid') {
+        repaymentStatus = 'PARTIALLY PAID';
       }
 
       const payload = {
-        fund_type:
-          fundType,
+        fund_type: fundType,
 
-        have_received_part:
-          fund.receivedYesNo ===
-          'Yes',
+        have_received_part: fund.receivedYesNo === 'Yes',
 
-        amount_received:
-          amountReceived,
+        amount_received: amountReceived,
 
-        amount_repaid:
-          amountRepaid,
+        amount_repaid: amountRepaid,
 
-        pending_amount:
-          pendingAmount,
+        pending_amount: pendingAmount,
 
-        repayment_status:
-          repaymentStatus,
+        repayment_status: repaymentStatus,
 
-        created_by:
-          createdBy,
+        created_by: createdBy,
       };
 
-      mandatoryFunds.push(
-        payload,
-      );
+      mandatoryFunds.push(payload);
     }
 
     return mandatoryFunds;
@@ -8708,7 +8644,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
   //     payload.form_type = 'newep';
   //     payload.is_active = false;
-
 
   //     // Replace the bottom of postSupport with:
   //     const data = await parseAndDecryptResponse(res);
@@ -8827,8 +8762,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       addSupport({
         support_category: 'Machinery',
         support_sub_category: null,
-        support_description:
-          form.machinery_detail || null,
+        support_description: form.machinery_detail || null,
         other_support: null,
       });
     }
@@ -8837,20 +8771,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
     // INFRASTRUCTURE
     // =====================================================
 
-    if (
-      form.support_types?.infrastructure
-    ) {
+    if (form.support_types?.infrastructure) {
       addSupport({
-        support_category:
-          'Infrastructure',
+        support_category: 'Infrastructure',
 
-        support_sub_category:
-          form.infrastructure_support_type ||
-          null,
+        support_sub_category: form.infrastructure_support_type || null,
 
-        support_description:
-          form.infrastructure_support_detail ||
-          null,
+        support_description: form.infrastructure_support_detail || null,
 
         other_support: null,
       });
@@ -8861,40 +8788,25 @@ export default function NewEnterpriseForm({ route, navigation }) {
     // =====================================================
 
     if (form.support_types?.branding) {
-      let subCategory =
-        form.branding_type ||
-        null;
+      let subCategory = form.branding_type || null;
 
-      let description =
-        form.branding_detail ||
-        null;
+      let description = form.branding_detail || null;
 
-      if (
-        form.branding_type ===
-        'Online'
-      ) {
-        subCategory =
-          form.branding_subtype ||
-          'Online';
+      if (form.branding_type === 'Online') {
+        subCategory = form.branding_subtype || 'Online';
 
         description =
-          form.branding_subtype ===
-            'Others'
-            ? form.branding_detail ||
-            null
-            : form.branding_subtype ||
-            null;
+          form.branding_subtype === 'Others'
+            ? form.branding_detail || null
+            : form.branding_subtype || null;
       }
 
       addSupport({
-        support_category:
-          'Branding & Promotion',
+        support_category: 'Branding & Promotion',
 
-        support_sub_category:
-          subCategory,
+        support_sub_category: subCategory,
 
-        support_description:
-          description,
+        support_description: description,
 
         other_support: null,
       });
@@ -8904,27 +8816,18 @@ export default function NewEnterpriseForm({ route, navigation }) {
     // FINANCIAL
     // =====================================================
 
-    if (
-      form.support_types?.financial
-    ) {
+    if (form.support_types?.financial) {
       let description =
-        form.financial_support_type ===
-          'Loan'
-          ? form.loan_amount_range ||
-          null
-          : form.financial_support_other_text ||
-          null;
+        form.financial_support_type === 'Loan'
+          ? form.loan_amount_range || null
+          : form.financial_support_other_text || null;
 
       addSupport({
-        support_category:
-          'Financial',
+        support_category: 'Financial',
 
-        support_sub_category:
-          form.financial_support_type ||
-          null,
+        support_sub_category: form.financial_support_type || null,
 
-        support_description:
-          description,
+        support_description: description,
 
         other_support: null,
       });
@@ -8936,33 +8839,20 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     if (form.support_types?.others) {
       addSupport({
-        support_category:
-          'Others',
+        support_category: 'Others',
 
-        support_sub_category:
-          null,
+        support_sub_category: null,
 
-        support_description:
-          null,
+        support_description: null,
 
-        other_support:
-          form.other_support ||
-          null,
+        other_support: form.other_support || null,
       });
     }
 
-    console.log(
-      'SUPPORT PAYLOAD =>',
-      JSON.stringify(
-        supports,
-        null,
-        2,
-      ),
-    );
+    console.log('SUPPORT PAYLOAD =>', JSON.stringify(supports, null, 2));
 
     return supports;
   };
-
 
   // const createTrainingReceivedRows = async enterpriseId => {
   //   if (!enterpriseId) return;
@@ -9012,7 +8902,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //       trainingPayload.created_by = createdBy;
   //     }
 
-
   //     // Replace the bottom of the loop (before step 2) with:
   //     const data = await parseAndDecryptResponse(res);
   //     if (!res.ok) {
@@ -9040,96 +8929,58 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //   return { trainingIds, certificateIds };
   // };
 
-
   const createTrainingReceivedRows = async enterpriseId => {
     // enterpriseId intentionally unused
 
-    if (
-      !Array.isArray(
-        trainingReceivedRows,
-      ) ||
-      !trainingReceivedRows.length
-    ) {
+    if (!Array.isArray(trainingReceivedRows) || !trainingReceivedRows.length) {
       return [];
     }
 
-    const createdBy =
-      getCreatedByNumeric();
+    const createdBy = getCreatedByNumeric();
 
-    const trainingPayloads =
-      [];
+    const trainingPayloads = [];
 
     for (let index = 0; index < trainingReceivedRows.length; index++) {
-      const row =
-        trainingReceivedRows[index];
+      const row = trainingReceivedRows[index];
 
-      if (!row?.department)
-        continue;
+      if (!row?.department) continue;
 
-      const {
-        parentCSV,
-        dictString,
-      } =
-        encodeParentChildSelection(
-          row.sectors,
-        );
+      const { parentCSV, dictString } = encodeParentChildSelection(row.sectors);
 
       trainingPayloads.push({
-        form_type:
-          'rec',
+        form_type: 'rec',
 
-        sector_type:
-          parentCSV ||
-          null,
+        sector_type: parentCSV || null,
 
-        sector:
-          dictString ||
-          null,
+        sector: dictString || null,
 
         department:
-          row.department ===
-            'Others'
-            ? row.department_other ||
-            null
-            : row.department ||
-            null,
+          row.department === 'Others'
+            ? row.department_other || null
+            : row.department || null,
 
-        training_type:
-          row.trainingType ||
-          'General',
+        training_type: row.trainingType || 'General',
 
-        duration:
-          Number(
-            row.duration,
-          ) || 0,
+        duration: Number(row.duration) || 0,
 
-        location:
-          row.location ||
-          '',
+        location: row.location || '',
 
-        expected_income:
-          Number(
-            row.expectedincome,
-          ) || 0,
+        expected_income: Number(row.expectedincome) || 0,
 
-        certificate_file_keys: (row.certificates || []).map((_, certIdx) => `cert_${index}_${certIdx}`),
-        created_by:
-          createdBy,
+        certificate_file_keys: (row.certificates || []).map(
+          (_, certIdx) => `cert_${index}_${certIdx}`,
+        ),
+        created_by: createdBy,
       });
     }
 
     console.log(
       'TRAINING RECEIVED PAYLOAD =>',
-      JSON.stringify(
-        trainingPayloads,
-        null,
-        2,
-      ),
+      JSON.stringify(trainingPayloads, null, 2),
     );
 
     return trainingPayloads;
   };
-
 
   // const uploadTrainingCertificate = async (trainingId, enterpriseId, asset) => {
   //   if (!trainingId || !enterpriseId || !asset?.uri) return;
@@ -9175,29 +9026,17 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //   return data?.id;
   // };
 
-  const uploadTrainingCertificate = async (
-    trainingId,
-    enterpriseId,
-    asset,
-  ) => {
-    if (
-      !trainingId ||
-      !enterpriseId ||
-      !asset?.uri
-    ) {
+  const uploadTrainingCertificate = async (trainingId, enterpriseId, asset) => {
+    if (!trainingId || !enterpriseId || !asset?.uri) {
       return null;
     }
 
     return {
       uri: asset.uri,
 
-      name:
-        asset.fileName ||
-        `certificate_${Date.now()}`,
+      name: asset.fileName || `certificate_${Date.now()}`,
 
-      type:
-        asset.type ||
-        'application/octet-stream',
+      type: asset.type || 'application/octet-stream',
     };
   };
 
@@ -9262,111 +9101,75 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
   // ---------- UI helpers ----------
 
+  const createTrainingRequired = async enterpriseId => {
+    // enterpriseId intentionally unused
 
-  const createTrainingRequired =
-    async enterpriseId => {
-      // enterpriseId intentionally unused
+    if (form.is_training_required !== 'Yes') {
+      return [];
+    }
 
-      if (
-        form.is_training_required !==
-        'Yes'
-      ) {
-        return [];
-      }
+    const { parentCSV, dictString } =
+      encodeParentChildSelection(trainingReqSectors);
 
-      const {
-        parentCSV,
-        dictString,
-      } =
-        encodeParentChildSelection(
-          trainingReqSectors,
-        );
+    const location = [
+      trainingReqLocationType,
+      trainingReqLocationState,
+      trainingReqLocationDistrict,
+      trainingReqLocationBlock,
+      trainingReqLocationVillage,
+    ]
+      .filter(Boolean)
+      .join(', ');
 
-      const location = [
-        trainingReqLocationType,
-        trainingReqLocationState,
-        trainingReqLocationDistrict,
-        trainingReqLocationBlock,
-        trainingReqLocationVillage,
-      ]
-        .filter(Boolean)
-        .join(', ');
+    const createdBy = getCreatedByNumeric();
 
-      const createdBy =
-        getCreatedByNumeric();
+    const payload = {
+      form_type: 'req',
 
-      const payload = {
-        form_type:
-          'req',
+      sector_type: parentCSV || null,
 
-        sector_type:
-          parentCSV ||
-          null,
+      sector: dictString || null,
 
-        sector:
-          dictString ||
-          null,
+      department:
+        trainingReqDept === 'Others'
+          ? trainingReqDeptOther || null
+          : trainingReqDept || null,
 
-        department:
-          trainingReqDept ===
-            'Others'
-            ? trainingReqDeptOther ||
-            null
-            : trainingReqDept ||
-            null,
+      training_type: Array.isArray(trainingReqType)
+        ? trainingReqType.join(',')
+        : trainingReqType || null,
 
-        training_type:
-          Array.isArray(
-            trainingReqType,
-          )
-            ? trainingReqType.join(
-              ',',
-            )
-            : trainingReqType ||
-            null,
-
-        duration:
-          trainingReqDuration !== null &&
-            trainingReqDuration !== undefined &&
-            trainingReqDuration !== ''
-            ? parseInt(
-              typeof trainingReqDuration ===
-                'object'
+      duration:
+        trainingReqDuration !== null &&
+        trainingReqDuration !== undefined &&
+        trainingReqDuration !== ''
+          ? parseInt(
+              typeof trainingReqDuration === 'object'
                 ? trainingReqDuration?.value
                 : trainingReqDuration,
               10,
             )
-            : null,
+          : null,
 
-        // duration:
-        //   Number(
-        //     trainingReqDuration,
-        //   ) || 0,
+      // duration:
+      //   Number(
+      //     trainingReqDuration,
+      //   ) || 0,
 
-        location:
-          location ||
-          null,
+      location: location || null,
 
-        expected_income:
-          Number(
-            trainingReqExpectedIncome,
-          ) || 0,
+      expected_income: Number(trainingReqExpectedIncome) || 0,
 
-        created_by:
-          createdBy,
-      };
-
-      console.log(
-        'TRAINING REQUIRED PAYLOAD =>',
-        JSON.stringify(
-          payload,
-          null,
-          2,
-        ),
-      );
-
-      return [payload];
+      created_by: createdBy,
     };
+
+    console.log(
+      'TRAINING REQUIRED PAYLOAD =>',
+      JSON.stringify(payload, null, 2),
+    );
+
+    return [payload];
+  };
 
   const openDeclarationModal = () => {
     const existing = form.declaration_date;
@@ -9383,7 +9186,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
           initMonth = String(parseInt(parts[1], 10));
           initDay = String(parseInt(parts[2], 10));
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
     if (!initYear) {
@@ -9740,8 +9543,9 @@ export default function NewEnterpriseForm({ route, navigation }) {
           Alert.alert(
             'Validation',
             language === 'hi'
-              ? `फंड ${i + 1
-              }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
+              ? `फंड ${
+                  i + 1
+                }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
               : `Fund ${i + 1}: Repaid amount cannot exceed received amount.`,
           );
           return false;
@@ -10705,7 +10509,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
   //     // Step 3: create NewEnterprise
 
-
   //     // let enterpriseRes;
   //     // try {
   //     //   enterpriseRes = await performMultipartCreateNewEnterprise(
@@ -11371,7 +11174,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //     // const selectedBeneficiary =
   //     //   beneficiary || recordedBenef || {};
 
-
   //     const selectedBeneficiary =
   //       beneficiary &&
   //         Object.keys(beneficiary).length > 0
@@ -11484,7 +11286,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //       // =====================================================
 
   //       beneficiary: {
-
 
   //         lokos_member_code:
   //           selectedBeneficiary?.lokos_member_code ??
@@ -11627,10 +11428,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //           selectedBeneficiary?.lokos_shg_code ??
   //           lokosShgCode ??
   //           '',
-
-
-
-
 
   //         // lokos_member_code:
   //         //   selectedBeneficiary?.lokos_member_code ??
@@ -12467,7 +12264,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //     setLoading(false);
   //   }
   // };
-
 
   // const handleSubmit = async () => {
   //   try {
@@ -13693,7 +13489,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //   }
   // };
 
-
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -13757,10 +13552,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       // =====================================================
 
       if (!form.is_training_required) {
-        Alert.alert(
-          'Validation',
-          'Please answer Do you require any training?',
-        );
+        Alert.alert('Validation', 'Please answer Do you require any training?');
         return;
       }
 
@@ -13773,8 +13565,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       let beneficiaryPayload = {};
 
       if (beneficiary) {
-        beneficiaryPayload =
-          await ensureRecordedBeneficiary();
+        beneficiaryPayload = await ensureRecordedBeneficiary();
       } else if (recordedBenef) {
         beneficiaryPayload = {
           ...recordedBenef,
@@ -13787,44 +13578,25 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       console.log(
         'BENEFICIARY PAYLOAD =>',
-        JSON.stringify(
-          beneficiaryPayload,
-          null,
-          2,
-        ),
+        JSON.stringify(beneficiaryPayload, null, 2),
       );
 
       console.log(
         'enterpriseTypeSelection FULL =>',
-        JSON.stringify(
-          enterpriseTypeSelection,
-          null,
-          2,
-        ),
+        JSON.stringify(enterpriseTypeSelection, null, 2),
       );
 
       console.log(
         'fund_cards FULL =>',
-        JSON.stringify(
-          form?.fund_cards,
-          null,
-          2,
-        ),
+        JSON.stringify(form?.fund_cards, null, 2),
       );
 
       console.log(
         'trainingReceivedRows FULL =>',
-        JSON.stringify(
-          trainingReceivedRows,
-          null,
-          2,
-        ),
+        JSON.stringify(trainingReceivedRows, null, 2),
       );
 
-      console.log(
-        'FORM FULL =>',
-        JSON.stringify(form, null, 2),
-      );
+      console.log('FORM FULL =>', JSON.stringify(form, null, 2));
 
       // =====================================================
       // FORMATTER
@@ -13840,9 +13612,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         if (values.includes('Other')) {
           if (form.applicant_cadre_other?.trim()) {
             values = values.map(v =>
-              v === 'Other'
-                ? form.applicant_cadre_other.trim()
-                : v,
+              v === 'Other' ? form.applicant_cadre_other.trim() : v,
             );
           } else {
             values = values.filter(v => v !== 'Other');
@@ -13852,8 +13622,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
         return values.join(',');
       };
 
-      const preferedlocation =
-        buildPreferedLocationValue();
+      const preferedlocation = buildPreferedLocationValue();
 
       // =====================================================
       // TRAINING NO FLOW
@@ -13865,30 +13634,18 @@ export default function NewEnterpriseForm({ route, navigation }) {
       let industryloc = null;
 
       if (form.is_training_required === 'No') {
-        if (
-          form.nearest_skill_centre_known ===
-          'Yes'
-        ) {
-          nearestskillcentre =
-            form.nearest_skill_centre_name ||
-            null;
+        if (form.nearest_skill_centre_known === 'Yes') {
+          nearestskillcentre = form.nearest_skill_centre_name || null;
 
-          skillcentreloc =
-            form.skill_centre_loc || null;
+          skillcentreloc = form.skill_centre_loc || null;
         } else {
           nearestskillcentre = 'No';
         }
 
-        if (
-          form.nearest_industry_known ===
-          'Yes'
-        ) {
-          nearestindustry =
-            form.nearest_industry_name ||
-            null;
+        if (form.nearest_industry_known === 'Yes') {
+          nearestindustry = form.nearest_industry_name || null;
 
-          industryloc =
-            form.industry_loc || null;
+          industryloc = form.industry_loc || null;
         } else {
           nearestindustry = 'No';
         }
@@ -13937,7 +13694,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
       //   ),
       // );
 
-
       // const enterpriseTypePayload =
       //   createEnterpriseTypeRecord();
 
@@ -13968,23 +13724,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
       //   JSON.stringify(categoriesPayload, null, 2),
       // );
 
-
-      const enterpriseTypePayload =
-        createEnterpriseTypeRecord();
+      const enterpriseTypePayload = createEnterpriseTypeRecord();
 
       console.log(
         'ENTERPRISE TYPE PAYLOAD =>',
-        JSON.stringify(
-          enterpriseTypePayload,
-          null,
-          2,
-        ),
+        JSON.stringify(enterpriseTypePayload, null, 2),
       );
 
-      const parents = (
-        enterpriseTypePayload
-          ?.parent_category || ''
-      )
+      const parents = (enterpriseTypePayload?.parent_category || '')
         .split(',')
         .map(x => x.trim())
         .filter(Boolean);
@@ -13994,61 +13741,33 @@ export default function NewEnterpriseForm({ route, navigation }) {
       // [Solid: C,D]
 
       const extracted =
-        (
-          enterpriseTypePayload
-            ?.sub_category || ''
-        )
-          .match(
-            /\[([^\]]+)\]/g,
-          ) || [];
+        (enterpriseTypePayload?.sub_category || '').match(/\[([^\]]+)\]/g) ||
+        [];
 
-      const categoriesPayload =
-        parents.map(
-          (
-            parent,
-            index,
-          ) => {
-            const raw =
-              extracted[
-              index
-              ] || '';
+      const categoriesPayload = parents.map((parent, index) => {
+        const raw = extracted[index] || '';
 
-            // remove parent:
-            // [Retail: A,B]
-            // → [A,B]
+        // remove parent:
+        // [Retail: A,B]
+        // → [A,B]
 
-            const cleaned =
-              raw.replace(
-                /^\[[^:]+:\s*/,
-                '[',
-              );
+        const cleaned = raw.replace(/^\[[^:]+:\s*/, '[');
 
-            return {
-              parent_category:
-                parent,
+        return {
+          parent_category: parent,
 
-              sub_category:
-                cleaned,
-            };
-          },
-        );
+          sub_category: cleaned,
+        };
+      });
 
       console.log(
         'CATEGORIES PAYLOAD =>',
-        JSON.stringify(
-          categoriesPayload,
-          null,
-          2,
-        ),
+        JSON.stringify(categoriesPayload, null, 2),
       );
 
+      const trainingReceived = await createTrainingReceivedRows();
 
-
-      const trainingReceived =
-        await createTrainingReceivedRows();
-
-      const trainingRequired =
-        await createTrainingRequired();
+      const trainingRequired = await createTrainingRequired();
       // =====================================================
       // FINAL PAYLOAD
       // =====================================================
@@ -14062,75 +13781,53 @@ export default function NewEnterpriseForm({ route, navigation }) {
           // FIXED WRONG KEY
           // =====================================================
 
-          marital_status:
-            beneficiaryPayload?.marital_status ||
-            '',
+          marital_status: beneficiaryPayload?.marital_status || '',
 
-          father_husband_name:
-            beneficiaryPayload?.father_husband_name ||
-            '',
+          father_husband_name: beneficiaryPayload?.father_husband_name || '',
         },
 
         enterprise: {
           created_by: createdBy,
 
           applicant_special_category:
-            form.applicant_special_category ===
-              'Other'
+            form.applicant_special_category === 'Other'
               ? form.applicant_special_category_other
               : form.applicant_special_category,
 
-          applicant_cadre:
-            formatDesignationString(
-              form.applicant_cadre_activity,
-            ),
+          applicant_cadre: formatDesignationString(
+            form.applicant_cadre_activity,
+          ),
 
-          applicant_designation:
-            formatDesignationString(
-              form.applicant_cadre_designation,
-            ),
+          applicant_designation: formatDesignationString(
+            form.applicant_cadre_designation,
+          ),
 
-          prefered_location:
-            preferedlocation ?? null,
+          prefered_location: preferedlocation ?? null,
 
-          has_shg_received_man_fund:
-            form.has_shg_cif === 'Yes',
+          has_shg_received_man_fund: form.has_shg_cif === 'Yes',
 
-          is_training_received:
-            form.is_training_received ===
-            'Yes',
+          is_training_received: form.is_training_received === 'Yes',
 
-          is_training_required:
-            form.is_training_required ===
-            'Yes',
+          is_training_required: form.is_training_required === 'Yes',
 
-          nearest_skill_centre:
-            nearestskillcentre,
+          nearest_skill_centre: nearestskillcentre,
 
-          skill_centre_loc:
-            skillcentreloc,
+          skill_centre_loc: skillcentreloc,
 
-          nearest_industry:
-            nearestindustry,
+          nearest_industry: nearestindustry,
 
-          industry_loc:
-            industryloc,
+          industry_loc: industryloc,
 
           // is_support_required:
           //   form.need_support ?? 'No',
 
-          is_support_required:
-            form.need_support ===
-            'Yes',
+          is_support_required: form.need_support === 'Yes',
 
-          declaration_confirmed:
-            !!form.declaration_confirmed,
+          declaration_confirmed: !!form.declaration_confirmed,
 
-          declaration_date:
-            form.declaration_date ?? null,
+          declaration_date: form.declaration_date ?? null,
 
-          signature_file_key:
-            'applicant_signature_file',
+          signature_file_key: 'applicant_signature_file',
         },
 
         // =====================================================
@@ -14187,15 +13884,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
         mandatory_funds: await createEnterpriseMandatoryFunds(true),
 
-
         supports: await createEnterpriseSupport(true),
 
         // training_requests: [],
-        training_requests:
-          [
-            ...trainingReceived,
-            ...trainingRequired,
-          ]
+        training_requests: [...trainingReceived, ...trainingRequired],
       };
 
       // =====================================================
@@ -14207,12 +13899,9 @@ export default function NewEnterpriseForm({ route, navigation }) {
           finalPayload.supports.push({
             category: 'Financial',
 
-            sub_category:
-              form.financialsupporttype,
+            sub_category: form.financialsupporttype,
 
-            support_description:
-              form.financialsupportdetail ||
-              '',
+            support_description: form.financialsupportdetail || '',
 
             other_support: '',
 
@@ -14220,18 +13909,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
           });
         }
 
-        if (
-          form.support_types?.infrastructure
-        ) {
+        if (form.support_types?.infrastructure) {
           finalPayload.supports.push({
             category: 'Infrastructure',
 
-            sub_category:
-              form.infrastructuresupporttype,
+            sub_category: form.infrastructuresupporttype,
 
-            support_description:
-              form.infrastructuresupportdetail ||
-              '',
+            support_description: form.infrastructuresupportdetail || '',
 
             other_support: '',
 
@@ -14245,8 +13929,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
             sub_category: 'Direct Entry',
 
-            support_description:
-              form.machinerydetail || '',
+            support_description: form.machinerydetail || '',
 
             other_support: '',
 
@@ -14320,10 +14003,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
       //   );
       // }
 
-
-
-
-
       // // =====================================================
       // // TRAINING REQUIRED
       // // =====================================================
@@ -14375,14 +14054,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
       // FINAL JSON DEBUG
       // =====================================================
 
-      console.log(
-        'FINAL PAYLOAD =>',
-        JSON.stringify(
-          finalPayload,
-          null,
-          2,
-        ),
-      );
+      console.log('FINAL PAYLOAD =>', JSON.stringify(finalPayload, null, 2));
 
       // =====================================================
       // FORM DATA
@@ -14390,25 +14062,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       const formData = new FormData();
 
-      formData.append(
-        'data_payload',
-        JSON.stringify(finalPayload),
-      );
+      formData.append('data_payload', JSON.stringify(finalPayload));
 
-      formData.append(
-        'applicant_signature_file',
-        {
-          uri: signatureAsset.uri,
+      formData.append('applicant_signature_file', {
+        uri: signatureAsset.uri,
 
-          type:
-            signatureAsset.type ||
-            'image/jpeg',
+        type: signatureAsset.type || 'image/jpeg',
 
-          name:
-            signatureAsset.fileName ||
-            'signature.jpg',
-        },
-      );
+        name: signatureAsset.fileName || 'signature.jpg',
+      });
 
       // trainingReceivedRows.forEach(
       //   (row, index) => {
@@ -14437,97 +14099,65 @@ export default function NewEnterpriseForm({ route, navigation }) {
       // API
       // =====================================================
 
-
       // =====================================================
       // FORM DATA
       // =====================================================
 
+      // --- K. TRAINING RECEIVED FORM DATA ---
       for (let index = 0; index < trainingReceivedRows.length; index++) {
         const row = trainingReceivedRows[index];
-        // 1. Get the full array of certificates (handle undefined/null safely)
         const certs = row?.certificates || [];
 
-        // 2. Loop through every certificate in this specific row
         for (let certIdx = 0; certIdx < certs.length; certIdx++) {
           const file = certs[certIdx];
-          // 3. Upload the specific file
-          const certificate = await uploadTrainingCertificate(
-            index,
-            beneficiaryPayload?.enterprise_id,
-            file,
-          );
 
-          // 4. Append using the DYNAMIC key pattern: cert_{row_index}_{cert_index}
-          if (file && certificate) {
-            formData.append(`cert_${index}_${certIdx}`, file);
+          // Simply append the file object (the file object from DocumentPicker)
+          // The name, uri, and type are already inside the 'file' object
+          if (file) {
+            formData.append(`cert_${index}_${certIdx}`, {
+              uri: file.uri,
+              type: file.type || 'application/pdf',
+              name: file.name || `cert_${index}_${certIdx}.pdf`,
+            });
           }
         }
       }
 
+      const enterpriseRes = await gsApi.createNewEnterprise(formData);
 
-      const enterpriseRes =
-        await gsApi.createNewEnterprise(
-          formData,
-        );
+      const responseData = enterpriseRes?.data ?? enterpriseRes;
 
-      const responseData =
-        enterpriseRes?.data ??
-        enterpriseRes;
-
-      console.log(
-        'API RESPONSE =>',
-        JSON.stringify(
-          responseData,
-          null,
-          2,
-        ),
-      );
+      console.log('API RESPONSE =>', JSON.stringify(responseData, null, 2));
 
       if (!responseData) {
-        throw new Error(
-          'Empty response from server.',
-        );
+        throw new Error('Empty response from server.');
       }
 
-      Alert.alert(
-        'Success',
-        'New enterprise saved successfully.',
-        [
-          {
-            text: 'OK',
+      Alert.alert('Success', 'New enterprise saved successfully.', [
+        {
+          text: 'OK',
 
-            onPress: async () => {
-              try {
-                if (DRAFT_KEY) {
-                  await AsyncStorage.removeItem(
-                    DRAFT_KEY,
-                  );
-                }
-              } catch (e) {
-                console.log(
-                  'Error clearing draft',
-                  e,
-                );
+          onPress: async () => {
+            try {
+              if (DRAFT_KEY) {
+                await AsyncStorage.removeItem(DRAFT_KEY);
               }
+            } catch (e) {
+              console.log('Error clearing draft', e);
+            }
 
-              navigation.goBack();
-            },
+            navigation.goBack();
           },
-        ],
-      );
+        },
+      ]);
     } catch (err) {
-      console.error(
-        'NewEnterprise submit error',
-        JSON.stringify(err, null, 2),
-      );
+      console.error('NewEnterprise submit error', JSON.stringify(err, null, 2));
 
       const serverMsg =
         err?.response?.data?.details ||
         err?.response?.data?.error ||
         err?.data?.detail ||
-        (typeof err?.data === 'object'
-          ? JSON.stringify(err.data)
-          : null) ||
+        (typeof err?.data === 'object' ? JSON.stringify(err.data) : null) ||
         err?.message ||
         'Failed to save new enterprise. Please try again.';
 
@@ -14536,7 +14166,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
       setLoading(false);
     }
   };
-
 
   // const handleSubmit = async () => {
   //   try {
@@ -15046,9 +14675,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
   //   }
   // };
 
-
-
-
   return (
     <ScrollView
       style={styles.container}
@@ -15141,7 +14767,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
             style={[
               styles.checkbox,
               form.prefered_location_choice === opt.key &&
-              styles.checkboxChecked,
+                styles.checkboxChecked,
             ]}
           />
           <Text style={styles.checkboxLabel}>
@@ -15630,12 +15256,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'Under 7 days'
                       ? '7 दिन से कम'
                       : opt === '7 days'
-                        ? '7 दिन'
-                        : opt === '15 days'
-                          ? '15 दिन'
-                          : opt === '30 days'
-                            ? '30 दिन'
-                            : '30 दिन से अधिक'
+                      ? '7 दिन'
+                      : opt === '15 days'
+                      ? '15 दिन'
+                      : opt === '30 days'
+                      ? '30 दिन'
+                      : '30 दिन से अधिक'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -15696,8 +15322,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
               onValueChange={value => setTrainingReqLocationType(value)}
               style={{
                 width: '100%',
-                height: 50,            //  IMPORTANT (Android fix)
-                color: '#000',         //  ensure text visible
+                height: 50, //  IMPORTANT (Android fix)
+                color: '#000', //  ensure text visible
               }}
               dropdownIconColor="#000" //  icon visible
             >
@@ -15942,7 +15568,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       style={[
                         styles.checkbox,
                         form.infrastructure_support_type === opt &&
-                        styles.checkboxChecked,
+                          styles.checkboxChecked,
                       ]}
                     />
                     <Text style={styles.checkboxLabel}>
@@ -15951,10 +15577,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         ? opt === 'Equipments'
                           ? 'उपकरण'
                           : opt === 'Machinery'
-                            ? 'मशीनरी'
-                            : opt === 'Place of Business'
-                              ? 'व्यवसाय स्थल'
-                              : 'अन्य'
+                          ? 'मशीनरी'
+                          : opt === 'Place of Business'
+                          ? 'व्यवसाय स्थल'
+                          : 'अन्य'
                         : opt}
                     </Text>
                   </TouchableOpacity>
@@ -16024,8 +15650,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Physical'
                         ? 'भौतिक'
                         : opt === 'Online'
-                          ? 'ऑनलाइन'
-                          : 'अन्य'
+                        ? 'ऑनलाइन'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -16044,7 +15670,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           style={[
                             styles.checkbox,
                             form.branding_subtype === sub &&
-                            styles.checkboxChecked,
+                              styles.checkboxChecked,
                           ]}
                         />
                         <Text style={styles.checkboxLabel}>
@@ -16053,14 +15679,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
                             ? sub === 'Flipkart'
                               ? 'फ्लिपकार्ट'
                               : sub === 'Amazon'
-                                ? 'अमेज़न'
-                                : sub === 'Meesho'
-                                  ? 'मीशो'
-                                  : sub === 'ONDC'
-                                    ? 'ओएनडीसी'
-                                    : sub === 'Others'
-                                      ? 'अन्य'
-                                      : sub
+                              ? 'अमेज़न'
+                              : sub === 'Meesho'
+                              ? 'मीशो'
+                              : sub === 'ONDC'
+                              ? 'ओएनडीसी'
+                              : sub === 'Others'
+                              ? 'अन्य'
+                              : sub
                             : sub}
                         </Text>
                       </TouchableOpacity>
@@ -16141,7 +15767,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     style={[
                       styles.checkbox,
                       form.financial_support_type === opt &&
-                      styles.checkboxChecked,
+                        styles.checkboxChecked,
                     ]}
                   />
                   <Text style={styles.checkboxLabel}>
@@ -16150,10 +15776,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Grant and Subsidy'
                         ? 'अनुदान एवं सब्सिडी'
                         : opt === 'Loan'
-                          ? 'ऋण'
-                          : opt === 'Interest Subvention'
-                            ? 'ब्याज अनुदान'
-                            : 'अन्य'
+                        ? 'ऋण'
+                        : opt === 'Interest Subvention'
+                        ? 'ब्याज अनुदान'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -16182,7 +15808,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         style={[
                           styles.checkbox,
                           form.loan_amount_range === range &&
-                          styles.checkboxChecked,
+                            styles.checkboxChecked,
                         ]}
                       />
                       <Text style={styles.checkboxLabel}>
@@ -16191,12 +15817,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           ? range === 'Below to 50,000'
                             ? '₹50,000 तक'
                             : range === '50,000 - 1,00,000'
-                              ? '₹50,000 – ₹1,00,000'
-                              : range === '1,00,000 - 2,00,000'
-                                ? '₹1,00,000 – ₹2,00,000'
-                                : range === '2,00,000 - 5,00,000'
-                                  ? '₹2,00,000 – ₹5,00,000'
-                                  : '₹5,00,000 से अधिक'
+                            ? '₹50,000 – ₹1,00,000'
+                            : range === '1,00,000 - 2,00,000'
+                            ? '₹1,00,000 – ₹2,00,000'
+                            : range === '2,00,000 - 5,00,000'
+                            ? '₹2,00,000 – ₹5,00,000'
+                            : '₹5,00,000 से अधिक'
                           : range}
                       </Text>
                     </TouchableOpacity>
@@ -16208,17 +15834,17 @@ export default function NewEnterpriseForm({ route, navigation }) {
               {['Grant and Subsidy', 'Interest Subvention', 'Others'].includes(
                 form.financial_support_type,
               ) && (
-                  <TextInput
-                    style={styles.input}
-                    placeholder={
-                      language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
-                    }
-                    value={form.financial_support_other_text}
-                    onChangeText={v =>
-                      setField('financial_support_other_text', v)
-                    }
-                  />
-                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder={
+                    language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
+                  }
+                  value={form.financial_support_other_text}
+                  onChangeText={v =>
+                    setField('financial_support_other_text', v)
+                  }
+                />
+              )}
             </>
           )}
 
@@ -16312,28 +15938,28 @@ export default function NewEnterpriseForm({ route, navigation }) {
                   ? opt === 'Lakhpati CRP'
                     ? 'लखपति सीआरपी'
                     : opt === 'Krishi Ajeevika Sakhi'
-                      ? 'कृषि आजीविका सखी'
-                      : opt === 'Krishi Udyog Sakhi'
-                        ? 'कृषि उद्योग सखी'
-                        : opt === 'Mahila Kisan'
-                          ? 'महिला किसान'
-                          : opt === 'CRP- EP'
-                            ? 'सीआरपी-ईपी'
-                            : opt === 'BC sakhi'
-                              ? 'बीसी सखी'
-                              : opt === 'Vidyut Sakhi'
-                                ? 'विद्युत सखी'
-                                : opt === 'Bank Sakhi'
-                                  ? 'बैंक सखी'
-                                  : opt === 'Fnhw Swasth sakhi'
-                                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
-                                    : opt === 'THR/Dry ration worker'
-                                      ? 'टीएचआर / सूखा राशन कार्यकर्ता'
-                                      : opt === 'Samuh Sakhi'
-                                        ? 'समूह सखी'
-                                        : opt === 'MGNREGA MATE'
-                                          ? 'मनरेगा मेट'
-                                          : 'अन्य'
+                    ? 'कृषि आजीविका सखी'
+                    : opt === 'Krishi Udyog Sakhi'
+                    ? 'कृषि उद्योग सखी'
+                    : opt === 'Mahila Kisan'
+                    ? 'महिला किसान'
+                    : opt === 'CRP- EP'
+                    ? 'सीआरपी-ईपी'
+                    : opt === 'BC sakhi'
+                    ? 'बीसी सखी'
+                    : opt === 'Vidyut Sakhi'
+                    ? 'विद्युत सखी'
+                    : opt === 'Bank Sakhi'
+                    ? 'बैंक सखी'
+                    : opt === 'Fnhw Swasth sakhi'
+                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
+                    : opt === 'THR/Dry ration worker'
+                    ? 'टीएचआर / सूखा राशन कार्यकर्ता'
+                    : opt === 'Samuh Sakhi'
+                    ? 'समूह सखी'
+                    : opt === 'MGNREGA MATE'
+                    ? 'मनरेगा मेट'
+                    : 'अन्य'
                   : opt}
               </Text>
             </TouchableOpacity>
@@ -16391,12 +16017,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'President'
                       ? 'अध्यक्ष'
                       : opt === 'Secretary'
-                        ? 'सचिव'
-                        : opt === 'Treasurer'
-                          ? 'कोषाध्यक्ष'
-                          : opt === 'Book-Keeper'
-                            ? 'बुक कीपर'
-                            : 'सदस्य'
+                      ? 'सचिव'
+                      : opt === 'Treasurer'
+                      ? 'कोषाध्यक्ष'
+                      : opt === 'Book-Keeper'
+                      ? 'बुक कीपर'
+                      : 'सदस्य'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -16419,17 +16045,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
             // onPress={() => setField('applicant_special_category', opt)}
             //  select unselect issue for special cateogary fixed
             onPress={() => {
-              const isSelected =
-                form.applicant_special_category === opt;
+              const isSelected = form.applicant_special_category === opt;
               setForm(prev => ({
                 ...prev,
-                applicant_special_category:
-                  isSelected ? '' : opt,
+                applicant_special_category: isSelected ? '' : opt,
                 // clear other text when unselecting Other
-                applicant_special_category_other:
-                  isSelected
-                    ? ''
-                    : prev.applicant_special_category_other,
+                applicant_special_category_other: isSelected
+                  ? ''
+                  : prev.applicant_special_category_other,
               }));
             }}
           >
@@ -16437,7 +16060,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
               style={[
                 styles.checkbox,
                 form.applicant_special_category === opt &&
-                styles.checkboxChecked,
+                  styles.checkboxChecked,
               ]}
             />
             <Text style={styles.checkboxLabel}>
@@ -16446,10 +16069,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                 ? opt === 'Divyang'
                   ? 'दिव्यांग'
                   : opt === 'Widow'
-                    ? 'विधवा'
-                    : opt === 'Unmarried'
-                      ? 'अविवाहित'
-                      : 'अन्य'
+                  ? 'विधवा'
+                  : opt === 'Unmarried'
+                  ? 'अविवाहित'
+                  : 'अन्य'
                 : opt}
             </Text>
           </TouchableOpacity>
@@ -16658,9 +16281,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       <Text style={[styles.label, { marginTop: 12 }]}>
         {/* PC-0426-2-A: Label for applicant selfie */}
-        {language === 'hi'
-          ? 'आवेदक की सेल्फी'
-          : 'Applicant Selfie'}
+        {language === 'hi' ? 'आवेदक की सेल्फी' : 'Applicant Selfie'}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <TouchableOpacity
