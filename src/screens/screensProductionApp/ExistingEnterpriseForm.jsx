@@ -67,18 +67,78 @@ const normalizeBoolean = val => {
 };
 
 // Helper to clean up internal UI flags (like 'Retail_Others') from marketing_channels
-const generateCleanMarketingChannels = row => {
-  if (!row) return '';
-  const channelsStr = Array.isArray(row.marketing_channels)
-    ? row.marketing_channels.join(', ')
-    : row.marketing_channels || '';
+// const generateCleanMarketingChannels = row => {
+//   if (!row) return '';
+//   const channelsStr = Array.isArray(row.marketing_channels)
+//     ? row.marketing_channels.join(', ')
+//     : row.marketing_channels || '';
 
-  return channelsStr
-    .split(',')
-    .map(s => s.trim())
-    .filter(ch => ch && !ch.includes('_Others')) // Filters out 'Retail_Others', 'Online_Others', etc.
-    .join(', ');
+//   return channelsStr
+//     .split(',')
+//     .map(s => s.trim())
+//     .filter(ch => ch && !ch.includes('_Others')) // Filters out 'Retail_Others', 'Online_Others', etc.
+//     .join(', ');
+// };
+
+// const generateCleanMarketingChannels = form => {
+//   const channels = Array.isArray(form.marketing_channels)
+//     ? form.marketing_channels
+//     : (form.marketing_channels || '')
+//       .split(',')
+//       .map(x => x.trim())
+//       .filter(Boolean);
+
+//   return channels
+//     .map(channel => {
+//       if (
+//         channel === 'Others' &&
+//         form.marketing_channels_other
+//       ) {
+//         return `Others - ${form.marketing_channels_other}`;
+//       }
+
+//       return channel;
+//     })
+//     .join(', ');
+// };
+
+const generateCleanMarketingChannels = form => {
+  try {
+    let channels = [];
+
+    if (Array.isArray(form?.marketing_channels)) {
+      channels = form.marketing_channels;
+    } else if (typeof form?.marketing_channels === 'string') {
+      channels = form.marketing_channels
+        .split(',')
+        .map(v => String(v).trim())
+        .filter(Boolean);
+    }
+
+    return channels
+      .map(channel => {
+        const value =
+          typeof channel === 'object'
+            ? channel?.en || channel?.value || ''
+            : String(channel);
+
+        if (
+          value === 'Others' &&
+          form?.marketing_channels_other
+        ) {
+          return `Others - ${form.marketing_channels_other}`;
+        }
+
+        return value;
+      })
+      .filter(Boolean)
+      .join(', ');
+  } catch (e) {
+    console.log('marketing_channels error', e);
+    return '';
+  }
 };
+
 
 // Helper to bundle channels and details in a dictionary-style string format
 const generateMarketLinkageString = row => {
@@ -381,13 +441,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
     const beneficiaryAddr =
       Array.isArray(beneficiary.member_addresses) &&
-      beneficiary.member_addresses.length > 0
+        beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-      beneficiary.member_phones.length > 0
+        beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -482,8 +542,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-          ? 'No'
-          : beneficiary.pld_status || null,
+            ? 'No'
+            : beneficiary.pld_status || null,
       enterprise_type: 'exep',
     };
 
@@ -513,6 +573,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
 
   const safeArray = arr => (Array.isArray(arr) ? arr : []);
 
+
+
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
@@ -521,13 +583,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       // --- EXACT SAME EXTRACTIONS FROM ensureRecordedBeneficiary ---
       const beneficiaryAddr =
         Array.isArray(beneficiary?.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+          beneficiary.member_addresses.length > 0
           ? beneficiary.member_addresses[0]
           : null;
 
       const phone =
         Array.isArray(beneficiary?.member_phones) &&
-        beneficiary.member_phones.length > 0
+          beneficiary.member_phones.length > 0
           ? beneficiary.member_phones[0]
           : null;
 
@@ -653,8 +715,8 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             beneficiary?.pld_status === true
               ? 'Yes'
               : beneficiary?.pld_status === false
-              ? 'No'
-              : beneficiary?.pld_status || null,
+                ? 'No'
+                : beneficiary?.pld_status || null,
           enterprise_type: 'exep',
           special_category: beneficiary?.special_category || '',
         },
@@ -709,7 +771,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           has_taken_loan: normalizeBoolean(existingForm.has_taken_loan),
           has_received_subsidy: normalizeBoolean(
             existingForm.has_receieved_subsidy ||
-              existingForm.has_receieved_subsidy,
+            existingForm.has_receieved_subsidy,
           ),
           has_shg_received_man_fund: normalizeBoolean(existingForm.has_shg_cif),
 
@@ -759,34 +821,88 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           date_taken: loan.date_taken || '',
           repayment_status:
             parseFloat(loan.repaid_amount || 0) >=
-            parseFloat(loan.loan_amount || 1)
+              parseFloat(loan.loan_amount || 1)
               ? 'PAID'
               : 'PARTIALLY PAID',
           created_by: createdBy,
         })),
 
+        // subsidies: safeArray(existingForm.subsidies).map(sub => {
+        //   let subsidyTypeText = '';
+        //   let subsidyNameText = '';
+        //   if (
+        //     Array.isArray(sub.subsidy_name_tree) &&
+        //     sub.subsidy_name_tree.length > 0
+        //   ) {
+        //     subsidyTypeText = sub.subsidy_name_tree
+        //       .map(item => item.parent)
+        //       .join(', ');
+        //     subsidyNameText = sub.subsidy_name_tree
+        //       .map(item => {
+        //         let childList =
+        //           item.children && item.children.length > 0
+        //             ? item.children.join(', ')
+        //             : 'General Support';
+        //         if (item.others_specify)
+        //           childList = `${childList} (${item.others_specify})`;
+        //         return childList;
+        //       })
+        //       .join(' | ');
+        //   }
+        //   return {
+        //     subsidy_type: subsidyTypeText || sub.subsidy_type || '',
+        //     subsidy_name: subsidyNameText || sub.subsidy_name || '',
+        //     subsidy_detail: sub.subsidy_detail || '',
+        //     created_by: createdBy,
+        //   };
+        // }),
+
         subsidies: safeArray(existingForm.subsidies).map(sub => {
           let subsidyTypeText = '';
           let subsidyNameText = '';
+
           if (
             Array.isArray(sub.subsidy_name_tree) &&
             sub.subsidy_name_tree.length > 0
           ) {
             subsidyTypeText = sub.subsidy_name_tree
-              .map(item => item.parent)
+              .map(item => {
+                const parent = item.parent || '';
+
+                if (
+                  parent.includes('Others') &&
+                  item.others_specify
+                ) {
+                  return `Others (Specify) - ${item.others_specify}`;
+                }
+
+                return parent;
+              })
               .join(', ');
+
             subsidyNameText = sub.subsidy_name_tree
               .map(item => {
-                let childList =
-                  item.children && item.children.length > 0
-                    ? item.children.join(', ')
-                    : 'General Support';
-                if (item.others_specify)
-                  childList = `${childList} (${item.others_specify})`;
-                return childList;
+                const children =
+                  Array.isArray(item.children) && item.children.length
+                    ? item.children
+                    : ['General Support'];
+
+                return children
+                  .map(child => {
+                    if (
+                      child === 'Others' &&
+                      item.others_specify
+                    ) {
+                      return `Others - ${item.others_specify}`;
+                    }
+
+                    return child;
+                  })
+                  .join(', ');
               })
               .join(' | ');
           }
+
           return {
             subsidy_type: subsidyTypeText || sub.subsidy_type || '',
             subsidy_name: subsidyNameText || sub.subsidy_name || '',
@@ -798,123 +914,123 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         shops:
           existingForm.has_shop_product === 'Yes'
             ? [
-                {
-                  // 1. Format Shop Category Others
-                  shop_category: (() => {
-                    const val = existingForm.shop_sub_category || '';
-                    if (val === 'Others') {
-                      const otherText =
-                        existingForm.shop_sub_category_other ||
-                        existingForm.shop_type_other ||
-                        '';
-                      return otherText ? `Others - ${otherText}` : 'Others';
-                    }
-                    return val;
-                  })(),
+              {
+                // 1. Format Shop Category Others
+                shop_category: (() => {
+                  const val = existingForm.shop_sub_category || '';
+                  if (val === 'Others') {
+                    const otherText =
+                      existingForm.shop_sub_category_other ||
+                      existingForm.shop_type_other ||
+                      '';
+                    return otherText ? `Others - ${otherText}` : 'Others';
+                  }
+                  return val;
+                })(),
 
-                  shop_type: (() => {
-                    if (
-                      existingForm.shop_type === 'Others' &&
-                      existingForm.shop_type_other
-                    ) {
-                      return `Others - ${existingForm.shop_type_other}`;
-                    }
-                    return existingForm.shop_type || '';
-                  })(),
-                  source_of_inventory: existingForm.inventory_source || '',
+                shop_type: (() => {
+                  if (
+                    existingForm.shop_type === 'Others' &&
+                    existingForm.shop_type_other
+                  ) {
+                    return `Others - ${existingForm.shop_type_other}`;
+                  }
+                  return existingForm.shop_type || '';
+                })(),
+                source_of_inventory: existingForm.inventory_source || '',
 
-                  // 2. Format Target Customers Others (Handles both single string or multi-select array)
-                  target_customers: (() => {
-                    const customers = Array.isArray(
-                      existingForm.target_customers,
+                // 2. Format Target Customers Others (Handles both single string or multi-select array)
+                target_customers: (() => {
+                  const customers = Array.isArray(
+                    existingForm.target_customers,
+                  )
+                    ? existingForm.target_customers
+                    : (existingForm.target_customers || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  return customers
+                    .map(c =>
+                      c === 'Others' && existingForm.target_customers_other
+                        ? `Others - ${existingForm.target_customers_other}`
+                        : c,
                     )
-                      ? existingForm.target_customers
-                      : (existingForm.target_customers || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
+                    .join(', ');
+                })(),
 
-                    return customers
+                sales_area: Array.isArray(existingForm.sales_area)
+                  ? existingForm.sales_area.join(', ')
+                  : existingForm.sales_area || '',
+
+                // 3. Format Marketing Strategy Others (Handles both single string or multi-select array)
+                marketing_strategy: (() => {
+                  const strategies = Array.isArray(
+                    existingForm.marketing_strategy,
+                  )
+                    ? existingForm.marketing_strategy
+                    : (existingForm.marketing_strategy || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  return strategies
+                    .map(s =>
+                      s === 'Others' && existingForm.marketing_strategy_other
+                        ? `Others - ${existingForm.marketing_strategy_other}`
+                        : s,
+                    )
+                    .join(', ');
+                })(),
+
+                marketing_channels:
+                  generateCleanMarketingChannels(existingForm),
+                market_linkage: generateMarketLinkageString(existingForm),
+
+                marketing_challenges: (() => {
+                  const challenges = Array.isArray(
+                    existingForm.marketing_challenges,
+                  )
+                    ? existingForm.marketing_challenges
+                    : (existingForm.marketing_challenges || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  if (
+                    challenges.includes('Others') &&
+                    existingForm.marketing_challenges_other
+                  ) {
+                    return challenges
                       .map(c =>
-                        c === 'Others' && existingForm.target_customers_other
-                          ? `Others - ${existingForm.target_customers_other}`
+                        c === 'Others'
+                          ? `Others (${existingForm.marketing_challenges_other})`
                           : c,
                       )
                       .join(', ');
-                  })(),
+                  }
+                  return challenges.join(', ');
+                })(),
 
-                  sales_area: Array.isArray(existingForm.sales_area)
-                    ? existingForm.sales_area.join(', ')
-                    : existingForm.sales_area || '',
-
-                  // 3. Format Marketing Strategy Others (Handles both single string or multi-select array)
-                  marketing_strategy: (() => {
-                    const strategies = Array.isArray(
-                      existingForm.marketing_strategy,
-                    )
-                      ? existingForm.marketing_strategy
-                      : (existingForm.marketing_strategy || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
-
-                    return strategies
-                      .map(s =>
-                        s === 'Others' && existingForm.marketing_strategy_other
-                          ? `Others - ${existingForm.marketing_strategy_other}`
-                          : s,
-                      )
-                      .join(', ');
-                  })(),
-
-                  marketing_channels:
-                    generateCleanMarketingChannels(existingForm),
-                  market_linkage: generateMarketLinkageString(existingForm),
-
-                  marketing_challenges: (() => {
-                    const challenges = Array.isArray(
-                      existingForm.marketing_challenges,
-                    )
-                      ? existingForm.marketing_challenges
-                      : (existingForm.marketing_challenges || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
-
-                    if (
-                      challenges.includes('Others') &&
-                      existingForm.marketing_challenges_other
-                    ) {
-                      return challenges
-                        .map(c =>
-                          c === 'Others'
-                            ? `Others (${existingForm.marketing_challenges_other})`
-                            : c,
-                        )
-                        .join(', ');
-                    }
-                    return challenges.join(', ');
-                  })(),
-
-                  accept_digital_payment: normalizeBoolean(
-                    existingForm.accept_digital_payment,
-                  ),
-                  avg_monthly_sales: existingForm.avg_monthly_sales || '0.00',
-                  avg_annual_sales: existingForm.annual_sale || '0.00',
-                  media: {
-                    front_key: safeArray(existingForm.media?.shop_front)
-                      .map((_, idx) => `shop_front_0_${idx}`)
-                      .join(','),
-                    inside_key: safeArray(existingForm.media?.shop_inside)
-                      .map((_, idx) => `shop_inside_0_${idx}`)
-                      .join(','),
-                    others_key: safeArray(existingForm.media?.shop_others)
-                      .map((_, idx) => `shop_others_0_${idx}`)
-                      .join(','),
-                  },
-                  created_by: createdBy,
+                accept_digital_payment: normalizeBoolean(
+                  existingForm.accept_digital_payment,
+                ),
+                avg_monthly_sales: existingForm.avg_monthly_sales || '0.00',
+                avg_annual_sales: existingForm.annual_sale || '0.00',
+                media: {
+                  front_key: safeArray(existingForm.media?.shop_front)
+                    .map((_, idx) => `shop_front_0_${idx}`)
+                    .join(','),
+                  inside_key: safeArray(existingForm.media?.shop_inside)
+                    .map((_, idx) => `shop_inside_0_${idx}`)
+                    .join(','),
+                  others_key: safeArray(existingForm.media?.shop_others)
+                    .map((_, idx) => `shop_others_0_${idx}`)
+                    .join(','),
                 },
-              ]
+                created_by: createdBy,
+              },
+            ]
             : [],
 
         products: sanitizedProducts.map((prod, i) => ({
@@ -983,14 +1099,39 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
           created_by: createdBy,
         },
 
+        // categories: existingForm.enterprise_types_tree
+        //   ? existingForm.enterprise_types_tree.map(cat => ({
+        //     parent_category: cat.parent?.en || cat.parent || '',
+        //     sub_category: cat.children
+        //       ? cat.children.map(c => c.en || c).join(', ')
+        //       : '',
+        //     created_by: createdBy,
+        //   }))
+        //   : [],
         categories: existingForm.enterprise_types_tree
           ? existingForm.enterprise_types_tree.map(cat => ({
-              parent_category: cat.parent?.en || cat.parent || '',
-              sub_category: cat.children
-                ? cat.children.map(c => c.en || c).join(', ')
-                : '',
-              created_by: createdBy,
-            }))
+            parent_category: cat.parent?.en || cat.parent || '',
+
+            sub_category: Array.isArray(cat.children)
+              ? cat.children
+                .map(c => {
+                  const value = c?.en || c || '';
+
+                  // Preserve Others input
+                  if (
+                    value === 'Others' &&
+                    cat.childOtherText?.Others
+                  ) {
+                    return `Others - ${cat.childOtherText.Others}`;
+                  }
+
+                  return value;
+                })
+                .join(', ')
+              : '',
+
+            created_by: createdBy,
+          }))
           : [],
 
         supports: (() => {
@@ -2486,7 +2627,7 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
             index={0}
             updateRow={(i, patch) => updateForm(patch)}
             language={language}
-            addProductRow={() => {}}
+            addProductRow={() => { }}
             ProductAndServicesComponent={
               ExistingEnterpriseProductServicesSection
             }

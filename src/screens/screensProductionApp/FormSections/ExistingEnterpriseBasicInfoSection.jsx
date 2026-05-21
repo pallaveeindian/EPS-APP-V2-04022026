@@ -904,10 +904,16 @@ export default function ExistingEnterpriseBasicInfoSection({
           <TextInput
             style={[styles.input, { marginTop: 6 }]}
             placeholder={
-              language === 'hi' ? 'कृपया निर्दिष्ट करें' : 'Please specify'
+              language === 'hi'
+                ? 'कृपया निर्दिष्ट करें'
+                : 'Please specify'
             }
-            value={existingForm.owner_cadre || ''}
-            onChangeText={v => update({ owner_cadre: v })}
+            value={existingForm.owner_cadre_other || ''}
+            onChangeText={v =>
+              update({
+                owner_cadre_other: v,
+              })
+            }
           />
         )}
       </View>
