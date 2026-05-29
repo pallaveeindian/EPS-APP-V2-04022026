@@ -2102,6 +2102,125 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
 
 
+  // const createEnterpriseSupport = async enterpriseId => {
+  //   // enterpriseId intentionally unused
+  //   // function now only prepares payload
+
+  //   if (form.need_support !== 'Yes') {
+  //     return [];
+  //   }
+
+  //   const createdBy = getCreatedByNumeric();
+
+  //   const supports = [];
+
+  //   const addSupport = payload => {
+  //     supports.push({
+  //       ...payload,
+  //       created_by: createdBy,
+  //     });
+  //   };
+
+  //   // =====================================================
+  //   // MACHINERY
+  //   // =====================================================
+
+  //   if (form.support_types?.machinery) {
+  //     addSupport({
+  //       support_category: 'Machinery',
+  //       support_sub_category: null,
+  //       support_description: form.machinery_detail || null,
+  //       other_support: null,
+  //     });
+  //   }
+
+  //   // =====================================================
+  //   // INFRASTRUCTURE
+  //   // =====================================================
+
+  //   if (form.support_types?.infrastructure) {
+  //     addSupport({
+  //       support_category: 'Infrastructure',
+
+  //       support_sub_category: form.infrastructure_support_type || null,
+
+  //       support_description: form.infrastructure_support_detail || null,
+
+  //       other_support: null,
+  //     });
+  //   }
+
+  //   // =====================================================
+  //   // BRANDING & PROMOTION
+  //   // =====================================================
+
+  //   if (form.support_types?.branding) {
+  //     let subCategory = form.branding_type || null;
+
+  //     let description = form.branding_detail || null;
+
+  //     if (form.branding_type === 'Online') {
+  //       subCategory = form.branding_subtype || 'Online';
+
+  //       description =
+  //         form.branding_subtype === 'Others'
+  //           ? form.branding_detail || null
+  //           : form.branding_subtype || null;
+  //     }
+
+  //     addSupport({
+  //       support_category: 'Branding & Promotion',
+
+  //       support_sub_category: subCategory,
+
+  //       support_description: description,
+
+  //       other_support: null,
+  //     });
+  //   }
+
+  //   // =====================================================
+  //   // FINANCIAL
+  //   // =====================================================
+
+  //   if (form.support_types?.financial) {
+  //     let description =
+  //       form.financial_support_type === 'Loan'
+  //         ? form.loan_amount_range || null
+  //         : form.financial_support_other_text || null;
+
+  //     addSupport({
+  //       support_category: 'Financial',
+
+  //       support_sub_category: form.financial_support_type || null,
+
+  //       support_description: description,
+
+  //       other_support: null,
+  //     });
+  //   }
+
+  //   // =====================================================
+  //   // OTHERS
+  //   // =====================================================
+
+  //   if (form.support_types?.others) {
+  //     addSupport({
+  //       support_category: 'Others',
+
+  //       support_sub_category: null,
+
+  //       support_description: null,
+
+  //       other_support: form.other_support || null,
+  //     });
+  //   }
+
+  //   console.log('SUPPORT PAYLOAD =>', JSON.stringify(supports, null, 2));
+
+  //   return supports;
+  // };
+
   const createEnterpriseSupport = async enterpriseId => {
     // enterpriseId intentionally unused
     // function now only prepares payload
@@ -2127,9 +2246,19 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     if (form.support_types?.machinery) {
       addSupport({
-        support_category: 'Machinery',
-        support_sub_category: null,
+        /* =========================================
+           FIXED:
+           Backend expects:
+           category
+           sub_category
+        ========================================= */
+
+        category: 'Machinery',
+
+        sub_category: null,
+
         support_description: form.machinery_detail || null,
+
         other_support: null,
       });
     }
@@ -2140,11 +2269,16 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     if (form.support_types?.infrastructure) {
       addSupport({
-        support_category: 'Infrastructure',
+        /* =========================================
+           FIXED KEY NAMES
+        ========================================= */
 
-        support_sub_category: form.infrastructure_support_type || null,
+        category: 'Infrastructure',
 
-        support_description: form.infrastructure_support_detail || null,
+        sub_category: form.infrastructure_support_type || null,
+
+        support_description:
+          form.infrastructure_support_detail || null,
 
         other_support: null,
       });
@@ -2169,9 +2303,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
       }
 
       addSupport({
-        support_category: 'Branding & Promotion',
+        /* =========================================
+           FIXED KEY NAMES
+        ========================================= */
 
-        support_sub_category: subCategory,
+        category: 'Branding & Promotion',
+
+        sub_category: subCategory,
 
         support_description: description,
 
@@ -2190,9 +2328,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
           : form.financial_support_other_text || null;
 
       addSupport({
-        support_category: 'Financial',
+        /* =========================================
+           FIXED KEY NAMES
+        ========================================= */
 
-        support_sub_category: form.financial_support_type || null,
+        category: 'Financial',
+
+        sub_category: form.financial_support_type || null,
 
         support_description: description,
 
@@ -2206,9 +2348,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     if (form.support_types?.others) {
       addSupport({
-        support_category: 'Others',
+        /* =========================================
+           FIXED KEY NAMES
+        ========================================= */
 
-        support_sub_category: null,
+        category: 'Others',
+
+        sub_category: null,
 
         support_description: null,
 
@@ -2216,7 +2362,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
       });
     }
 
-    console.log('SUPPORT PAYLOAD =>', JSON.stringify(supports, null, 2));
+    console.log(
+      'SUPPORT PAYLOAD =>',
+      JSON.stringify(supports, null, 2),
+    );
 
     return supports;
   };
@@ -6584,49 +6733,97 @@ export default function NewEnterpriseForm({ route, navigation }) {
       // SUPPORTS
       // =====================================================
 
-      if (form.need_support === 'Yes') {
-        if (form.support_types?.financial) {
-          finalPayload.supports.push({
-            category: 'Financial',
+      // if (form.need_support === 'Yes') {
+      //   if (form.support_types?.financial) {
+      //     finalPayload.supports.push({
+      //       category: 'Financial',
 
-            sub_category: form.financialsupporttype,
+      //       sub_category: form.financialsupporttype,
 
-            support_description: form.financialsupportdetail || '',
+      //       support_description: form.financialsupportdetail || '',
 
-            other_support: '',
+      //       other_support: '',
 
-            created_by: createdBy,
-          });
-        }
+      //       created_by: createdBy,
+      //     });
+      //   }
 
-        if (form.support_types?.infrastructure) {
-          finalPayload.supports.push({
-            category: 'Infrastructure',
+      //   if (form.support_types?.infrastructure) {
+      //     finalPayload.supports.push({
+      //       category: 'Infrastructure',
 
-            sub_category: form.infrastructuresupporttype,
+      //       sub_category: form.infrastructuresupporttype,
 
-            support_description: form.infrastructuresupportdetail || '',
+      //       support_description: form.infrastructuresupportdetail || '',
 
-            other_support: '',
+      //       other_support: '',
 
-            created_by: createdBy,
-          });
-        }
+      //       created_by: createdBy,
+      //     });
+      //   }
 
-        if (form.support_types?.machinery) {
-          finalPayload.supports.push({
-            category: 'Machinery',
+      //   if (form.support_types?.machinery) {
+      //     finalPayload.supports.push({
+      //       category: 'Machinery',
 
-            sub_category: 'Direct Entry',
+      //       sub_category: 'Direct Entry',
 
-            support_description: form.machinerydetail || '',
+      //       support_description: form.machinerydetail || '',
 
-            other_support: '',
+      //       other_support: '',
 
-            created_by: createdBy,
-          });
-        }
-      }
+      //       created_by: createdBy,
+      //     });
+      //   }
+      // }
+
+      // =====================================================
+      // SUPPORTS
+      // =====================================================
+
+      // if (form.need_support === 'Yes') {
+      //   if (form.support_types?.financial) {
+      //     finalPayload.supports.push({
+      //       category: 'Financial',
+
+      //       sub_category: form.financialsupporttype,
+
+      //       support_description: form.financialsupportdetail || '',
+
+      //       other_support: '',
+
+      //       created_by: createdBy,
+      //     });
+      //   }
+
+      //   if (form.support_types?.infrastructure) {
+      //     finalPayload.supports.push({
+      //       category: 'Infrastructure',
+
+      //       sub_category: form.infrastructuresupporttype,
+
+      //       support_description: form.infrastructuresupportdetail || '',
+
+      //       other_support: '',
+
+      //       created_by: createdBy,
+      //     });
+      //   }
+
+      //   if (form.support_types?.machinery) {
+      //     finalPayload.supports.push({
+      //       category: 'Machinery',
+
+      //       sub_category: 'Direct Entry',
+
+      //       support_description: form.machinerydetail || '',
+
+      //       other_support: '',
+
+      //       created_by: createdBy,
+      //     });
+      //   }
+      // }
 
       // =====================================================
       // FINAL JSON DEBUG

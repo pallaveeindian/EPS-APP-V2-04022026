@@ -317,9 +317,26 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
       const savedDraft = await AsyncStorage.getItem(`DRAFT_EXEP_${memberCode}`);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
+        // Alert.alert(
+        //   'Resume Draft?',
+        //   `We found a saved form for ${beneficiaryName}. Would you like to continue where you left off?`,
         Alert.alert(
-          'Resume Draft?',
-          `We found a saved form for ${beneficiaryName}. Would you like to continue where you left off?`,
+          language === 'hi' ? 'ड्राफ्ट फिर से शुरू करें?' : 'Resume Draft?',
+
+          language === 'hi'
+            ? `हमें ${beneficiaryName} के लिए एक सेव किया गया फॉर्म मिला।
+
+क्या आप वहीं से जारी रखना चाहते हैं जहाँ आपने छोड़ा था?
+
+⚠ महत्वपूर्ण:
+कृपया Resume करने के बाद Basic Information सेक्शन में Licenses और Support सेक्शन को दोबारा भरें।`
+            : `We found a saved form for ${beneficiaryName}.
+
+Would you like to continue where you left off?
+
+⚠ IMPORTANT:
+Please refill Licenses in Basic Information section and Support section again after resuming.`,
+
           [
             {
               text: 'Start New',
@@ -2374,13 +2391,44 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
               }
             }
 
-            if (canProceed && support.machinery !== undefined) {
-              if (isEmpty(support.machinery)) {
-                Alert.alert(
-                  'Validation',
-                  'Machinery: Please specify required machinery.',
-                );
-                canProceed = false;
+            // if (canProceed && support.machinery !== undefined) {
+            //   if (isEmpty(support.machinery)) {
+            //     Alert.alert(
+            //       'Validation',
+            //       'Machinery: Please specify required machinery.',
+            //     );
+            //     canProceed = false;
+            //   }
+            // }
+
+
+            /* ========================= */
+            /* FIXED: Machinery validation */
+            /* Only validate when machinery support is actually selected */
+            /* ========================= */
+
+            if (
+              canProceed &&
+              support.machinery !== undefined &&
+              support.machinery !== null
+            ) {
+              // FIX:
+              // Ignore validation if machinery was unchecked/removed
+              // or value became empty after unselecting
+              const machineryValue =
+                typeof support.machinery === 'string'
+                  ? support.machinery.trim()
+                  : support.machinery;
+
+              //  Only validate when user has actually entered/select machinery section
+              if (machineryValue !== '') {
+                if (isEmpty(machineryValue)) {
+                  Alert.alert(
+                    'Validation',
+                    'Machinery: Please specify required machinery.',
+                  );
+                  canProceed = false;
+                }
               }
             }
 

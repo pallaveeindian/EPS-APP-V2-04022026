@@ -225,8 +225,8 @@ export default function CRPDashboardProduction({ navigation }) {
       recorded = Array.isArray(res?.results)
         ? res.results
         : Array.isArray(res)
-        ? res
-        : [];
+          ? res
+          : [];
       setCrpRecordedBeneficiaries(recorded);
 
       // Build analytics per Panchayat
@@ -256,30 +256,6 @@ export default function CRPDashboardProduction({ navigation }) {
       setLoading(false);
     }
   };
-
-  // const loadDrafts = async () => {
-  //   try {
-  //     const allKeys = await AsyncStorage.getAllKeys();
-  //     const draftKeys = allKeys.filter(key =>
-  //       key.startsWith('NO_ENTERPRISE_FORM_DRAFT_'),
-  //     );
-  //     const entries = await AsyncStorage.multiGet(draftKeys);
-
-  //     const loadedDrafts = entries.map(([key, value]) => {
-  //       const draft = JSON.parse(value || '{}');
-  //       return {
-  //         key,
-  //         member_code: key.replace('NO_ENTERPRISE_FORM_DRAFT_', ''),
-  //         applicant_name: draft?.memberName || 'Unnamed',
-  //         draft,
-  //       };
-  //     });
-
-  //     setDrafts(loadedDrafts);
-  //   } catch (e) {
-  //     console.error('Failed to load drafts', e);
-  //   }
-  // };
 
   // [+++ ADD THIS FUNCTION: Scans storage for keys starting with DRAFT_ENTERPRISE_FORM_]
   const loadDrafts = async () => {

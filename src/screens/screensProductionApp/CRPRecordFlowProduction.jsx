@@ -307,8 +307,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
           const recList = Array.isArray(res?.results)
             ? res.results
             : Array.isArray(res)
-            ? res
-            : [];
+              ? res
+              : [];
           setRecorded(recList);
           try {
             setCrpRecordedBeneficiaries?.(recList);
@@ -334,10 +334,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
       const rows = Array.isArray(res?.results)
         ? res.results
         : Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
+          ? res.data
+          : Array.isArray(res)
+            ? res
+            : [];
       return rows;
     } catch (err) {
       if (err?.status === 404) {
@@ -386,10 +386,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
       const rows = Array.isArray(res?.data)
         ? res.data
         : Array.isArray(res?.results)
-        ? res.results
-        : Array.isArray(res)
-        ? res
-        : [];
+          ? res.results
+          : Array.isArray(res)
+            ? res
+            : [];
 
       try {
         setShgListForPanchayat(cacheKey, rows);
@@ -421,10 +421,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
         const rows = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res?.results)
-          ? res.results
-          : Array.isArray(res)
-          ? res
-          : [];
+            ? res.results
+            : Array.isArray(res)
+              ? res
+              : [];
         if (!rows.length) break;
         all.push(...rows);
         page += 1;
@@ -520,7 +520,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
 
         // Recorded only if enterprise_id is present
         const isRecorded = !!(rec && rec.enterprise_id);
-        const isPLD = m?.pld_status === true; // ✅ SAFE ADDITION
+        const isPLD = m?.pld_status === true; //  SAFE ADDITION
 
         return {
           ...m,
@@ -579,18 +579,6 @@ export default function CRPRecordFlowProduction({ navigation }) {
                       crpUserId,
                     }),
                 },
-                // {
-                //   text: t.no,
-                //   onPress: () => {
-                //     Alert.alert(
-                //       'Success',
-                //       'Your data has been recorded successfully',
-                //       [{ text: 'OK', style: 'default' }],
-                //       { cancelable: true },
-                //     );
-                //   },
-                //   style: 'default',
-                // },
                 {
                   text: t.no,
                   onPress: async () => {
@@ -640,7 +628,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
         },
         {
           text: t.cancel,
-          onPress: () => {},
+          onPress: () => { },
           style: 'cancel',
         },
       ],
@@ -671,8 +659,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
             const recList = Array.isArray(res?.results)
               ? res.results
               : Array.isArray(res)
-              ? res
-              : [];
+                ? res
+                : [];
 
             setRecorded(recList);
             setCrpRecordedBeneficiaries?.(recList);
@@ -687,7 +675,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
       } else if (step === 'shg' && selectedVillage) {
         await handleSelectVillage(selectedVillage);
       } else if (step === 'beneficiaries' && selectedShg) {
-        // 🔥 1️⃣ Refresh recorded list for current panchayat
+        // Refresh recorded list for current panchayat
         const panchayatId = selectedPanchayat?.panchayat_id;
 
         if (panchayatId) {
@@ -701,8 +689,8 @@ export default function CRPRecordFlowProduction({ navigation }) {
             const recList = Array.isArray(res?.results)
               ? res.results
               : Array.isArray(res)
-              ? res
-              : [];
+                ? res
+                : [];
 
             setRecorded(recList);
             setCrpRecordedBeneficiaries?.(recList);
@@ -711,7 +699,7 @@ export default function CRPRecordFlowProduction({ navigation }) {
           }
         }
 
-        // 🔥 2️⃣ Re-fetch members and re-evaluate _isRecorded
+        //  Re-fetch members and re-evaluate _isRecorded
         await handleSelectShg(selectedShg);
       }
     } catch (e) {
@@ -772,10 +760,10 @@ export default function CRPRecordFlowProduction({ navigation }) {
     step === 'gp'
       ? t.selectGramPanchayat
       : step === 'village'
-      ? t.selectVillage
-      : step === 'shg'
-      ? t.selectShg
-      : t.selectBeneficiary;
+        ? t.selectVillage
+        : step === 'shg'
+          ? t.selectShg
+          : t.selectBeneficiary;
 
   const handleStepBack = () => {
     if (step === 'gp') {
