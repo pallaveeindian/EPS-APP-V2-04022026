@@ -660,23 +660,23 @@ export default function ExistingEnterpriseTrainingSkillsSection({
       });
 
       // Strict filter (extra safety)
-      const filtered = results.filter(file => {
-        const name = (file.name || '').toLowerCase();
-        return (
-          name.endsWith('.pdf') ||
-          name.endsWith('.jpg') ||
-          name.endsWith('.jpeg')
-        );
-      });
+      // const filtered = results.filter(file => {
+      //   const name = (file.name || '').toLowerCase();
+      //   return (
+      //     name.endsWith('.pdf') ||
+      //     name.endsWith('.jpg') ||
+      //     name.endsWith('.jpeg')
+      //   );
+      // });
 
-      if (filtered.length === 0) {
-        alert(
-          language === 'hi'
-            ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
-            : 'Only PDF or JPG files are allowed',
-        );
-        return;
-      }
+      // if (filtered.length === 0) {
+      //   alert(
+      //     language === 'hi'
+      //       ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
+      //       : 'Only PDF or JPG files are allowed',
+      //   );
+      //   return;
+      // }
 
       const row = trainingReceived[rowIndex];
       const current = Array.isArray(row.certificates_files)

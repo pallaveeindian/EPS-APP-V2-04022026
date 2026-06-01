@@ -271,6 +271,11 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   const [loggedUser, setLoggedUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // ==========================
+  // NEW
+  // ==========================
+  const [draftMeta, setDraftMeta] = useState(null);
+
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [isDraftLoaded, setIsDraftLoaded] = useState(false);
   const TOTAL_SECTIONS = 9;
@@ -296,16 +301,43 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     return null;
   };
 
+  // const saveProgress = async (state, index) => {
+  //   if (!memberCode) return;
+  //   try {
+  //     const draftBlob = JSON.stringify({
+  //       formData: state,
+  //       sectionIndex: index,
+  //       beneficiary: beneficiary,
+  //       lastSaved: new Date().toISOString(),
+  //     });
+  //     await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
+  //   } catch (e) {
+  //     console.warn('Failed to save draft', e);
+  //   }
+  // };
+
   const saveProgress = async (state, index) => {
     if (!memberCode) return;
+
     try {
       const draftBlob = JSON.stringify({
         formData: state,
         sectionIndex: index,
         beneficiary: beneficiary,
+
+        // ==========================
+        // NEW : persist SHG/location
+        // ==========================
+        tempShg,
+        lokos_shg_code: lokosShgCode,
+
         lastSaved: new Date().toISOString(),
       });
-      await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
+
+      await AsyncStorage.setItem(
+        `DRAFT_EXEP_${memberCode}`,
+        draftBlob,
+      );
     } catch (e) {
       console.warn('Failed to save draft', e);
     }
@@ -345,14 +377,34 @@ Please refill Licenses in Basic Information section and Support section again af
                 setIsDraftLoaded(true);
               },
             },
+            // {
+            //   text: 'Resume',
+            //   onPress: () => {
+            //     setExistingForm(parsed.formData);
+            //     setCurrentSectionIndex(parsed.sectionIndex);
+            //     setIsDraftLoaded(true);
+            //   },
+            // },
+
             {
               text: 'Resume',
               onPress: () => {
                 setExistingForm(parsed.formData);
+
+                // ==========================
+                // NEW
+                // ==========================
+                setDraftMeta({
+                  tempShg: parsed.tempShg || null,
+                  lokos_shg_code: parsed.lokos_shg_code || null,
+                  beneficiary: parsed.beneficiary || null,
+                });
+
                 setCurrentSectionIndex(parsed.sectionIndex);
                 setIsDraftLoaded(true);
               },
-            },
+            }
+
           ],
         );
       } else {
@@ -638,18 +690,53 @@ Please refill Licenses in Basic Information section and Support section again af
         beneficiary?.relation_name ??
         '';
 
-      let lokos_shg = lokosShgCode || tempShg?.code || null;
+      // let lokos_shg = lokosShgCode || tempShg?.code || null;
+
+      // ==========================
+      // NEW
+      // ==========================
+      const effectiveTempShg =
+        tempShg ||
+        draftMeta?.tempShg ||
+        null;
+
+      let lokos_shg =
+        lokosShgCode ||
+        draftMeta?.lokos_shg_code ||
+        effectiveTempShg?.code ||
+        null;
 
       // --- FALLBACK LOGIC 1: FROM TEMP SHG ---
+      // if (
+      //   (!district_id ||
+      //     !block_id ||
+      //     !panchayat_id ||
+      //     !village_id ||
+      //     !lokos_shg) &&
+      //   tempShg
+      // ) {
+      //   const loc = extractLocationFromShg(tempShg);
+      //   if (loc) {
+      //     district_id = district_id || loc.district_id;
+      //     block_id = block_id || loc.block_id;
+      //     panchayat_id = panchayat_id || loc.panchayat_id;
+      //     village_id = village_id || loc.village_id;
+      //     lokos_shg = lokos_shg || loc.lokos_shg_code;
+      //   }
+      // }
+
       if (
         (!district_id ||
           !block_id ||
           !panchayat_id ||
           !village_id ||
           !lokos_shg) &&
-        tempShg
+        effectiveTempShg
       ) {
-        const loc = extractLocationFromShg(tempShg);
+        const loc = extractLocationFromShg(
+          effectiveTempShg,
+        );
+
         if (loc) {
           district_id = district_id || loc.district_id;
           block_id = block_id || loc.block_id;
@@ -707,6 +794,40 @@ Please refill Licenses in Basic Information section and Support section again af
           ? existingForm.licenses
           : existingEnterprise?.licenses || [];
 
+      // ========================================
+      // FINAL SAFETY FALLBACK FOR RESUME DRAFT
+      // ========================================
+
+      if (!district_id && draftMeta?.tempShg?.districtId) {
+        district_id = draftMeta.tempShg.districtId;
+      }
+
+      if (!block_id && draftMeta?.tempShg?.blockId) {
+        block_id = draftMeta.tempShg.blockId;
+      }
+
+      if (!panchayat_id && draftMeta?.tempShg?.panchayatId) {
+        panchayat_id = draftMeta.tempShg.panchayatId;
+      }
+
+      if (!village_id && draftMeta?.tempShg?.villageId) {
+        village_id = draftMeta.tempShg.villageId;
+      }
+
+      if (!lokos_shg && draftMeta?.tempShg?.code) {
+        lokos_shg = draftMeta.tempShg.code;
+      }
+      console.log('========== LOCATION DEBUG ==========');
+
+      console.log({
+        district_id,
+        block_id,
+        panchayat_id,
+        village_id,
+        lokos_shg,
+      });
+
+      console.log('====================================');
       const finalPayload = {
         beneficiary: {
           lokos_member_code:
