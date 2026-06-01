@@ -696,9 +696,6 @@ function isFormData(obj) {
   return obj && typeof obj.append === 'function';
 }
 
-
-
-
 // export async function createNewEnterprise(payload) {
 //   if (isFormData(payload)) {
 //     return requestMultipart('/api/v1/epsakhi/new-enterprise/', {
@@ -711,7 +708,6 @@ function isFormData(obj) {
 //     body: payload,
 //   });
 // }
-
 
 // export async function createNewEnterprise(payload) {
 //   if (isFormData(payload)) {
@@ -726,7 +722,6 @@ function isFormData(obj) {
 //   });
 // }
 
-
 // export async function updateNewEnterprise(id, payload) {
 //   if (isFormData(payload)) {
 //     return requestMultipart(`/api/v1/epsakhi/new-enterprise/${id}/`, {
@@ -740,12 +735,10 @@ function isFormData(obj) {
 //   });
 // }
 
-
 // =======================================================
 // CREATE NEW ENTERPRISE
 // =======================================================
 export async function createNewEnterprise(payload) {
-
   // =====================================================
   // ✅ CHANGE 1:
   // DETECT MULTIPART
@@ -759,23 +752,14 @@ export async function createNewEnterprise(payload) {
   // =====================================================
 
   if (multipart) {
+    console.log('🚀 createNewEnterprise → MULTIPART REQUEST');
 
-    console.log(
-      '🚀 createNewEnterprise → MULTIPART REQUEST',
-    );
+    console.log('📡 ENDPOINT:', '/api/v1/epsakhi/newep-form/create/');
 
-    console.log(
-      '📡 ENDPOINT:',
-      '/api/v1/epsakhi/newep-form/create/',
-    );
-
-    return requestMultipart(
-      '/api/v1/epsakhi/newep-form/create/',
-      {
-        method: 'POST',
-        body: payload,
-      },
-    );
+    return requestMultipart('/api/v1/epsakhi/newep-form/create/', {
+      method: 'POST',
+      body: payload,
+    });
   }
 
   // =====================================================
@@ -783,29 +767,17 @@ export async function createNewEnterprise(payload) {
   // JSON REQUEST
   // =====================================================
 
-  console.log(
-    '🚀 createNewEnterprise → JSON REQUEST',
-  );
+  console.log('🚀 createNewEnterprise → JSON REQUEST');
 
-  console.log(
-    '📡 ENDPOINT:',
-    '/api/v1/epsakhi/newep-form/create/',
-  );
+  console.log('📡 ENDPOINT:', '/api/v1/epsakhi/newep-form/create/');
 
-  return request(
-    '/api/v1/epsakhi/newep-form/create/',
-    {
-      method: 'POST',
-      body: payload,
-    },
-  );
+  return request('/api/v1/epsakhi/newep-form/create/', {
+    method: 'POST',
+    body: payload,
+  });
 }
 
-export async function updateNewEnterprise(
-  id,
-  payload,
-) {
-
+export async function updateNewEnterprise(id, payload) {
   // =====================================================
   // ✅ CHANGE 1:
   // DETECT MULTIPART
@@ -819,23 +791,14 @@ export async function updateNewEnterprise(
   // =====================================================
 
   if (multipart) {
+    console.log('🚀 updateNewEnterprise → MULTIPART PATCH');
 
-    console.log(
-      '🚀 updateNewEnterprise → MULTIPART PATCH',
-    );
+    console.log('📡 ENDPOINT:', `/api/v1/epsakhi/newep-form/${id}/`);
 
-    console.log(
-      '📡 ENDPOINT:',
-      `/api/v1/epsakhi/newep-form/${id}/`,
-    );
-
-    return requestMultipart(
-      `/api/v1/epsakhi/newep-form/${id}/`,
-      {
-        method: 'PATCH',
-        body: payload,
-      },
-    );
+    return requestMultipart(`/api/v1/epsakhi/newep-form/${id}/`, {
+      method: 'PATCH',
+      body: payload,
+    });
   }
 
   // =====================================================
@@ -843,25 +806,15 @@ export async function updateNewEnterprise(
   // JSON PATCH
   // =====================================================
 
-  console.log(
-    '🚀 updateNewEnterprise → JSON PATCH',
-  );
+  console.log('🚀 updateNewEnterprise → JSON PATCH');
 
-  console.log(
-    '📡 ENDPOINT:',
-    `/api/v1/epsakhi/newep-form/${id}/`,
-  );
+  console.log('📡 ENDPOINT:', `/api/v1/epsakhi/newep-form/${id}/`);
 
-  return request(
-    `/api/v1/epsakhi/newep-form/${id}/`,
-    {
-      method: 'PATCH',
-      body: payload,
-    },
-  );
+  return request(`/api/v1/epsakhi/newep-form/${id}/`, {
+    method: 'PATCH',
+    body: payload,
+  });
 }
-
-
 
 export async function getNewEnterprise(id) {
   return request(`/api/v1/epsakhi/new-enterprise/${id}/`);
@@ -1583,6 +1536,26 @@ export async function deleteNewEnterpriseCascade(
   }
 }
 
+// ======================= PDF EXPORT =======================
+
+export async function downloadBeneficiaryPdf(id) {
+  // Replace this exact path if your urls.py uses a slightly different route
+  // (e.g., `/api/v1/epsakhi/beneficiaries/${id}/export-pdf/`)
+  const url = buildUrl(`/api/v1/epsakhi/export-pdf/${id}/`);
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: authHeaders(), // Applies Bearer Token automatically
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to download PDF. Status: ${res.status}`);
+  }
+
+  // Return raw blob to prevent the JSON decrypter from corrupting the binary data
+  return await res.blob();
+}
+
 export async function getCaptcha() {
   const res = await fetch(buildUrl('/api/v1/auth/captcha/'), {
     method: 'GET',
@@ -1743,6 +1716,8 @@ const api = {
 
   deleteEpsakhiCascade,
   deleteNewEnterpriseCascade,
+
+  downloadBeneficiaryPdf,
 };
 
 export default api;

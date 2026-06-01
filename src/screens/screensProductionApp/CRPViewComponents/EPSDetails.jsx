@@ -46,6 +46,7 @@ export default function EPSDetail() {
       setLoading(true);
       const res = await gsApi.getEpsakhiDetailByMember(epsId);
       setDetail(res);
+      console.log('Fetched EPS Detail:', res);
     } catch (err) {
       Alert.alert('Error', 'Unable to load beneficiary details.');
     } finally {

@@ -8,11 +8,14 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LanguageContext } from '../../../components/LanguageContext';
 import gsApi from '../../../api/gsApi';
 import { getUser } from '../../../utils/auth';
+import RNFS from 'react-native-fs'; // SURGICAL ADDITION
 
 export default function EPSTable({ filters }) {
   const { language } = useContext(LanguageContext);
@@ -45,6 +48,7 @@ export default function EPSTable({ filters }) {
       enterpriseType: 'Enterprise Type',
       createdOn: 'Created On',
       pldStatus: 'PLD',
+      pdf: 'PDF',
     },
     hi: {
       noRecords: 'कोई रिकॉर्ड नहीं मिला।',
@@ -62,6 +66,7 @@ export default function EPSTable({ filters }) {
       enterpriseType: 'उद्यम प्रकार',
       createdOn: 'तारीख',
       pldStatus: 'पीएलडी',
+      pdf: 'पीडीएफ',
     },
   };
 
@@ -113,8 +118,9 @@ export default function EPSTable({ filters }) {
       setLoading(true);
 
       const res = await gsApi.getRecordedBeneficiaries({
-        created_by: userId, // BASE FILTER
+        created_by: userId,
         ...filters,
+        paginate: 'true',
         page: pageNumber,
         limit: PAGE_SIZE,
         search: filters?.search || '',
@@ -137,63 +143,110 @@ export default function EPSTable({ filters }) {
 
   const totalPages = Math.ceil(count / PAGE_SIZE);
 
-  // const handleDelete = id => {
-  //   Alert.alert(
-  //     translate('delete'),
-  //     'Delete feature to be implemented.',
-  //     [
-  //       {
-  //         text: 'OK',
-  //         style: 'default',
-  //       },
-  //     ],
-  //     { cancelable: true },
-  //   );
-  // };
-
-
   const handleDelete = (id, memberCode) => {
     Alert.alert(
-      translate("delete"),
-      translate("confirmDelete"),
+      translate('delete'),
+      translate('confirmDelete'),
       [
-        { text: translate("cancel"), style: "cancel" },
+        { text: translate('cancel'), style: 'cancel' },
         {
-          text: translate("delete"),
-          style: "destructive",
+          text: translate('delete'),
+          style: 'destructive',
           onPress: async () => {
             try {
-
-              // Try deleting Existing Enterprise
               try {
                 await gsApi.deleteEpsakhiCascade(memberCode, id, userId);
               } catch (err) {
-
-                // If existing enterprise not found, try deleting New Enterprise
                 await gsApi.deleteNewEnterpriseCascade(memberCode, id, userId);
-
               }
 
-              Alert.alert("Success", "Deleted successfully");
-
+              Alert.alert('Success', 'Deleted successfully');
               fetchData(page);
-
             } catch (err) {
-
-              console.error("Delete error:", err);
-
+              console.error('Delete error:', err);
               Alert.alert(
-                "Error",
-                err?.response?.data?.message || "Delete failed"
+                'Error',
+                err?.response?.data?.message || 'Delete failed',
               );
-
             }
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   };
+
+  /* ================= SURGICAL FIX: Permission & PDF Logic ================= */
+
+  const requestStoragePermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        // Android 13+ (API 33+) does not need this permission to save to Downloads
+        if (Platform.Version >= 33) {
+          return true;
+        }
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          {
+            title: 'Storage Permission Required',
+            message:
+              'This app needs access to your storage to download the PDF.',
+            buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true; // iOS handles its own sandboxed document permissions
+  };
+
+  const handleDownloadPdf = async (id, applicantName) => {
+    try {
+      setLoading(true);
+
+      const hasPermission = await requestStoragePermission();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission Denied',
+          'Storage permission is required to save PDFs.',
+        );
+        setLoading(false);
+        return;
+      }
+
+      const blob = await gsApi.downloadBeneficiaryPdf(id);
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64data = reader.result.split(',')[1];
+
+        // Clean the name for the filesystem
+        const safeName = applicantName.replace(/[^a-zA-Z0-9]/g, '_');
+        const fileName = `Beneficiary_${id}_${safeName}.pdf`;
+
+        // Android -> Downloads | iOS -> Documents
+        const filePath =
+          Platform.OS === 'android'
+            ? `${RNFS.DownloadDirectoryPath}/${fileName}`
+            : `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+        await RNFS.writeFile(filePath, base64data, 'base64');
+        Alert.alert('Success', `PDF saved successfully to:\n${filePath}`);
+      };
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      console.error('PDF download error:', err);
+      Alert.alert('Error', 'Failed to generate PDF.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /* ================= Empty States ================= */
 
   if (!filters) {
@@ -211,18 +264,14 @@ export default function EPSTable({ filters }) {
   /* ================= Render Card ================= */
 
   const renderCard = ({ item, index }) => {
-    console.log('FULL ITEM DATA:', item);
-    console.log('Member Code:', item.lokos_member_code);
     const serialNumber = (page - 1) * PAGE_SIZE + index + 1;
 
     return (
       <View style={styles.card}>
-        {/* Badge */}
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{serialNumber}</Text>
         </View>
 
-        {/* Header */}
         <View style={styles.cardHeader}>
           <Text style={styles.name}>{item.applicant_name}</Text>
 
@@ -238,12 +287,12 @@ export default function EPSTable({ filters }) {
               <Text style={styles.buttonText}>{translate('view')}</Text>
             </TouchableOpacity>
 
-            {/* <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDelete(item.id)}
+            <TouchableOpacity
+              style={styles.pdfButton}
+              onPress={() => handleDownloadPdf(item.id, item.applicant_name)}
             >
-              <Text style={styles.buttonText}>{translate('delete')}</Text>
-            </TouchableOpacity> */}
+              <Text style={styles.buttonText}>{translate('pdf')}</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.deleteButton}
@@ -347,7 +396,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
-
   badge: {
     position: 'absolute',
     backgroundColor: '#EE6969',
@@ -357,24 +405,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   badgeText: {
     color: '#fff',
     fontWeight: '700',
   },
-
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-
   name: {
     fontSize: 16,
     fontWeight: '700',
     flex: 1,
   },
-
   viewButton: {
     backgroundColor: '#EE6969',
     paddingVertical: 6,
@@ -382,47 +426,46 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginRight: 6,
   },
-
+  pdfButton: {
+    backgroundColor: '#28a745',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
   deleteButton: {
     backgroundColor: '#444',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
-
   buttonText: {
     color: '#fff',
     fontWeight: '600',
   },
-
   divider: {
     height: 1,
     backgroundColor: '#eee',
     marginVertical: 10,
   },
-
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-
   detailLabel: {
     fontWeight: '600',
     color: '#555',
   },
-
   detailValue: {
     color: '#333',
   },
-
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 16,
   },
-
   pageButton: {
     backgroundColor: '#EE6969',
     paddingVertical: 8,
@@ -430,20 +473,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginHorizontal: 10,
   },
-
   pageButtonText: {
     color: '#fff',
     fontWeight: '600',
   },
-
   disabledButton: {
     backgroundColor: '#ccc',
   },
-
   pageInfo: {
     fontWeight: '600',
   },
-
   infoText: {
     textAlign: 'center',
     marginTop: 10,
