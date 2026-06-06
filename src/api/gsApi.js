@@ -9,40 +9,6 @@ const clientId = X_API_ID;
 const clientKey = X_API_KEY;
 const SECRET_KEY = ENV_API_KEY;
 
-// http://upsrlmtms.upsdc.gov.in
-// http://72.61.255.170:8080
-// VUN - 14 FIX
-// function decryptPayload(responseData) {
-//   // If it doesn't match our {iv, data} payload shape, return it as-is
-//   if (
-//     !responseData ||
-//     typeof responseData !== 'object' ||
-//     !responseData.iv ||
-//     !responseData.data
-//   ) {
-//     return responseData;
-//   }
-
-//   try {
-//     const key = CryptoJS.enc.Utf8.parse(SECRET_KEY);
-//     const iv = CryptoJS.enc.Base64.parse(responseData.iv);
-//     const ciphertext = CryptoJS.enc.Base64.parse(responseData.data);
-
-//     const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext });
-//     const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
-//       iv: iv,
-//       mode: CryptoJS.mode.CBC,
-//       padding: CryptoJS.pad.Pkcs7,
-//     });
-
-//     const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
-//     return JSON.parse(decryptedString);
-//   } catch (error) {
-//     console.error('API Decryption failed:', error);
-//     return responseData;
-//   }
-// }
-
 export function decryptPayload(responseData) {
   if (
     !responseData ||
@@ -77,6 +43,9 @@ export function decryptPayload(responseData) {
 }
 
 const DEFAULT_HEADERS = {
+  // Add this line to bypass the FortiGate DPI application block
+  'User-Agent':
+    'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
   'Content-Type': 'application/json',
   Accept: 'application/json',
   'X-API-ID': clientId,
@@ -199,6 +168,7 @@ async function refreshAccessTokenOnce() {
   const resp = await fetch(buildUrl('/api/v1/auth/refresh/'), {
     method: 'POST',
     headers: {
+      ...DEFAULT_HEADERS, // Changed this to include the User-Agent
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -1560,6 +1530,7 @@ export async function getCaptcha() {
   const res = await fetch(buildUrl('/api/v1/auth/captcha/'), {
     method: 'GET',
     headers: {
+      ...DEFAULT_HEADERS,
       'X-App-Client': 'CRP-EP_APP',
     },
     credentials: 'include',

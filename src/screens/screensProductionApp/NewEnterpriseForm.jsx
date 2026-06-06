@@ -1,4 +1,3 @@
-
 // src/screens/epsakhi/NewEnterpriseForm.jsx
 import React, { useEffect, useState, useContext } from 'react';
 import {
@@ -68,6 +67,9 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
 
   const doFetch = async token => {
     const headers = {
+      // 🛠️ ADD THE USER-AGENT HERE
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
       ...(options.headers || {}),
       Authorization: token ? `Bearer ${token}` : undefined,
       'X-API-ID': MULTIPART_X_API_ID,
@@ -80,7 +82,6 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
     });
   };
 
-
   let response = await doFetch(access);
 
   // If not 401 → return
@@ -92,7 +93,12 @@ const safeFetchWithRefresh = async (url, options = {}, retry = true) => {
   // 🔥 Try refresh
   const refreshResp = await fetch(`${BASE_URL}/api/v1/auth/refresh/`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      // 🛠️ ADD THE USER-AGENT HERE AS WELL
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ refresh }),
   });
 
@@ -1198,8 +1204,8 @@ const ParentChildMultiSelect = ({
                             style={[
                               styles.checkboxSmall,
                               po.children &&
-                              po.children[childKey] &&
-                              styles.checkboxChecked,
+                                po.children[childKey] &&
+                                styles.checkboxChecked,
                             ]}
                           />
                           <Text style={styles.checkboxLabel}>
@@ -1242,7 +1248,6 @@ const INITIAL_FORM_STATE = {
   declaration_confirmed: false,
   declaration_date: '',
 };
-
 
 const parseAndDecryptResponse = async res => {
   const text = await res.text();
@@ -1753,7 +1758,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
     }
   };
 
-
   const ensureRecordedBeneficiary = async () => {
     if (!beneficiary) {
       throw new Error(
@@ -1763,13 +1767,13 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     const addr =
       Array.isArray(beneficiary.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+      beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-        beneficiary.member_phones.length > 0
+      beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -1857,10 +1861,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
           const shgRows = Array.isArray(shgRes?.data)
             ? shgRes.data
             : Array.isArray(shgRes?.results)
-              ? shgRes.results
-              : Array.isArray(shgRes)
-                ? shgRes
-                : [];
+            ? shgRes.results
+            : Array.isArray(shgRes)
+            ? shgRes
+            : [];
 
           const found = shgRows.find(s => String(s.code) === String(lokos_shg));
 
@@ -1921,8 +1925,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-            ? 'No'
-            : beneficiary.pld_status || null,
+          ? 'No'
+          : beneficiary.pld_status || null,
     };
 
     if (createdBy !== null) {
@@ -1980,6 +1984,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
   const authHeadersJson = () => {
     const token = gsApi.getAuthToken ? gsApi.getAuthToken() : null;
     const h = {
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
       'Content-Type': 'application/json',
       'X-API-ID': MULTIPART_X_API_ID,
       'X-API-KEY': MULTIPART_X_API_KEY,
@@ -2005,8 +2011,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
       throw new Error(`Activation failed: ${text}`);
     }
   };
-
-
 
   const createEnterpriseTypeRecord = () => {
     const { parentCSV, dictString } = encodeParentChildSelection(
@@ -2036,7 +2040,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return payload;
   };
-
 
   const createEnterpriseMandatoryFunds = async enterpriseId => {
     if (!enterpriseId) return [];
@@ -2099,8 +2102,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return mandatoryFunds;
   };
-
-
 
   // const createEnterpriseSupport = async enterpriseId => {
   //   // enterpriseId intentionally unused
@@ -2277,8 +2278,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
         sub_category: form.infrastructure_support_type || null,
 
-        support_description:
-          form.infrastructure_support_detail || null,
+        support_description: form.infrastructure_support_detail || null,
 
         other_support: null,
       });
@@ -2362,15 +2362,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
       });
     }
 
-    console.log(
-      'SUPPORT PAYLOAD =>',
-      JSON.stringify(supports, null, 2),
-    );
+    console.log('SUPPORT PAYLOAD =>', JSON.stringify(supports, null, 2));
 
     return supports;
   };
-
-
 
   const createTrainingReceivedRows = async enterpriseId => {
     // enterpriseId intentionally unused
@@ -2391,28 +2386,16 @@ export default function NewEnterpriseForm({ route, navigation }) {
       const { parentCSV, dictString } = encodeParentChildSelection(row.sectors);
 
       // FIX
-      const cleanedSector =
-        (
-          dictString ||
-          ''
-        )
-          .replace(
-            /^\[[^:]+:\s*/,
-            '[',
-          )
-          .trim();
+      const cleanedSector = (dictString || '')
+        .replace(/^\[[^:]+:\s*/, '[')
+        .trim();
 
       trainingPayloads.push({
         form_type: 'rec',
 
-        sector_type:
-          parentCSV ||
-          null,
+        sector_type: parentCSV || null,
 
-        sector:
-          cleanedSector ||
-          null,
-
+        sector: cleanedSector || null,
 
         department:
           row.department === 'Others'
@@ -2442,9 +2425,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
     return trainingPayloads;
   };
 
-
-
-
   const uploadTrainingCertificate = async (trainingId, enterpriseId, asset) => {
     if (!trainingId || !enterpriseId || !asset?.uri) {
       return null;
@@ -2458,8 +2438,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
       type: asset.type || 'application/octet-stream',
     };
   };
-
-
 
   // ---------- UI helpers ----------
 
@@ -2503,17 +2481,15 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
       duration:
         trainingReqDuration !== null &&
-          trainingReqDuration !== undefined &&
-          trainingReqDuration !== ''
+        trainingReqDuration !== undefined &&
+        trainingReqDuration !== ''
           ? parseInt(
-            typeof trainingReqDuration === 'object'
-              ? trainingReqDuration?.value
-              : trainingReqDuration,
-            10,
-          )
+              typeof trainingReqDuration === 'object'
+                ? trainingReqDuration?.value
+                : trainingReqDuration,
+              10,
+            )
           : null,
-
-
 
       location: location || null,
 
@@ -2545,7 +2521,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
           initMonth = String(parseInt(parts[1], 10));
           initDay = String(parseInt(parts[2], 10));
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
     if (!initYear) {
@@ -2618,8 +2594,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
     recordedBenef?.applicant_name ||
     '';
 
-
-
   const validateEnterpriseType = () => {
     const values = Object.values(enterpriseTypeSelection || {});
 
@@ -2669,7 +2643,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return true;
   };
-
 
   const validateMandatoryFunds = () => {
     //  Main option required
@@ -2761,8 +2734,9 @@ export default function NewEnterpriseForm({ route, navigation }) {
           Alert.alert(
             'Validation',
             language === 'hi'
-              ? `फंड ${i + 1
-              }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
+              ? `फंड ${
+                  i + 1
+                }: अदा की गई राशि प्राप्त राशि से अधिक नहीं हो सकती।`
               : `Fund ${i + 1}: Repaid amount cannot exceed received amount.`,
           );
           return false;
@@ -2832,7 +2806,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return true;
   };
-
 
   const validateTrainingRequired = () => {
     if (!form.is_training_required) {
@@ -2953,8 +2926,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return true;
   };
-
-
 
   const validateSupportRequired = () => {
     //  Must answer Yes/No
@@ -3271,7 +3242,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
     return true;
   };
-
 
   //   if (!beneficiary && !recordedBenef) {
   //     Alert.alert(
@@ -6621,8 +6591,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
         }
       }
 
-
-
       const enterpriseTypePayload = createEnterpriseTypeRecord();
 
       console.log(
@@ -6635,14 +6603,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
         .map(x => x.trim())
         .filter(Boolean);
 
-
       const extracted =
         (enterpriseTypePayload?.sub_category || '').match(/\[([^\]]+)\]/g) ||
         [];
 
       const categoriesPayload = parents.map((parent, index) => {
         const raw = extracted[index] || '';
-
 
         const cleaned = raw.replace(/^\[[^:]+:\s*/, '[');
 
@@ -6717,7 +6683,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
           signature_file_key: 'applicant_signature_file',
         },
-
 
         categories: categoriesPayload,
 
@@ -6846,7 +6811,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
 
         name: signatureAsset.fileName || 'signature.jpg',
       });
-
 
       // =====================================================
       // FORM DATA
@@ -7491,7 +7455,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
             style={[
               styles.checkbox,
               form.prefered_location_choice === opt.key &&
-              styles.checkboxChecked,
+                styles.checkboxChecked,
             ]}
           />
           <Text style={styles.checkboxLabel}>
@@ -7784,7 +7748,6 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         ? 'आपने किन क्षेत्रों में प्रशिक्षण प्राप्त किया है?'
                         : 'Please select all sectors in which you have received trainings'
                     }
-
                     items={TRAINING_SECTORS.map(cat => ({
                       parent: language === 'hi' ? cat.parent.hi : cat.parent.en,
                       children: cat.children.map(child =>
@@ -7977,12 +7940,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'Under 7 days'
                       ? '7 दिन से कम'
                       : opt === '7 days'
-                        ? '7 दिन'
-                        : opt === '15 days'
-                          ? '15 दिन'
-                          : opt === '30 days'
-                            ? '30 दिन'
-                            : '30 दिन से अधिक'
+                      ? '7 दिन'
+                      : opt === '15 days'
+                      ? '15 दिन'
+                      : opt === '30 days'
+                      ? '30 दिन'
+                      : '30 दिन से अधिक'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -8289,7 +8252,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       style={[
                         styles.checkbox,
                         form.infrastructure_support_type === opt &&
-                        styles.checkboxChecked,
+                          styles.checkboxChecked,
                       ]}
                     />
                     <Text style={styles.checkboxLabel}>
@@ -8298,10 +8261,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         ? opt === 'Equipments'
                           ? 'उपकरण'
                           : opt === 'Machinery'
-                            ? 'मशीनरी'
-                            : opt === 'Place of Business'
-                              ? 'व्यवसाय स्थल'
-                              : 'अन्य'
+                          ? 'मशीनरी'
+                          : opt === 'Place of Business'
+                          ? 'व्यवसाय स्थल'
+                          : 'अन्य'
                         : opt}
                     </Text>
                   </TouchableOpacity>
@@ -8371,8 +8334,8 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Physical'
                         ? 'भौतिक'
                         : opt === 'Online'
-                          ? 'ऑनलाइन'
-                          : 'अन्य'
+                        ? 'ऑनलाइन'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -8391,7 +8354,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           style={[
                             styles.checkbox,
                             form.branding_subtype === sub &&
-                            styles.checkboxChecked,
+                              styles.checkboxChecked,
                           ]}
                         />
                         <Text style={styles.checkboxLabel}>
@@ -8400,14 +8363,14 @@ export default function NewEnterpriseForm({ route, navigation }) {
                             ? sub === 'Flipkart'
                               ? 'फ्लिपकार्ट'
                               : sub === 'Amazon'
-                                ? 'अमेज़न'
-                                : sub === 'Meesho'
-                                  ? 'मीशो'
-                                  : sub === 'ONDC'
-                                    ? 'ओएनडीसी'
-                                    : sub === 'Others'
-                                      ? 'अन्य'
-                                      : sub
+                              ? 'अमेज़न'
+                              : sub === 'Meesho'
+                              ? 'मीशो'
+                              : sub === 'ONDC'
+                              ? 'ओएनडीसी'
+                              : sub === 'Others'
+                              ? 'अन्य'
+                              : sub
                             : sub}
                         </Text>
                       </TouchableOpacity>
@@ -8488,7 +8451,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     style={[
                       styles.checkbox,
                       form.financial_support_type === opt &&
-                      styles.checkboxChecked,
+                        styles.checkboxChecked,
                     ]}
                   />
                   <Text style={styles.checkboxLabel}>
@@ -8497,10 +8460,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                       ? opt === 'Grant and Subsidy'
                         ? 'अनुदान एवं सब्सिडी'
                         : opt === 'Loan'
-                          ? 'ऋण'
-                          : opt === 'Interest Subvention'
-                            ? 'ब्याज अनुदान'
-                            : 'अन्य'
+                        ? 'ऋण'
+                        : opt === 'Interest Subvention'
+                        ? 'ब्याज अनुदान'
+                        : 'अन्य'
                       : opt}
                   </Text>
                 </TouchableOpacity>
@@ -8529,7 +8492,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
                         style={[
                           styles.checkbox,
                           form.loan_amount_range === range &&
-                          styles.checkboxChecked,
+                            styles.checkboxChecked,
                         ]}
                       />
                       <Text style={styles.checkboxLabel}>
@@ -8538,12 +8501,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                           ? range === 'Below to 50,000'
                             ? '₹50,000 तक'
                             : range === '50,000 - 1,00,000'
-                              ? '₹50,000 – ₹1,00,000'
-                              : range === '1,00,000 - 2,00,000'
-                                ? '₹1,00,000 – ₹2,00,000'
-                                : range === '2,00,000 - 5,00,000'
-                                  ? '₹2,00,000 – ₹5,00,000'
-                                  : '₹5,00,000 से अधिक'
+                            ? '₹50,000 – ₹1,00,000'
+                            : range === '1,00,000 - 2,00,000'
+                            ? '₹1,00,000 – ₹2,00,000'
+                            : range === '2,00,000 - 5,00,000'
+                            ? '₹2,00,000 – ₹5,00,000'
+                            : '₹5,00,000 से अधिक'
                           : range}
                       </Text>
                     </TouchableOpacity>
@@ -8555,17 +8518,17 @@ export default function NewEnterpriseForm({ route, navigation }) {
               {['Grant and Subsidy', 'Interest Subvention', 'Others'].includes(
                 form.financial_support_type,
               ) && (
-                  <TextInput
-                    style={styles.input}
-                    placeholder={
-                      language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
-                    }
-                    value={form.financial_support_other_text}
-                    onChangeText={v =>
-                      setField('financial_support_other_text', v)
-                    }
-                  />
-                )}
+                <TextInput
+                  style={styles.input}
+                  placeholder={
+                    language === 'hi' ? 'कृपया विवरण लिखें' : 'Please specify'
+                  }
+                  value={form.financial_support_other_text}
+                  onChangeText={v =>
+                    setField('financial_support_other_text', v)
+                  }
+                />
+              )}
             </>
           )}
 
@@ -8659,28 +8622,28 @@ export default function NewEnterpriseForm({ route, navigation }) {
                   ? opt === 'Lakhpati CRP'
                     ? 'लखपति सीआरपी'
                     : opt === 'Krishi Ajeevika Sakhi'
-                      ? 'कृषि आजीविका सखी'
-                      : opt === 'Krishi Udyog Sakhi'
-                        ? 'कृषि उद्योग सखी'
-                        : opt === 'Mahila Kisan'
-                          ? 'महिला किसान'
-                          : opt === 'CRP- EP'
-                            ? 'सीआरपी-ईपी'
-                            : opt === 'BC sakhi'
-                              ? 'बीसी सखी'
-                              : opt === 'Vidyut Sakhi'
-                                ? 'विद्युत सखी'
-                                : opt === 'Bank Sakhi'
-                                  ? 'बैंक सखी'
-                                  : opt === 'Fnhw Swasth sakhi'
-                                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
-                                    : opt === 'THR/Dry ration worker'
-                                      ? 'टीएचआर / सूखा राशन कार्यकर्ता'
-                                      : opt === 'Samuh Sakhi'
-                                        ? 'समूह सखी'
-                                        : opt === 'MGNREGA MATE'
-                                          ? 'मनरेगा मेट'
-                                          : 'अन्य'
+                    ? 'कृषि आजीविका सखी'
+                    : opt === 'Krishi Udyog Sakhi'
+                    ? 'कृषि उद्योग सखी'
+                    : opt === 'Mahila Kisan'
+                    ? 'महिला किसान'
+                    : opt === 'CRP- EP'
+                    ? 'सीआरपी-ईपी'
+                    : opt === 'BC sakhi'
+                    ? 'बीसी सखी'
+                    : opt === 'Vidyut Sakhi'
+                    ? 'विद्युत सखी'
+                    : opt === 'Bank Sakhi'
+                    ? 'बैंक सखी'
+                    : opt === 'Fnhw Swasth sakhi'
+                    ? 'एफएनएचडब्ल्यू स्वास्थ्य सखी'
+                    : opt === 'THR/Dry ration worker'
+                    ? 'टीएचआर / सूखा राशन कार्यकर्ता'
+                    : opt === 'Samuh Sakhi'
+                    ? 'समूह सखी'
+                    : opt === 'MGNREGA MATE'
+                    ? 'मनरेगा मेट'
+                    : 'अन्य'
                   : opt}
               </Text>
             </TouchableOpacity>
@@ -8738,12 +8701,12 @@ export default function NewEnterpriseForm({ route, navigation }) {
                     ? opt === 'President'
                       ? 'अध्यक्ष'
                       : opt === 'Secretary'
-                        ? 'सचिव'
-                        : opt === 'Treasurer'
-                          ? 'कोषाध्यक्ष'
-                          : opt === 'Book-Keeper'
-                            ? 'बुक कीपर'
-                            : 'सदस्य'
+                      ? 'सचिव'
+                      : opt === 'Treasurer'
+                      ? 'कोषाध्यक्ष'
+                      : opt === 'Book-Keeper'
+                      ? 'बुक कीपर'
+                      : 'सदस्य'
                     : opt}
                 </Text>
               </TouchableOpacity>
@@ -8781,7 +8744,7 @@ export default function NewEnterpriseForm({ route, navigation }) {
               style={[
                 styles.checkbox,
                 form.applicant_special_category === opt &&
-                styles.checkboxChecked,
+                  styles.checkboxChecked,
               ]}
             />
             <Text style={styles.checkboxLabel}>
@@ -8790,10 +8753,10 @@ export default function NewEnterpriseForm({ route, navigation }) {
                 ? opt === 'Divyang'
                   ? 'दिव्यांग'
                   : opt === 'Widow'
-                    ? 'विधवा'
-                    : opt === 'Unmarried'
-                      ? 'अविवाहित'
-                      : 'अन्य'
+                  ? 'विधवा'
+                  : opt === 'Unmarried'
+                  ? 'अविवाहित'
+                  : 'अन्य'
                 : opt}
             </Text>
           </TouchableOpacity>
