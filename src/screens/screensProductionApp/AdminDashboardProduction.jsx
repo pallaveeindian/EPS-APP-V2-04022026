@@ -104,14 +104,9 @@ export default function AdminDashboardProduction({ navigation }) {
   const bootstrapAdminData = async u => {
     try {
       setLoading(true);
-
-      // Example: inject token
       if (u?.access) {
         gsApi.setAuthToken?.(u.access, u.refresh);
       }
-
-      // TODO: Add admin analytics API here
-      // await gsApi.getAdminSummary()
     } catch (err) {
       console.error('Admin dashboard error', err);
 

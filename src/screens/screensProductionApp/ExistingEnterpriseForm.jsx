@@ -1489,6 +1489,7 @@ Please refill Licenses in Basic Information section and Support section again af
       ]);
     } catch (err) {
       console.error('Submit error:', err);
+      console.log(err);
       if (err.status === 400 && err.data?.details) {
         Alert.alert('Validation Error', err.data.details);
       } else {

@@ -652,46 +652,101 @@ export default function ExistingEnterpriseTrainingSkillsSection({
     updateTrainingRequiredRow(index, { expanded: !row.expanded });
   };
 
+  // const pickCertificates = async rowIndex => {
+  //   try {
+  //     const results = await pick({
+  //       type: ['application/pdf', 'image/jpeg'],
+  //       allowMultiSelection: true,
+  //     });
+
+  //     // Strict filter (extra safety)
+  //     // const filtered = results.filter(file => {
+  //     //   const name = (file.name || '').toLowerCase();
+  //     //   return (
+  //     //     name.endsWith('.pdf') ||
+  //     //     name.endsWith('.jpg') ||
+  //     //     name.endsWith('.jpeg')
+  //     //   );
+  //     // });
+
+  //     // if (filtered.length === 0) {
+  //     //   alert(
+  //     //     language === 'hi'
+  //     //       ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
+  //     //       : 'Only PDF or JPG files are allowed',
+  //     //   );
+  //     //   return;
+  //     // }
+
+  //     const row = trainingReceived[rowIndex];
+  //     const current = Array.isArray(row.certificates_files)
+  //       ? row.certificates_files
+  //       : [];
+
+  //     updateTrainingReceivedRow(rowIndex, {
+  //       certificates_files: [...current, ...filtered],
+  //     });
+  //   } catch (err) {
+  //     if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+  //       console.warn('Certificate pick failed', err);
+  //     }
+  //   }
+  // };
+
   const pickCertificates = async rowIndex => {
     try {
       const results = await pick({
-        type: ['application/pdf', 'image/jpeg'],
+        type: ['application/pdf', 'image/jpeg', 'image/jpg'],
         allowMultiSelection: true,
       });
 
-      // Strict filter (extra safety)
-      // const filtered = results.filter(file => {
-      //   const name = (file.name || '').toLowerCase();
-      //   return (
-      //     name.endsWith('.pdf') ||
-      //     name.endsWith('.jpg') ||
-      //     name.endsWith('.jpeg')
-      //   );
-      // });
+      const filtered = results.filter(file => {
+        const name = (file.name || '').toLowerCase();
 
-      // if (filtered.length === 0) {
-      //   alert(
-      //     language === 'hi'
-      //       ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
-      //       : 'Only PDF or JPG files are allowed',
-      //   );
-      //   return;
-      // }
+        return (
+          name.endsWith('.pdf') ||
+          name.endsWith('.jpg') ||
+          name.endsWith('.jpeg')
+        );
+      });
+
+      if (filtered.length === 0) {
+        alert(
+          language === 'hi'
+            ? 'केवल PDF या JPG फ़ाइलें अनुमत हैं'
+            : 'Only PDF or JPG files are allowed',
+        );
+        return;
+      }
+
+      const normalizedFiles = filtered.map(file => ({
+        ...file,
+        name:
+          file.name ||
+          file.fileName ||
+          file.uri?.split('/').pop() ||
+          'Document',
+      }));
 
       const row = trainingReceived[rowIndex];
+
       const current = Array.isArray(row.certificates_files)
         ? row.certificates_files
         : [];
 
       updateTrainingReceivedRow(rowIndex, {
-        certificates_files: [...current, ...filtered],
+        certificates_files: [...current, ...normalizedFiles],
       });
     } catch (err) {
-      if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+      if (
+        err?.code !== 'DOCUMENT_PICKER_CANCELED' &&
+        err?.code !== 'OPERATION_CANCELED'
+      ) {
         console.warn('Certificate pick failed', err);
       }
     }
   };
+
 
   return (
     <View style={styles.sectionContainer}>
@@ -895,7 +950,17 @@ export default function ExistingEnterpriseTrainingSkillsSection({
                             )
                               ? row.certificates_files
                               : [];
-                            const combined = [...current, ...assets];
+                            // const combined = [...current, ...assets];
+                            const normalizedAssets = assets.map(file => ({
+                              ...file,
+                              name:
+                                file.fileName ||
+                                file.name ||
+                                file.uri?.split('/').pop() ||
+                                'Camera Image',
+                            }));
+
+                            const combined = [...current, ...normalizedAssets];
                             updateTrainingReceivedRow(index, {
                               certificates_files: combined,
                             });
@@ -913,11 +978,19 @@ export default function ExistingEnterpriseTrainingSkillsSection({
                     {Array.isArray(row.certificates_files) &&
                       row.certificates_files.length > 0 && (
                         <View style={{ marginTop: 6 }}>
-                          {row.certificates_files.map((file, i) => (
-                            <Text key={i} style={styles.mediaInfo}>
-                              • {file.name}
-                            </Text>
-                          ))}
+                          {row.certificates_files.map((file, i) => {
+                            const displayName =
+                              file?.name ||
+                              file?.fileName ||
+                              file?.uri?.split('/').pop() ||
+                              `Certificate ${i + 1}`;
+
+                            return (
+                              <Text key={i} style={styles.mediaInfo}>
+                                • {displayName}
+                              </Text>
+                            );
+                          })}
                         </View>
                       )}
                   </View>
