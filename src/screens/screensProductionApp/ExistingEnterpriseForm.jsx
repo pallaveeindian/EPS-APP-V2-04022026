@@ -33,6 +33,11 @@ import ExistingEnterpriseSupportSection from './FormSections/ExistingEnterpriseS
 import ExistingEnterpriseMediaSection from './FormSections/ExistingEnterpriseMediaSection';
 import ExistingEnterpriseDeclarationSection from './FormSections/ExistingEnterpriseDeclarationSection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// ===== ZIP SUPPORT =====
+import JSZip from 'jszip';
+import RNFS from 'react-native-fs';
+// =======================
+import SubmissionProgressModal from '../screensProductionApp/SubmissionProgressModal';
 
 // ---- helpers ----
 
@@ -66,6 +71,42 @@ const normalizeBoolean = val => {
   return false;
 };
 
+// Helper to clean up internal UI flags (like 'Retail_Others') from marketing_channels
+// const generateCleanMarketingChannels = row => {
+//   if (!row) return '';
+//   const channelsStr = Array.isArray(row.marketing_channels)
+//     ? row.marketing_channels.join(', ')
+//     : row.marketing_channels || '';
+
+//   return channelsStr
+//     .split(',')
+//     .map(s => s.trim())
+//     .filter(ch => ch && !ch.includes('_Others')) // Filters out 'Retail_Others', 'Online_Others', etc.
+//     .join(', ');
+// };
+
+// const generateCleanMarketingChannels = form => {
+//   const channels = Array.isArray(form.marketing_channels)
+//     ? form.marketing_channels
+//     : (form.marketing_channels || '')
+//       .split(',')
+//       .map(x => x.trim())
+//       .filter(Boolean);
+
+//   return channels
+//     .map(channel => {
+//       if (
+//         channel === 'Others' &&
+//         form.marketing_channels_other
+//       ) {
+//         return `Others - ${form.marketing_channels_other}`;
+//       }
+
+//       return channel;
+//     })
+//     .join(', ');
+// };
+
 const generateCleanMarketingChannels = form => {
   try {
     let channels = [];
@@ -86,7 +127,10 @@ const generateCleanMarketingChannels = form => {
             ? channel?.en || channel?.value || ''
             : String(channel);
 
-        if (value === 'Others' && form?.marketing_channels_other) {
+        if (
+          value === 'Others' &&
+          form?.marketing_channels_other
+        ) {
           return `Others - ${form.marketing_channels_other}`;
         }
 
@@ -99,6 +143,7 @@ const generateCleanMarketingChannels = form => {
     return '';
   }
 };
+
 
 // Helper to bundle channels and details in a dictionary-style string format
 const generateMarketLinkageString = row => {
@@ -231,6 +276,13 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
   const [loggedUser, setLoggedUser] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+
+  const [submitProgress, setSubmitProgress] = useState(0);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [showProgressModal, setShowProgressModal] =
+    useState(false);
+
+
   // ==========================
   // NEW
   // ==========================
@@ -261,6 +313,21 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
     return null;
   };
 
+  // const saveProgress = async (state, index) => {
+  //   if (!memberCode) return;
+  //   try {
+  //     const draftBlob = JSON.stringify({
+  //       formData: state,
+  //       sectionIndex: index,
+  //       beneficiary: beneficiary,
+  //       lastSaved: new Date().toISOString(),
+  //     });
+  //     await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
+  //   } catch (e) {
+  //     console.warn('Failed to save draft', e);
+  //   }
+  // };
+
   const saveProgress = async (state, index) => {
     if (!memberCode) return;
 
@@ -279,7 +346,10 @@ export default function ExistingEnterpriseForm({ route, navigation }) {
         lastSaved: new Date().toISOString(),
       });
 
-      await AsyncStorage.setItem(`DRAFT_EXEP_${memberCode}`, draftBlob);
+      await AsyncStorage.setItem(
+        `DRAFT_EXEP_${memberCode}`,
+        draftBlob,
+      );
     } catch (e) {
       console.warn('Failed to save draft', e);
     }
@@ -319,6 +389,14 @@ Please refill Licenses in Basic Information section and Support section again af
                 setIsDraftLoaded(true);
               },
             },
+            // {
+            //   text: 'Resume',
+            //   onPress: () => {
+            //     setExistingForm(parsed.formData);
+            //     setCurrentSectionIndex(parsed.sectionIndex);
+            //     setIsDraftLoaded(true);
+            //   },
+            // },
 
             {
               text: 'Resume',
@@ -337,7 +415,8 @@ Please refill Licenses in Basic Information section and Support section again af
                 setCurrentSectionIndex(parsed.sectionIndex);
                 setIsDraftLoaded(true);
               },
-            },
+            }
+
           ],
         );
       } else {
@@ -443,13 +522,13 @@ Please refill Licenses in Basic Information section and Support section again af
 
     const beneficiaryAddr =
       Array.isArray(beneficiary.member_addresses) &&
-      beneficiary.member_addresses.length > 0
+        beneficiary.member_addresses.length > 0
         ? beneficiary.member_addresses[0]
         : null;
 
     const phone =
       Array.isArray(beneficiary.member_phones) &&
-      beneficiary.member_phones.length > 0
+        beneficiary.member_phones.length > 0
         ? beneficiary.member_phones[0]
         : null;
 
@@ -544,8 +623,8 @@ Please refill Licenses in Basic Information section and Support section again af
         beneficiary.pld_status === true
           ? 'Yes'
           : beneficiary.pld_status === false
-          ? 'No'
-          : beneficiary.pld_status || null,
+            ? 'No'
+            : beneficiary.pld_status || null,
       enterprise_type: 'exep',
     };
 
@@ -575,21 +654,80 @@ Please refill Licenses in Basic Information section and Support section again af
 
   const safeArray = arr => (Array.isArray(arr) ? arr : []);
 
+  // =====================================================
+  // ZIP HELPERS
+  // =====================================================
+
+  const getFileExtension = file => {
+    const name =
+      file?.fileName ||
+      file?.name ||
+      '';
+
+    const dot = name.lastIndexOf('.');
+
+    if (dot === -1) {
+      return 'jpg';
+    }
+
+    return name.substring(dot + 1);
+  };
+
+  const readFileAsBase64 = async uri => {
+    let path = uri;
+
+    if (path.startsWith('file://')) {
+      path = path.replace('file://', '');
+    }
+
+    return RNFS.readFile(path, 'base64');
+  };
+
+  const addFileToZip = async (
+    zip,
+    file,
+    zipFileName,
+  ) => {
+    if (!file?.uri) return;
+
+    try {
+      const base64 = await readFileAsBase64(
+        file.uri,
+      );
+
+      zip.file(zipFileName, base64, {
+        base64: true,
+      });
+    } catch (e) {
+      console.log(
+        'ZIP FILE ERROR:',
+        zipFileName,
+        e,
+      );
+    }
+  };
+
+  // =====================================================
+
+
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
+    setShowProgressModal(true);
+    setSubmitProgress(0);
+    setSubmitMessage('Preparing submission...');
 
     try {
       // --- EXACT SAME EXTRACTIONS FROM ensureRecordedBeneficiary ---
       const beneficiaryAddr =
         Array.isArray(beneficiary?.member_addresses) &&
-        beneficiary.member_addresses.length > 0
+          beneficiary.member_addresses.length > 0
           ? beneficiary.member_addresses[0]
           : null;
 
       const phone =
         Array.isArray(beneficiary?.member_phones) &&
-        beneficiary.member_phones.length > 0
+          beneficiary.member_phones.length > 0
           ? beneficiary.member_phones[0]
           : null;
 
@@ -626,13 +764,35 @@ Please refill Licenses in Basic Information section and Support section again af
       // ==========================
       // NEW
       // ==========================
-      const effectiveTempShg = tempShg || draftMeta?.tempShg || null;
+      const effectiveTempShg =
+        tempShg ||
+        draftMeta?.tempShg ||
+        null;
 
       let lokos_shg =
         lokosShgCode ||
         draftMeta?.lokos_shg_code ||
         effectiveTempShg?.code ||
         null;
+
+      // --- FALLBACK LOGIC 1: FROM TEMP SHG ---
+      // if (
+      //   (!district_id ||
+      //     !block_id ||
+      //     !panchayat_id ||
+      //     !village_id ||
+      //     !lokos_shg) &&
+      //   tempShg
+      // ) {
+      //   const loc = extractLocationFromShg(tempShg);
+      //   if (loc) {
+      //     district_id = district_id || loc.district_id;
+      //     block_id = block_id || loc.block_id;
+      //     panchayat_id = panchayat_id || loc.panchayat_id;
+      //     village_id = village_id || loc.village_id;
+      //     lokos_shg = lokos_shg || loc.lokos_shg_code;
+      //   }
+      // }
 
       if (
         (!district_id ||
@@ -642,7 +802,9 @@ Please refill Licenses in Basic Information section and Support section again af
           !lokos_shg) &&
         effectiveTempShg
       ) {
-        const loc = extractLocationFromShg(effectiveTempShg);
+        const loc = extractLocationFromShg(
+          effectiveTempShg,
+        );
 
         if (loc) {
           district_id = district_id || loc.district_id;
@@ -736,6 +898,7 @@ Please refill Licenses in Basic Information section and Support section again af
 
       console.log('====================================');
       const finalPayload = {
+
         beneficiary: {
           lokos_member_code:
             beneficiary?.member_code || beneficiary?.nic_member_code || null,
@@ -760,8 +923,8 @@ Please refill Licenses in Basic Information section and Support section again af
             beneficiary?.pld_status === true
               ? 'Yes'
               : beneficiary?.pld_status === false
-              ? 'No'
-              : beneficiary?.pld_status || null,
+                ? 'No'
+                : beneficiary?.pld_status || null,
           enterprise_type: 'exep',
           special_category: beneficiary?.special_category || '',
         },
@@ -816,7 +979,7 @@ Please refill Licenses in Basic Information section and Support section again af
           has_taken_loan: normalizeBoolean(existingForm.has_taken_loan),
           has_received_subsidy: normalizeBoolean(
             existingForm.has_receieved_subsidy ||
-              existingForm.has_receieved_subsidy,
+            existingForm.has_receieved_subsidy,
           ),
           has_shg_received_man_fund: normalizeBoolean(existingForm.has_shg_cif),
 
@@ -848,7 +1011,11 @@ Please refill Licenses in Basic Information section and Support section again af
           license_category: lic.license_category || lic.category || '',
           license_name: lic.license_name || lic.name || '',
           license_no: lic.license_no || lic.number || '',
-          file_key: `license_${i}`,
+          // file_key: `license_${i}`,
+          file_key:
+            lic?.file?.fileName ||
+            lic?.file?.name ||
+            `license_${i}.pdf`,
           created_by: createdBy,
         })),
 
@@ -866,11 +1033,42 @@ Please refill Licenses in Basic Information section and Support section again af
           date_taken: loan.date_taken || '',
           repayment_status:
             parseFloat(loan.repaid_amount || 0) >=
-            parseFloat(loan.loan_amount || 1)
+              parseFloat(loan.loan_amount || 1)
               ? 'PAID'
               : 'PARTIALLY PAID',
           created_by: createdBy,
         })),
+
+        // subsidies: safeArray(existingForm.subsidies).map(sub => {
+        //   let subsidyTypeText = '';
+        //   let subsidyNameText = '';
+        //   if (
+        //     Array.isArray(sub.subsidy_name_tree) &&
+        //     sub.subsidy_name_tree.length > 0
+        //   ) {
+        //     subsidyTypeText = sub.subsidy_name_tree
+        //       .map(item => item.parent)
+        //       .join(', ');
+        //     subsidyNameText = sub.subsidy_name_tree
+        //       .map(item => {
+        //         let childList =
+        //           item.children && item.children.length > 0
+        //             ? item.children.join(', ')
+        //             : 'General Support';
+        //         if (item.others_specify)
+        //           childList = `${childList} (${item.others_specify})`;
+        //         return childList;
+        //       })
+        //       .join(' | ');
+        //   }
+        //   return {
+        //     subsidy_type: subsidyTypeText || sub.subsidy_type || '',
+        //     subsidy_name: subsidyNameText || sub.subsidy_name || '',
+        //     subsidy_detail: sub.subsidy_detail || '',
+        //     created_by: createdBy,
+        //   };
+        // }),
+
         subsidies: safeArray(existingForm.subsidies).map(sub => {
           let subsidyTypeText = '';
           let subsidyNameText = '';
@@ -883,7 +1081,10 @@ Please refill Licenses in Basic Information section and Support section again af
               .map(item => {
                 const parent = item.parent || '';
 
-                if (parent.includes('Others') && item.others_specify) {
+                if (
+                  parent.includes('Others') &&
+                  item.others_specify
+                ) {
                   return `Others (Specify) - ${item.others_specify}`;
                 }
 
@@ -900,7 +1101,10 @@ Please refill Licenses in Basic Information section and Support section again af
 
                 return children
                   .map(child => {
-                    if (child === 'Others' && item.others_specify) {
+                    if (
+                      child === 'Others' &&
+                      item.others_specify
+                    ) {
                       return `Others - ${item.others_specify}`;
                     }
 
@@ -922,123 +1126,147 @@ Please refill Licenses in Basic Information section and Support section again af
         shops:
           existingForm.has_shop_product === 'Yes'
             ? [
-                {
-                  // 1. Format Shop Category Others
-                  shop_category: (() => {
-                    const val = existingForm.shop_sub_category || '';
-                    if (val === 'Others') {
-                      const otherText =
-                        existingForm.shop_sub_category_other ||
-                        existingForm.shop_type_other ||
-                        '';
-                      return otherText ? `Others - ${otherText}` : 'Others';
-                    }
-                    return val;
-                  })(),
+              {
+                // 1. Format Shop Category Others
+                shop_category: (() => {
+                  const val = existingForm.shop_sub_category || '';
+                  if (val === 'Others') {
+                    const otherText =
+                      existingForm.shop_sub_category_other ||
+                      existingForm.shop_type_other ||
+                      '';
+                    return otherText ? `Others - ${otherText}` : 'Others';
+                  }
+                  return val;
+                })(),
 
-                  shop_type: (() => {
-                    if (
-                      existingForm.shop_type === 'Others' &&
-                      existingForm.shop_type_other
-                    ) {
-                      return `Others - ${existingForm.shop_type_other}`;
-                    }
-                    return existingForm.shop_type || '';
-                  })(),
-                  source_of_inventory: existingForm.inventory_source || '',
+                shop_type: (() => {
+                  if (
+                    existingForm.shop_type === 'Others' &&
+                    existingForm.shop_type_other
+                  ) {
+                    return `Others - ${existingForm.shop_type_other}`;
+                  }
+                  return existingForm.shop_type || '';
+                })(),
+                source_of_inventory: existingForm.inventory_source || '',
 
-                  // 2. Format Target Customers Others (Handles both single string or multi-select array)
-                  target_customers: (() => {
-                    const customers = Array.isArray(
-                      existingForm.target_customers,
+                // 2. Format Target Customers Others (Handles both single string or multi-select array)
+                target_customers: (() => {
+                  const customers = Array.isArray(
+                    existingForm.target_customers,
+                  )
+                    ? existingForm.target_customers
+                    : (existingForm.target_customers || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  return customers
+                    .map(c =>
+                      c === 'Others' && existingForm.target_customers_other
+                        ? `Others - ${existingForm.target_customers_other}`
+                        : c,
                     )
-                      ? existingForm.target_customers
-                      : (existingForm.target_customers || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
+                    .join(', ');
+                })(),
 
-                    return customers
+                sales_area: Array.isArray(existingForm.sales_area)
+                  ? existingForm.sales_area.join(', ')
+                  : existingForm.sales_area || '',
+
+                // 3. Format Marketing Strategy Others (Handles both single string or multi-select array)
+                marketing_strategy: (() => {
+                  const strategies = Array.isArray(
+                    existingForm.marketing_strategy,
+                  )
+                    ? existingForm.marketing_strategy
+                    : (existingForm.marketing_strategy || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  return strategies
+                    .map(s =>
+                      s === 'Others' && existingForm.marketing_strategy_other
+                        ? `Others - ${existingForm.marketing_strategy_other}`
+                        : s,
+                    )
+                    .join(', ');
+                })(),
+
+                marketing_channels:
+                  generateCleanMarketingChannels(existingForm),
+                market_linkage: generateMarketLinkageString(existingForm),
+
+                marketing_challenges: (() => {
+                  const challenges = Array.isArray(
+                    existingForm.marketing_challenges,
+                  )
+                    ? existingForm.marketing_challenges
+                    : (existingForm.marketing_challenges || '')
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+
+                  if (
+                    challenges.includes('Others') &&
+                    existingForm.marketing_challenges_other
+                  ) {
+                    return challenges
                       .map(c =>
-                        c === 'Others' && existingForm.target_customers_other
-                          ? `Others - ${existingForm.target_customers_other}`
+                        c === 'Others'
+                          ? `Others (${existingForm.marketing_challenges_other})`
                           : c,
                       )
                       .join(', ');
-                  })(),
+                  }
+                  return challenges.join(', ');
+                })(),
 
-                  sales_area: Array.isArray(existingForm.sales_area)
-                    ? existingForm.sales_area.join(', ')
-                    : existingForm.sales_area || '',
+                accept_digital_payment: normalizeBoolean(
+                  existingForm.accept_digital_payment,
+                ),
+                avg_monthly_sales: existingForm.avg_monthly_sales || '0.00',
+                avg_annual_sales: existingForm.annual_sale || '0.00',
+                // media: {
+                //   front_key: safeArray(existingForm.media?.shop_front)
+                //     .map((_, idx) => `shop_front_0_${idx}`)
+                //     .join(','),
+                //   inside_key: safeArray(existingForm.media?.shop_inside)
+                //     .map((_, idx) => `shop_inside_0_${idx}`)
+                //     .join(','),
+                //   others_key: safeArray(existingForm.media?.shop_others)
+                //     .map((_, idx) => `shop_others_0_${idx}`)
+                //     .join(','),
+                // },
+                media: [
+                  {
+                    front_key:
+                      existingForm.media?.shop_front?.[0]
+                        ?.fileName ||
+                      existingForm.media?.shop_front?.[0]
+                        ?.name ||
+                      null,
 
-                  // 3. Format Marketing Strategy Others (Handles both single string or multi-select array)
-                  marketing_strategy: (() => {
-                    const strategies = Array.isArray(
-                      existingForm.marketing_strategy,
-                    )
-                      ? existingForm.marketing_strategy
-                      : (existingForm.marketing_strategy || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
+                    inside_key:
+                      existingForm.media?.shop_inside?.[0]
+                        ?.fileName ||
+                      existingForm.media?.shop_inside?.[0]
+                        ?.name ||
+                      null,
 
-                    return strategies
-                      .map(s =>
-                        s === 'Others' && existingForm.marketing_strategy_other
-                          ? `Others - ${existingForm.marketing_strategy_other}`
-                          : s,
-                      )
-                      .join(', ');
-                  })(),
-
-                  marketing_channels:
-                    generateCleanMarketingChannels(existingForm),
-                  market_linkage: generateMarketLinkageString(existingForm),
-
-                  marketing_challenges: (() => {
-                    const challenges = Array.isArray(
-                      existingForm.marketing_challenges,
-                    )
-                      ? existingForm.marketing_challenges
-                      : (existingForm.marketing_challenges || '')
-                          .split(',')
-                          .map(s => s.trim())
-                          .filter(Boolean);
-
-                    if (
-                      challenges.includes('Others') &&
-                      existingForm.marketing_challenges_other
-                    ) {
-                      return challenges
-                        .map(c =>
-                          c === 'Others'
-                            ? `Others (${existingForm.marketing_challenges_other})`
-                            : c,
-                        )
-                        .join(', ');
-                    }
-                    return challenges.join(', ');
-                  })(),
-
-                  accept_digital_payment: normalizeBoolean(
-                    existingForm.accept_digital_payment,
-                  ),
-                  avg_monthly_sales: existingForm.avg_monthly_sales || '0.00',
-                  avg_annual_sales: existingForm.annual_sale || '0.00',
-                  media: {
-                    front_key: safeArray(existingForm.media?.shop_front)
-                      .map((_, idx) => `shop_front_0_${idx}`)
-                      .join(','),
-                    inside_key: safeArray(existingForm.media?.shop_inside)
-                      .map((_, idx) => `shop_inside_0_${idx}`)
-                      .join(','),
-                    others_key: safeArray(existingForm.media?.shop_others)
-                      .map((_, idx) => `shop_others_0_${idx}`)
-                      .join(','),
+                    others_key:
+                      existingForm.media?.shop_others?.[0]
+                        ?.fileName ||
+                      existingForm.media?.shop_others?.[0]
+                        ?.name ||
+                      null,
                   },
-                  created_by: createdBy,
-                },
-              ]
+                ],
+                created_by: createdBy,
+              },
+            ]
             : [],
 
         products: sanitizedProducts.map((prod, i) => ({
@@ -1080,54 +1308,120 @@ Please refill Licenses in Basic Information section and Support section again af
           accept_digital_payment: normalizeBoolean(prod.accept_digital_payment),
           avg_monthly_sales: prod.avg_monthly_sales || '0.00',
           avg_annual_sales: prod.avg_annual_sales || '0.00',
-          media: {
-            open_box_key: safeArray(prod.media?.open_box)
-              .map((_, idx) => `prod_${i}_open_${idx}`)
-              .join(','),
-            close_box_key: safeArray(prod.media?.close_box)
-              .map((_, idx) => `prod_${i}_close_${idx}`)
-              .join(','),
-            others_key: safeArray(prod.media?.others)
-              .map((_, idx) => `prod_${i}_others_${idx}`)
-              .join(','),
-          },
+          // media: {
+          //   open_box_key: safeArray(prod.media?.open_box)
+          //     .map((_, idx) => `prod_${i}_open_${idx}`)
+          //     .join(','),
+          //   close_box_key: safeArray(prod.media?.close_box)
+          //     .map((_, idx) => `prod_${i}_close_${idx}`)
+          //     .join(','),
+          //   others_key: safeArray(prod.media?.others)
+          //     .map((_, idx) => `prod_${i}_others_${idx}`)
+          //     .join(','),
+          // },
+          media: [
+            {
+              open_box_key:
+                prod.media?.open_box?.[0]
+                  ?.fileName ||
+                prod.media?.open_box?.[0]
+                  ?.name ||
+                null,
+
+              close_box_key:
+                prod.media?.close_box?.[0]
+                  ?.fileName ||
+                prod.media?.close_box?.[0]
+                  ?.name ||
+                null,
+
+              others_key:
+                prod.media?.others?.[0]
+                  ?.fileName ||
+                prod.media?.others?.[0]
+                  ?.name ||
+                null,
+            },
+          ],
           created_by: createdBy,
         })),
 
+        // enterprise_media: {
+        //   entrepreneur_key: safeArray(existingForm.media?.photo_entrepreneur)
+        //     .map((_, idx) => `photo_entrepreneur_${idx}`)
+        //     .join(','),
+        //   enterprise_key: safeArray(existingForm.media?.photo_enterprise)
+        //     .map((_, idx) => `photo_enterprise_${idx}`)
+        //     .join(','),
+        //   others_key: safeArray(existingForm.media?.others)
+        //     .map((_, idx) => `media_others_${idx}`)
+        //     .join(','),
+        //   created_by: createdBy,
+        // },
+
+        // categories: existingForm.enterprise_types_tree
+        //   ? existingForm.enterprise_types_tree.map(cat => ({
+        //     parent_category: cat.parent?.en || cat.parent || '',
+        //     sub_category: cat.children
+        //       ? cat.children.map(c => c.en || c).join(', ')
+        //       : '',
+        //     created_by: createdBy,
+        //   }))
+        //   : [],
+
         enterprise_media: {
-          entrepreneur_key: safeArray(existingForm.media?.photo_entrepreneur)
-            .map((_, idx) => `photo_entrepreneur_${idx}`)
-            .join(','),
-          enterprise_key: safeArray(existingForm.media?.photo_enterprise)
-            .map((_, idx) => `photo_enterprise_${idx}`)
-            .join(','),
-          others_key: safeArray(existingForm.media?.others)
-            .map((_, idx) => `media_others_${idx}`)
-            .join(','),
+          entrepreneur_key:
+            existingForm.media
+              ?.photo_entrepreneur?.[0]
+              ?.fileName ||
+            existingForm.media
+              ?.photo_entrepreneur?.[0]
+              ?.name ||
+            null,
+
+          enterprise_key:
+            existingForm.media
+              ?.photo_enterprise?.[0]
+              ?.fileName ||
+            existingForm.media
+              ?.photo_enterprise?.[0]
+              ?.name ||
+            null,
+
+          others_key:
+            existingForm.media?.others?.[0]
+              ?.fileName ||
+            existingForm.media?.others?.[0]
+              ?.name ||
+            null,
+
           created_by: createdBy,
         },
 
         categories: existingForm.enterprise_types_tree
           ? existingForm.enterprise_types_tree.map(cat => ({
-              parent_category: cat.parent?.en || cat.parent || '',
+            parent_category: cat.parent?.en || cat.parent || '',
 
-              sub_category: Array.isArray(cat.children)
-                ? cat.children
-                    .map(c => {
-                      const value = c?.en || c || '';
+            sub_category: Array.isArray(cat.children)
+              ? cat.children
+                .map(c => {
+                  const value = c?.en || c || '';
 
-                      // Preserve Others input
-                      if (value === 'Others' && cat.childOtherText?.Others) {
-                        return `Others - ${cat.childOtherText.Others}`;
-                      }
+                  // Preserve Others input
+                  if (
+                    value === 'Others' &&
+                    cat.childOtherText?.Others
+                  ) {
+                    return `Others - ${cat.childOtherText.Others}`;
+                  }
 
-                      return value;
-                    })
-                    .join(', ')
-                : '',
+                  return value;
+                })
+                .join(', ')
+              : '',
 
-              created_by: createdBy,
-            }))
+            created_by: createdBy,
+          }))
           : [],
 
         supports: (() => {
@@ -1193,11 +1487,22 @@ Please refill Licenses in Basic Information section and Support section again af
             duration: row.duration || '',
             location: row.location || '',
             expected_income: String(row.expected_income || '0'),
-            certificate_file_keys: (
-              row.files ||
-              row.certificates_files ||
-              []
-            ).map((_, idx) => `cert_${i}_${idx}`),
+            // certificate_file_keys: (
+            //   row.files ||
+            //   row.certificates_files ||
+            //   []
+            // ).map((_, idx) => `cert_${i}_${idx}`),
+
+            certificate_file_keys:
+              (
+                row.files ||
+                row.certificates_files ||
+                []
+              ).map(
+                file =>
+                  file.fileName ||
+                  file.name,
+              ),
             created_by: createdBy,
           })),
           ...safeArray(existingForm.training_required_rows).map(row => ({
@@ -1212,127 +1517,540 @@ Please refill Licenses in Basic Information section and Support section again af
             created_by: createdBy,
           })),
         ],
+
       };
+
+      setSubmitProgress(10);
+      setSubmitMessage('Preparing payload...');
 
       console.log('=== PAYLOAD JSON STRING (for backend) ===');
       console.log(JSON.stringify(finalPayload, null, 2));
 
-      const formData = new FormData();
-      formData.append('data_payload', JSON.stringify(finalPayload));
+      // const formData = new FormData();
+      // formData.append('data_payload', JSON.stringify(finalPayload));
 
-      // 🛠️ FIX: Using activeLicenses to map over existing/preserved data and only append files safely
-      safeArray(activeLicenses).forEach((lic, i) => {
-        if (lic.file && lic.file.uri) {
-          formData.append(`license_${i}`, {
-            uri: lic.file.uri,
-            type: lic.file.type || 'image/jpeg',
-            name: lic.file.fileName || lic.file.name || `license_${i}.jpg`,
-          });
+      // // 🛠️ FIX: Using activeLicenses to map over existing/preserved data and only append files safely
+      // safeArray(activeLicenses).forEach((lic, i) => {
+      //   if (lic.file && lic.file.uri) {
+      //     formData.append(`license_${i}`, {
+      //       uri: lic.file.uri,
+      //       type: lic.file.type || 'image/jpeg',
+      //       name: lic.file.fileName || lic.file.name || `license_${i}.jpg`,
+      //     });
+      //   }
+      // });
+
+      // // Shop Media
+      // if (existingForm.has_shop_product === 'Yes' && existingForm.media) {
+      //   safeArray(existingForm.media.shop_front).forEach((file, idx) => {
+      //     formData.append(`shop_front_0_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `shop_front_${idx}.jpg`,
+      //     });
+      //   });
+      //   safeArray(existingForm.media.shop_inside).forEach((file, idx) => {
+      //     formData.append(`shop_inside_0_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `shop_inside_${idx}.jpg`,
+      //     });
+      //   });
+      //   safeArray(existingForm.media.shop_others).forEach((file, idx) => {
+      //     formData.append(`shop_others_0_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `shop_others_${idx}.jpg`,
+      //     });
+      //   });
+      // }
+
+      // // Product Media
+      // sanitizedProducts.forEach((prod, i) => {
+      //   const media = prod.media || {};
+      //   safeArray(media.open_box).forEach((file, idx) => {
+      //     formData.append(`prod_${i}_open_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `prod_${i}_open_${idx}.jpg`,
+      //     });
+      //   });
+      //   safeArray(media.close_box).forEach((file, idx) => {
+      //     formData.append(`prod_${i}_close_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `prod_${i}_close_${idx}.jpg`,
+      //     });
+      //   });
+      //   safeArray(media.others).forEach((file, idx) => {
+      //     formData.append(`prod_${i}_others_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: `prod_${i}_others_${idx}.jpg`,
+      //     });
+      //   });
+      // });
+
+      // // Enterprise Media
+      // const epMedia = existingForm.media || {};
+      // safeArray(epMedia.photo_entrepreneur).forEach((file, idx) => {
+      //   formData.append(`photo_entrepreneur_${idx}`, {
+      //     uri: file.uri,
+      //     type: file.type || 'image/jpeg',
+      //     name: `entrepreneur_${idx}.jpg`,
+      //   });
+      // });
+      // safeArray(epMedia.photo_enterprise).forEach((file, idx) => {
+      //   formData.append(`photo_enterprise_${idx}`, {
+      //     uri: file.uri,
+      //     type: file.type || 'image/jpeg',
+      //     name: `enterprise_${idx}.jpg`,
+      //   });
+      // });
+      // safeArray(epMedia.others).forEach((file, idx) => {
+      //   formData.append(`media_others_${idx}`, {
+      //     uri: file.uri,
+      //     type: file.type || 'image/jpeg',
+      //     name: `others_${idx}.jpg`,
+      //   });
+      // });
+
+      // // Training certs
+      // safeArray(existingForm.training_received_rows).forEach((tr, i) => {
+      //   const files = tr.files || tr.certificates_files || [];
+      //   files.forEach((file, idx) => {
+      //     formData.append(`cert_${i}_${idx}`, {
+      //       uri: file.uri,
+      //       type: file.type || 'image/jpeg',
+      //       name: file.fileName || file.name || `cert_${i}_${idx}.jpg`,
+      //     });
+      //   });
+      // });
+
+      // const signature = existingForm?.media?.declaration_signature || [];
+      // if (signature?.[0]) {
+      //   formData.append('signature', {
+      //     uri: signature[0].uri,
+      //     type: signature[0].type || 'image/jpeg',
+      //     name: 'signature.jpg',
+      //   });
+      // }
+
+
+      // =====================================================
+      // NEW ZIP BASED SUBMISSION
+      // =====================================================
+
+      setSubmitProgress(20);
+      setSubmitMessage('Creating ZIP package...');
+
+
+      const zip = new JSZip();
+
+      let totalFiles = 0;
+
+      totalFiles += safeArray(activeLicenses).length;
+
+      totalFiles += safeArray(
+        existingForm.media?.shop_front,
+      ).length;
+
+      totalFiles += safeArray(
+        existingForm.media?.shop_inside,
+      ).length;
+
+      totalFiles += safeArray(
+        existingForm.media?.shop_others,
+      ).length;
+
+      sanitizedProducts.forEach(prod => {
+        totalFiles += safeArray(prod.media?.open_box).length;
+        totalFiles += safeArray(prod.media?.close_box).length;
+        totalFiles += safeArray(prod.media?.others).length;
+      });
+
+      totalFiles += safeArray(
+        existingForm.media?.photo_entrepreneur,
+      ).length;
+
+      totalFiles += safeArray(
+        existingForm.media?.photo_enterprise,
+      ).length;
+
+      totalFiles += safeArray(
+        existingForm.media?.others,
+      ).length;
+
+      safeArray(
+        existingForm.training_received_rows,
+      ).forEach(tr => {
+        totalFiles += safeArray(
+          tr.files || tr.certificates_files,
+        ).length;
+      });
+
+      if (
+        existingForm?.media?.declaration_signature?.[0]
+      ) {
+        totalFiles += 1;
+      }
+
+      let processedFiles = 0;
+
+      const updateZipProgress = () => {
+        processedFiles++;
+
+        const progress =
+          20 +
+          (processedFiles / Math.max(totalFiles, 1)) * 50;
+
+        setSubmitProgress(progress);
+        setSubmitMessage(
+          `Adding files (${processedFiles}/${totalFiles})`,
+        );
+      };
+
+      zip.file(
+        'payload.json',
+        JSON.stringify(finalPayload, null, 2),
+      );
+
+      // ------------------------
+      // LICENSES
+      // ------------------------
+
+      for (
+        let i = 0;
+        i < safeArray(activeLicenses).length;
+        i++
+      ) {
+        const lic = activeLicenses[i];
+
+        if (lic?.file?.uri) {
+          const ext = getFileExtension(
+            lic.file,
+          );
+
+          await addFileToZip(
+            zip,
+            lic.file,
+            `license_${i}.${ext}`,
+          );
+          updateZipProgress();
         }
-      });
-
-      // Shop Media
-      if (existingForm.has_shop_product === 'Yes' && existingForm.media) {
-        safeArray(existingForm.media.shop_front).forEach((file, idx) => {
-          formData.append(`shop_front_0_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `shop_front_${idx}.jpg`,
-          });
-        });
-        safeArray(existingForm.media.shop_inside).forEach((file, idx) => {
-          formData.append(`shop_inside_0_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `shop_inside_${idx}.jpg`,
-          });
-        });
-        safeArray(existingForm.media.shop_others).forEach((file, idx) => {
-          formData.append(`shop_others_0_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `shop_others_${idx}.jpg`,
-          });
-        });
       }
 
-      // Product Media
-      sanitizedProducts.forEach((prod, i) => {
-        const media = prod.media || {};
-        safeArray(media.open_box).forEach((file, idx) => {
-          formData.append(`prod_${i}_open_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `prod_${i}_open_${idx}.jpg`,
-          });
-        });
-        safeArray(media.close_box).forEach((file, idx) => {
-          formData.append(`prod_${i}_close_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `prod_${i}_close_${idx}.jpg`,
-          });
-        });
-        safeArray(media.others).forEach((file, idx) => {
-          formData.append(`prod_${i}_others_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: `prod_${i}_others_${idx}.jpg`,
-          });
-        });
-      });
+      // ------------------------
+      // SHOP MEDIA
+      // ------------------------
 
-      // Enterprise Media
-      const epMedia = existingForm.media || {};
-      safeArray(epMedia.photo_entrepreneur).forEach((file, idx) => {
-        formData.append(`photo_entrepreneur_${idx}`, {
-          uri: file.uri,
-          type: file.type || 'image/jpeg',
-          name: `entrepreneur_${idx}.jpg`,
-        });
-      });
-      safeArray(epMedia.photo_enterprise).forEach((file, idx) => {
-        formData.append(`photo_enterprise_${idx}`, {
-          uri: file.uri,
-          type: file.type || 'image/jpeg',
-          name: `enterprise_${idx}.jpg`,
-        });
-      });
-      safeArray(epMedia.others).forEach((file, idx) => {
-        formData.append(`media_others_${idx}`, {
-          uri: file.uri,
-          type: file.type || 'image/jpeg',
-          name: `others_${idx}.jpg`,
-        });
-      });
+      for (
+        let i = 0;
+        i <
+        safeArray(
+          existingForm.media?.shop_front,
+        ).length;
+        i++
+      ) {
+        const file =
+          existingForm.media.shop_front[i];
 
-      // Training certs
-      safeArray(existingForm.training_received_rows).forEach((tr, i) => {
-        const files = tr.files || tr.certificates_files || [];
-        files.forEach((file, idx) => {
-          formData.append(`cert_${i}_${idx}`, {
-            uri: file.uri,
-            type: file.type || 'image/jpeg',
-            name: file.fileName || file.name || `cert_${i}_${idx}.jpg`,
-          });
-        });
-      });
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          `shop_front_${i}.jpg`,
+        );
 
-      const signature = existingForm?.media?.declaration_signature || [];
+      }
+
+      for (
+        let i = 0;
+        i <
+        safeArray(
+          existingForm.media?.shop_inside,
+        ).length;
+        i++
+      ) {
+        const file =
+          existingForm.media.shop_inside[i];
+
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          `shop_inside_${i}.jpg`,
+        );
+      }
+
+      for (
+        let i = 0;
+        i <
+        safeArray(
+          existingForm.media?.shop_others,
+        ).length;
+        i++
+      ) {
+        const file =
+          existingForm.media.shop_others[i];
+
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          `shop_others_${i}.jpg`,
+        );
+        updateZipProgress();
+      }
+
+      // ------------------------
+      // PRODUCTS
+      // ------------------------
+
+      for (
+        let p = 0;
+        p < sanitizedProducts.length;
+        p++
+      ) {
+        const media =
+          sanitizedProducts[p]?.media ||
+          {};
+
+        for (
+          let i = 0;
+          i < safeArray(media.open_box).length;
+          i++
+        ) {
+          const file =
+            media.open_box[i];
+
+          await addFileToZip(
+            zip,
+            file,
+            file.fileName ||
+            file.name ||
+            `prod_${p}_open_${i}.jpg`,
+          );
+        }
+
+        for (
+          let i = 0;
+          i <
+          safeArray(media.close_box)
+            .length;
+          i++
+        ) {
+          const file =
+            media.close_box[i];
+
+          await addFileToZip(
+            zip,
+            file,
+            file.fileName ||
+            file.name ||
+            `prod_${p}_close_${i}.jpg`,
+          );
+        }
+
+        for (
+          let i = 0;
+          i < safeArray(media.others).length;
+          i++
+        ) {
+          const file =
+            media.others[i];
+
+          await addFileToZip(
+            zip,
+            file,
+            file.fileName ||
+            file.name ||
+            `prod_${p}_others_${i}.jpg`,
+          );
+        }
+        updateZipProgress();
+      }
+
+      // ------------------------
+      // ENTERPRISE MEDIA
+      // ------------------------
+
+      const epMedia =
+        existingForm.media || {};
+
+      for (const file of safeArray(
+        epMedia.photo_entrepreneur,
+      )) {
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          'entrepreneur.jpg',
+        );
+      }
+
+      for (const file of safeArray(
+        epMedia.photo_enterprise,
+      )) {
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          'enterprise.jpg',
+        );
+      }
+
+      for (const file of safeArray(
+        epMedia.others,
+      )) {
+        await addFileToZip(
+          zip,
+          file,
+          file.fileName ||
+          file.name ||
+          'other_media.jpg',
+        );
+        updateZipProgress();
+      }
+
+      // ------------------------
+      // TRAINING CERTIFICATES
+      // ------------------------
+
+      for (
+        let row = 0;
+        row <
+        safeArray(
+          existingForm.training_received_rows,
+        ).length;
+        row++
+      ) {
+        const tr =
+          existingForm
+            .training_received_rows[row];
+
+        const files =
+          tr.files ||
+          tr.certificates_files ||
+          [];
+
+        for (const file of files) {
+          await addFileToZip(
+            zip,
+            file,
+            file.fileName ||
+            file.name,
+          );
+        }
+        updateZipProgress();
+      }
+
+      // ------------------------
+      // SIGNATURE
+      // ------------------------
+
+      const signature =
+        existingForm?.media
+          ?.declaration_signature || [];
+
       if (signature?.[0]) {
-        formData.append('signature', {
-          uri: signature[0].uri,
-          type: signature[0].type || 'image/jpeg',
-          name: 'signature.jpg',
-        });
+        await addFileToZip(
+          zip,
+          signature[0],
+          signature[0].fileName ||
+          signature[0].name ||
+          'signature.jpg',
+        );
+        updateZipProgress();
       }
+
+      // ------------------------
+      // GENERATE ZIP
+      // ------------------------
+      setSubmitProgress(75);
+      setSubmitMessage(
+        'Compressing files...'
+      );
+
+
+      const zipBase64 =
+        await zip.generateAsync({
+          type: 'base64',
+        });
+
+      const zipPath =
+        `${RNFS.CachesDirectoryPath}/submission_${Date.now()}.zip`;
+
+      await RNFS.writeFile(
+        zipPath,
+        zipBase64,
+        'base64',
+      );
+
+      setSubmitProgress(85);
+      setSubmitMessage(
+        'Preparing upload...'
+      );
+      // ------------------------
+      // SINGLE FIELD API
+      // ------------------------
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        'zip_file',
+        {
+          uri: `file://${zipPath}`,
+          type: 'application/zip',
+          name: `submission_${Date.now()}.zip`,
+        },
+      );
+
+      // =====================================================
+
+
 
       // API Call
-      const enterpriseRes = await gsApi.createExepForm(formData);
+      // const enterpriseRes = await gsApi.createExepForm(formData);
+
+      const enterpriseRes =
+        await gsApi.createExepForm(
+          formData,
+          progressEvent => {
+            const percent =
+              Math.round(
+                (progressEvent.loaded * 100) /
+                progressEvent.total,
+              );
+
+            setSubmitProgress(
+              85 + percent * 0.15,
+            );
+
+            setSubmitMessage(
+              `Uploading ZIP (${percent}%)`,
+            );
+          },
+        );
 
       if (!enterpriseRes?.enterprise_id && !enterpriseRes?.TH_urid) {
         throw new Error('Enterprise ID not returned from API');
       }
+
+      setSubmitProgress(100);
+      setSubmitMessage(
+        'Submission completed'
+      );
+
+      setTimeout(() => {
+        setShowProgressModal(false);
+      }, 500);
 
       // Success
       Alert.alert('Saved', 'Existing Enterprise submitted successfully!', [
@@ -1347,14 +2065,23 @@ Please refill Licenses in Basic Information section and Support section again af
       ]);
     } catch (err) {
       console.error('Submit error:', err);
-      console.log(err.data.rawText);
+      console.log(err);
       if (err.status === 400 && err.data?.details) {
         Alert.alert('Validation Error', err.data.details);
       } else {
         Alert.alert('Error', err.message || 'Please try again.');
       }
-    } finally {
+    }
+    // finally {
+    //   setSubmitting(false);
+    // }
+
+    finally {
       setSubmitting(false);
+
+      setTimeout(() => {
+        setShowProgressModal(false);
+      }, 500);
     }
   };
 
@@ -2381,6 +3108,7 @@ Please refill Licenses in Basic Information section and Support section again af
             //   }
             // }
 
+
             /* ========================= */
             /* FIXED: Machinery validation */
             /* Only validate when machinery support is actually selected */
@@ -2654,7 +3382,7 @@ Please refill Licenses in Basic Information section and Support section again af
             index={0}
             updateRow={(i, patch) => updateForm(patch)}
             language={language}
-            addProductRow={() => {}}
+            addProductRow={() => { }}
             ProductAndServicesComponent={
               ExistingEnterpriseProductServicesSection
             }
@@ -2744,6 +3472,11 @@ Please refill Licenses in Basic Information section and Support section again af
         submitting={submitting}
         setCurrentSectionIndex={setCurrentSectionIndex}
         handleSubmit={handleSubmit}
+      />
+      <SubmissionProgressModal
+        visible={showProgressModal}
+        progress={submitProgress}
+        message={submitMessage}
       />
     </ScrollView>
   );
