@@ -164,7 +164,7 @@ const requestCameraPermissionIfNeeded = async () => {
 // NOTE: api.
 const MULTIPART_X_API_ID = X_API_ID;
 const MULTIPART_X_API_KEY = X_API_KEY;
-const BASE_URL = 'http://72.61.255.170:8080';
+const BASE_URL = 'http://upsrlmtms.upsdc.gov.in';
 
 // ---------- Enterprise Category (Parent / Child) ----------
 
