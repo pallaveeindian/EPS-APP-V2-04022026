@@ -82,7 +82,7 @@ android {
         applicationId "com.crp_ep_demo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
+        versionCode 7
         versionName "1.1"
 
         // Resolve manifest placeholder for usesCleartextTraffic (so ${usesCleartextTraffic} becomes "true")
